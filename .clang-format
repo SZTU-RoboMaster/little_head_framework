@@ -1,0 +1,35 @@
+---
+Language: Cpp
+# Microsoft 风格最接近这种所有大括号全换行的行为，也就是 Allman/BSD 风格
+BasedOnStyle: Microsoft
+
+# 缩进设置为 4 个空格
+IndentWidth: 4
+UseTab: Never
+
+# 取消 public/protected/private 的缩进（与类对齐）
+AccessModifierOffset: -4
+
+# 限制每行字符数（可选，这里设为较宽的 100）
+ColumnLimit: 100
+
+# 指针星号紧贴变量名，同 astyle 的 --align-pointer=name
+PointerAlignment: Right
+
+# 为单行控制流语句强制加上大括号，同 astyle 的 --add-braces
+InsertBraces: true
+
+# 自定义大括号包裹规则（确保任何情况下都换行）
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always # if, for, while 大括号必须换行
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true              # else 大括号另起一行
+  IndentBraces: false
