@@ -1,0 +1,170 @@
+/**
+ * @file gimbal.h
+ * @author anchengc
+ * @brief
+ * @version 0.1
+ * @date 2026-05-30 0.1 初版
+ *
+ * @copyright SZTU-HJ (c) 2026
+ *
+ */
+
+#pragma once
+
+/* Includes ------------------------------------------------------------------*/
+
+#include "bmi088.h"
+#include "dr16.h"
+#include "math_tools.h"
+#include "motor_dji.h"
+#include "quaternion_ekf.h"
+
+/* Exported macros -----------------------------------------------------------*/
+
+/* Exported types ------------------------------------------------------------*/
+
+struct GimbalInput
+{
+    int16_t ch_3; // pitch
+    int16_t ch_2; // yaw
+    uint8_t sw_2; // 云台控制方式
+};
+
+struct GimbalFeedback
+{
+    float imu_yaw_angle;
+    float yaw_angle;
+    float pitch_angle;
+    float yaw_omega;
+    float pitch_omega;
+};
+
+struct GimbalConfig
+{
+    // pitch轴最小值
+    float pitch_min_angle;
+    // pitch轴最大值
+    float pitch_max_angle;
+    // pitch轴KP值
+    float pitch_kp = 30.0f;
+    // pitch轴KD值
+    float pitch_kd = 3.0f;
+    // pitch轴回中值
+    float pitch_center_angle = 1.6f;
+    // yaw轴回中值
+    float yaw_center_angle = 1.0f;
+    // yaw轴KP值
+    float yaw_kp;
+    // yaw轴KD值
+    float yaw_kd;
+};
+
+struct GimbalOutput
+{
+    // yaw轴目标角度
+    float target_yaw_angle = 0.0f;
+    // pitch轴目标角度
+    float target_pitch_angle = 0.0f;
+    // yaw轴目标角速度
+    float target_yaw_omega = 0.0f;
+    // pitch轴目标角速度
+    float target_pitch_omega = 0.0f;
+};
+
+enum GimbalMode
+{
+    GIMBAL_RELAX,  // 云台失能
+    GIMBAL_ACTIVE, // 云台使能
+};
+
+enum ModeSwitch
+{
+    GIMBAL_SWITCH_IDLE,      // 无操作
+    GIMBAL_SWITCH_TO_MIDDLE, // 云台回中
+};
+
+struct GimbalStatus
+{
+    GimbalMode mode;
+    ModeSwitch switching;
+};
+
+/**
+ * @brief Specialized, 云台类
+ *
+ */
+class Gimbal
+{
+public:
+    // 云台陀螺仪
+    Bmi088 bmi088_;
+    float ins_angle_[3];
+
+    // 遥控器
+    Dr16 *dr16_;
+
+    // yaw轴电机
+    MotorDji motor_yaw_;
+    Pid yaw_angle_pid_;
+
+    // pitch轴电机
+    MotorDji motor_pitch_;
+
+    void init();
+
+    void update_input();
+
+    void update_feedback();
+
+    void handle_safety();
+
+    void set_mode();
+
+    void update_control_state();
+
+    void control();
+
+    void output();
+
+    inline float get_yaw();
+
+protected:
+    // 初始化相关常量
+
+    // 常量
+
+    // 云台配置
+    GimbalConfig config_;
+
+    // 内部变量
+
+    // 读变量
+
+    // 写变量
+
+    // 云台输入
+    GimbalInput input_;
+    // 云台反馈
+    GimbalFeedback feedback_;
+    // 云台状态
+    GimbalStatus status_;
+
+    // 读写变量
+
+    // 云台输出
+    GimbalOutput control_output_;
+
+    // 内部函数
+
+    void gimbal_motor_nearest_transposition();
+};
+
+/* Exported variables ---------------------------------------------------------*/
+
+/* Exported function declarations ---------------------------------------------*/
+
+inline float Gimbal::get_yaw()
+{
+    return feedback_.yaw_angle;
+}
+/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
