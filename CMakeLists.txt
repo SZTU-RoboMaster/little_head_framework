@@ -74,6 +74,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/gimbal/gimbal.cpp
     application/chassis/chassis.cpp
     application/initial/initial_task.cpp
+    bsp/usb/bsp_usb.cpp
+    components/vision/vision.cpp
 )
 
 # Add include paths
@@ -96,6 +98,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/gimbal
     application/chassis
     application/initial
+    bsp/usb
+    components/vision
 )
 
 # Add project symbols (macros)

@@ -19,6 +19,7 @@
 #include "chassis.h"
 #include "dr16.h"
 #include "gimbal.h"
+#include "vision.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -26,13 +27,14 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-uint8_t init_finished = false;
+uint8_t init_finished = 0;
 uint32_t flag = 0;
 
 Chassis chassis;
 Gimbal gimbal;
 
 Dr16 dr16;
+Vision vision;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -165,7 +167,7 @@ void task_init()
     uart_init(&huart3, dr16_uart3_callback, 18);
     tim_init(&htim7, task1ms_tim7_callback);
 
-    init_finished = true;
+    init_finished = 1;
 }
 
 void task_loop()
@@ -208,6 +210,9 @@ void task_loop()
         chassis.control();
         chassis.solve();
         chassis.output();
+
+        vision.tx_data_.yaw = gimbal.ins_angle_[2];
+        vision.send();
     }
 }
 

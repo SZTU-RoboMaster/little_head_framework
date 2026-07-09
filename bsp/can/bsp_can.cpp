@@ -161,7 +161,7 @@ uint8_t can_data_send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint1
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     // 判断程序初始化完成
-    if (init_finished == false)
+    if (!init_finished)
     {
         return;
     }
@@ -195,7 +195,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     // 判断程序初始化完成
-    if (init_finished == false)
+    if (!init_finished)
     {
         return;
     }

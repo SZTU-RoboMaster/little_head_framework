@@ -92,6 +92,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
+  MX_USB_DEVICE_Init();
 
   /* USER CODE END SysInit */
 
@@ -110,7 +111,6 @@ int main(void)
   MX_TIM10_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
-
   task_init();
 
   /* USER CODE END 2 */

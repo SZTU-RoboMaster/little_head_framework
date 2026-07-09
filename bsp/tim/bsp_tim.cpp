@@ -140,7 +140,7 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     // 判断程序初始化完成
-    if (init_finished == false)
+    if (!init_finished)
     {
         return;
     }

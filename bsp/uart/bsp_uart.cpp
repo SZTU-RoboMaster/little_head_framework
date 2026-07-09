@@ -168,7 +168,7 @@ void uart_reinit(UART_HandleTypeDef *huart)
  */
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
 {
-    if (init_finished == false)
+    if (!init_finished)
     {
         return;
     }

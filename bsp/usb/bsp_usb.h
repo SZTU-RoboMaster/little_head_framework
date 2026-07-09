@@ -1,58 +1,52 @@
 /**
- * @file task.h
+ * @file bsp_usb.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-05-10 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
  */
 
 #pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
+#include "stm32f4xx_hal.h"
+#include "usbd_cdc_if.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
 
 /**
- * @brief Specialized
+ * @brief USB通信接收回调函数数据类型
  *
  */
-// class
-// {
-// public:
+typedef void (*usb_callback_t)(uint8_t *buffer, uint32_t length);
 
-// protected:
-//     // 初始化相关常量
-
-//     // 常量
-
-//     // 内部变量
-
-//     // 读变量
-
-//     // 写变量
-
-//     // 读写变量
-
-//     // 内部函数
-// };
+/**
+ * @brief USB通信处理结构体
+ */
+typedef struct
+{
+    usb_callback_t callback_func;
+} UsbManageObject;
 
 /* Exported variables ---------------------------------------------------------*/
-
 extern uint8_t init_finished;
+
+extern UsbManageObject usb_manage_obj;
 
 /* Exported function declarations ---------------------------------------------*/
 
-void task_init();
+void usb_init(usb_callback_t callback);
 
-void task_loop();
+void USB_Rx_Callback(uint8_t *buf, uint32_t len);
 
 #ifdef __cplusplus
 }

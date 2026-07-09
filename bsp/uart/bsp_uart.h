@@ -42,8 +42,7 @@ struct UartManageObject
 };
 
 /* Exported variables ---------------------------------------------------------*/
-
-extern uint8_t init_finished;
+extern "C" uint8_t init_finished;
 
 extern UartManageObject uart1_manage_obj;
 extern UartManageObject uart3_manage_obj;
