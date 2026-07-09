@@ -137,9 +137,9 @@ protected:
     // 内部函数
 
     // 麦轮逆解算
-    void resolve_mecanum_inverse();
+    void mecanum_inverse_kinematics();
     // 麦轮解算
-    void resolve_mecanum_forward();
+    void mecanum_forward_kinematics();
 };
 
 /* Exported variables ---------------------------------------------------------*/

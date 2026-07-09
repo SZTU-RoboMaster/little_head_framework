@@ -68,13 +68,13 @@ struct MotorDmRxData
 
     MotorDmErrStatus error_status;
     float position;
-    float angle; // 实验性添加
+    float angle;
     float omega;
     float torque;
     uint8_t mos_temperature;
     uint8_t rotor_temperature;
     float last_position;
-    float total_position;
+    float total_angle;
     int16_t position_cycle_count;
 };
 

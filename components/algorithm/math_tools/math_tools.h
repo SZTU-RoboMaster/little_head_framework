@@ -15,7 +15,7 @@
 
 #include "arm_math.h"
 #include "stm32f4xx_hal.h"
-
+#include <algorithm>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -37,58 +37,25 @@ float uint_to_float(uint32_t x_int, float x_min, float x_max, size_t bits);
 uint32_t float_to_uint(float x, float x_min, float x_max, size_t bits);
 
 /**
- * @brief 限幅函数
+ * @brief 归化函数
  *
- * @tparam Type 类型
- * @param x 传入数据
- * @param min 最小值
- * @param max 最大值
- */
-template <typename Type> Type math_constrain(Type *x, Type min, Type max)
-{
-    if (*x < min)
-    {
-        *x = min;
-    }
-    else if (*x > max)
-    {
-        *x = max;
-    }
-    return (*x);
-}
-
-/**
- * @brief 求绝对值
- *
- * @tparam Type 类型
- * @param x 传入数据
- * @return Type x的绝对值
- */
-template <typename Type> Type math_abs(Type x)
-{
-    return ((x > 0) ? x : -x);
-}
-
-/**
- * @brief 求取模归化
- *
- * @tparam Type 类型
+ * @tparam T 类型
  * @param x 传入数据
  * @param modulus 模数
- * @return Type 返回的归化数, 介于 ±modulus / 2 之间
+ * @return T 返回的归化数, 介于 ±modulus / 2 之间
  */
-template <typename Type> Type math_modulus_normalize(Type x, Type modulus)
+template <typename T> T wrap_center(T x, T modulus)
 {
-    float tmp;
-
-    tmp = fmod(x + modulus / 2.0f, modulus);
-
-    if (tmp < 0.0f)
+    T tmp;
+    tmp = std::fmod(x, modulus);
+    if (tmp < -(modulus / T{2}))
     {
         tmp += modulus;
     }
-
-    return (tmp - modulus / 2.0f);
+    else if (tmp >= (modulus / T{2}))
+    {
+        tmp -= modulus;
+    }
+    return (tmp);
 }
-
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

@@ -311,10 +311,10 @@ void MotorDji::process_data(const uint8_t *rx_data)
         // 反方向转过了一圈
         rx_data_.round_count--;
     }
-    rx_data_.total_encoder = rx_data_.round_count * 8192 + rx_data_.encoder;
 
     // 计算角度
-    rx_data_.angle = (float)rx_data_.total_encoder / (float)8192 * 2.0f * M_PI / gearbox_rate_;
+    rx_data_.total_angle = (rx_data_.round_count + (float)rx_data_.encoder / 8192.0f) * 2.0f * M_PI / gearbox_rate_;
+    rx_data_.angle = wrap_center((double)rx_data_.total_angle, 2.0f * M_PI);
 
     // 存储预备信息
     rx_data_.last_encoder = rx_data_.encoder;
@@ -351,7 +351,7 @@ void MotorDji::calculate_control()
             calculate_mod5_ = 0;
 
             angle_pid_.set_target(target_angle_);
-            angle_pid_.set_feedback(rx_data_.angle);
+            angle_pid_.set_feedback(rx_data_.total_angle);
             angle_pid_.calculate();
         }
 

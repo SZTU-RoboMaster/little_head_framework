@@ -54,7 +54,7 @@ struct MotorDjiRxData
     int16_t current;
     uint8_t temperature;
     uint16_t last_encoder;
-    int32_t total_encoder;
+    float total_angle;
     int16_t round_count;
 };
 

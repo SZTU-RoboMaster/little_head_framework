@@ -62,7 +62,7 @@ void Chassis::update_feedback()
     {
         feedback_.wheel_omega[i] = wheel_motor_[i].rx_data_.omega;
     }
-    resolve_mecanum_forward();
+    mecanum_forward_kinematics();
 }
 
 void Chassis::handle_safety()
@@ -92,7 +92,7 @@ void Chassis::set_mode()
 void Chassis::control()
 {
     // 控制
-    float yaw_error = 0.0f;
+    double yaw_error = 0.0f;
     switch (mode_)
     {
     case CHASSIS_RELAX:
@@ -106,7 +106,8 @@ void Chassis::control()
     }
     case CHASSIS_FOLLOW:
     {
-        yaw_error = remainderf(input_.gimbal_yaw - config_.gimbal_yaw_offset, 2.0f * M_PI);
+        yaw_error =
+            wrap_center((double)(input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * M_PI));
         omega_pid_.set_target(0.0f);
         omega_pid_.set_feedback(yaw_error);
         omega_pid_.calculate();
@@ -142,7 +143,7 @@ void Chassis::solve()
     else
     {
         // 解算
-        resolve_mecanum_inverse();
+        mecanum_inverse_kinematics();
     }
 }
 
@@ -165,7 +166,7 @@ void Chassis::output()
     }
 }
 
-void Chassis::resolve_mecanum_forward()
+void Chassis::mecanum_forward_kinematics()
 {
     // 麦轮解算
     feedback_.velocity_x = (-feedback_.wheel_omega[0] + feedback_.wheel_omega[1] +
@@ -179,7 +180,7 @@ void Chassis::resolve_mecanum_forward()
                       config_.wheel_radius / 4.0f;
 }
 
-void Chassis::resolve_mecanum_inverse()
+void Chassis::mecanum_inverse_kinematics()
 {
     // 麦轮逆解算
     control_output_.wheel_target_omega[0] =

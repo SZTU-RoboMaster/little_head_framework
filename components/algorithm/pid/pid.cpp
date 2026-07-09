@@ -80,7 +80,7 @@ void Pid::calculate()
     float speed_ratio;
 
     error = target_ - feedback_;
-    abs_error = math_abs(error);
+    abs_error = std::abs(error);
 
     // 判断死区
     if (abs_error < dead_zone_)
@@ -129,8 +129,8 @@ void Pid::calculate()
     // 积分限幅
     if (integral_output_limit_ != 0.0f)
     {
-        math_constrain(&integral_error_, -integral_output_limit_ / ki_,
-                       integral_output_limit_ / ki_);
+        integral_error_ = std::clamp(integral_error_, -integral_output_limit_ / ki_, integral_output_limit_ / ki_);
+
     }
     if (integral_separate_threshold_ == 0.0f)
     {
@@ -179,7 +179,7 @@ void Pid::calculate()
     // 输出限幅
     if (output_limit_ != 0.0f)
     {
-        math_constrain(&output_value_, -output_limit_, output_limit_);
+        output_value_ = std::clamp(output_value_, -output_limit_, output_limit_);
     }
 
     // 善后工作

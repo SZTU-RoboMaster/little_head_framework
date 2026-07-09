@@ -36,8 +36,7 @@ struct UartManageObject
 {
     UART_HandleTypeDef *uart_handle;
     uint8_t tx_buffer[UART_BUFFER_SIZE];
-    uint8_t rx_buffer_0[UART_BUFFER_SIZE];
-    uint8_t rx_buffer_1[UART_BUFFER_SIZE];
+    uint8_t rx_buffer[2][UART_BUFFER_SIZE];
     uint16_t rx_buffer_length;
     uart_callback_t callback_func;
 };

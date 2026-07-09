@@ -62,8 +62,8 @@ void Gimbal::update_input()
 void Gimbal::update_feedback()
 {
     feedback_.imu_yaw_angle = ins_angle_[2];
-    feedback_.yaw_angle = motor_yaw_.rx_data_.angle;
-    feedback_.pitch_angle = motor_pitch_.rx_data_.angle;
+    feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
+    feedback_.pitch_angle = motor_pitch_.rx_data_.total_angle;
 
     feedback_.yaw_omega = bmi088_.rx_data_.gyro[2];
     feedback_.pitch_omega = motor_pitch_.rx_data_.omega;
@@ -153,7 +153,8 @@ void Gimbal::control()
 
     // PID计算yaw目标角速度
     static float yaw_error = 0.0f;
-    yaw_error = remainderf(feedback_.imu_yaw_angle - control_output_.target_yaw_angle, 2.0f * M_PI);
+    yaw_error = wrap_center((double)(feedback_.imu_yaw_angle - control_output_.target_yaw_angle),
+                            (2.0f * M_PI));
     yaw_angle_pid_.set_target(0.0f);
     yaw_angle_pid_.set_feedback(yaw_error);
     yaw_angle_pid_.calculate();

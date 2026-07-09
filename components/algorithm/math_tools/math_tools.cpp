@@ -24,9 +24,10 @@
 /* Function prototypes -------------------------------------------------------*/
 
 /**
- * @brief 计算平方根的倒数
+ * @brief 快速计算逆平方根
  *
  * @param x 待计算的浮点数
+ * @note ref: https://en.wikipedia.org/wiki/Fast_inverse_square_root
  * @return float 平方根的倒数
  */
 float inv_sqrt(float x)

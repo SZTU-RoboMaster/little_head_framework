@@ -12,6 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "motor_dm.h"
+#include "math_tools.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -138,14 +139,11 @@ void MotorDm::send_control()
         if (rx_data_.error_status == MOTOR_DM_ERR_STATUS_ENABLE)
         {
             // 电机在线, 正常控制
-            cmd_angle_ = reverse_ ? -target_angle_ : target_angle_;
-            cmd_omega_ = reverse_ ? -target_omega_ : target_omega_;
-            cmd_torque_ = reverse_ ? -target_torque_ : target_torque_;
-            math_constrain(&cmd_angle_, -p_max_, p_max_);
-            math_constrain(&cmd_omega_, -v_max_, v_max_);
-            math_constrain(&cmd_torque_, -t_max_, t_max_);
-            math_constrain(&kp_, 0.0f, 500.0f);
-            math_constrain(&kd_, 0.0f, 5.0f);
+            cmd_angle_ = std::clamp(reverse_ ? -target_angle_ : target_angle_, -p_max_, p_max_);
+            cmd_omega_ = std::clamp(reverse_ ? -target_omega_ : target_omega_, -v_max_, v_max_);
+            cmd_torque_ = std::clamp(reverse_ ? -target_torque_ : target_torque_, -t_max_, t_max_);
+            kp_ = std::clamp(kp_, 0.0f, 500.0f);
+            kd_ = std::clamp(kd_, 0.0f, 5.0f);
 
             output();
         }
@@ -216,10 +214,10 @@ void MotorDm::process_data(const uint8_t *rx_data)
         // 反方向转过了一个P_MAX周期
         rx_data_.position_cycle_count--;
     }
-    rx_data_.total_position = rx_data_.position_cycle_count * 2.0f * p_max_ + rx_data_.position;
+    rx_data_.total_angle = rx_data_.position_cycle_count * 2.0f * p_max_ + rx_data_.position;
 
     // 计算角度, 归化到 -PI ~ PI
-    rx_data_.angle = math_modulus_normalize((double)rx_data_.total_position, 2.0f * M_PI);
+    rx_data_.angle = wrap_center((double)rx_data_.total_angle, 2.0f * M_PI);
 
     // 存储预备信息
     rx_data_.last_position = rx_data_.position;
