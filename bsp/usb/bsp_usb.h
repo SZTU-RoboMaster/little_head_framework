@@ -11,10 +11,6 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 #include "usbd_cdc_if.h"
@@ -27,7 +23,7 @@ extern "C" {
  * @brief USB通信接收回调函数数据类型
  *
  */
-typedef void (*usb_callback_t)(uint8_t *buffer, uint32_t length);
+typedef void (*usb_callback_t)(uint8_t *buf, uint32_t len);
 
 /**
  * @brief USB通信处理结构体
@@ -48,7 +44,4 @@ void usb_init(usb_callback_t callback);
 
 void USB_Rx_Callback(uint8_t *buf, uint32_t len);
 
-#ifdef __cplusplus
-}
-#endif
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

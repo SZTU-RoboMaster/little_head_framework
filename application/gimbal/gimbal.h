@@ -52,7 +52,7 @@ struct GimbalConfig
     // pitch轴回中值
     float pitch_center_angle = 1.6f;
     // yaw轴回中值
-    float yaw_center_angle = 1.0f;
+    float yaw_center_angle = -0.56f;
     // yaw轴KP值
     float yaw_kp;
     // yaw轴KD值

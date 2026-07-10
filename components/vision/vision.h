@@ -66,7 +66,6 @@ struct __attribute__((packed)) VisionData
 class Vision
 {
 public:
-    Vision();
 
     RobotData tx_data_;
 
@@ -74,7 +73,7 @@ public:
 
     VisionStatus vision_status_ = VISION_STATUS_DISABLE;
 
-    static void vision_rx_callback(uint8_t *buf, uint32_t len);
+    void usb_rx_callback(uint8_t *buf, uint32_t len);
 
     void check_alive_100ms();
 
@@ -83,8 +82,6 @@ public:
 protected:
     // 初始化相关常量
 
-    // 静态指针用于在静态函数中访问类成员变量
-    inline static Vision *instance_ = nullptr;
     // 常量
 
     // 内部变量
@@ -105,7 +102,6 @@ protected:
     // 读写变量
 
     // 内部函数
-    void usb_rx_callback(uint8_t *buf, uint32_t len);
 
     void update(uint8_t *buf, uint32_t len);
 };

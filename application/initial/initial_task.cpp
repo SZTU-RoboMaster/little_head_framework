@@ -16,6 +16,7 @@
 #include "bsp_can.h"
 #include "bsp_tim.h"
 #include "bsp_uart.h"
+#include "bsp_usb.h"
 #include "chassis.h"
 #include "dr16.h"
 #include "gimbal.h"
@@ -49,25 +50,25 @@ void device_can1_callback(CanRxBuffer *rx_buffer)
 {
     switch (rx_buffer->header.StdId)
     {
-    case (0x202):
+    case (0x201):
     {
         chassis.wheel_motor_[0].can_rx_callback(rx_buffer->data);
 
         break;
     }
-    case (0x201):
+    case (0x202):
     {
         chassis.wheel_motor_[1].can_rx_callback(rx_buffer->data);
 
         break;
     }
-    case (0x204):
+    case (0x203):
     {
         chassis.wheel_motor_[2].can_rx_callback(rx_buffer->data);
 
         break;
     }
-    case (0x203):
+    case (0x204):
     {
         chassis.wheel_motor_[3].can_rx_callback(rx_buffer->data);
 
@@ -114,6 +115,17 @@ void dr16_uart3_callback(uint8_t *buffer, uint16_t length)
 void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
 {
     gimbal.bmi088_.exti_read_callback(gpio_pin);
+}
+
+/**
+ * @brief USB视觉回调函数
+ *
+ * @param buf 接收的数据
+ * @param len 数据长度
+ */
+void vision_usb_callback(uint8_t *buf, uint32_t len)
+{
+    vision.usb_rx_callback(buf, len);
 }
 
 /**
@@ -166,6 +178,7 @@ void task_init()
     can_init(&hcan2, device_can2_callback);
     uart_init(&huart3, dr16_uart3_callback, 18);
     tim_init(&htim7, task1ms_tim7_callback);
+    usb_init(vision_usb_callback);
 
     init_finished = 1;
 }

@@ -49,7 +49,7 @@ struct CanManageObject
 
 /* Exported variables ---------------------------------------------------------*/
 
-extern "C" uint8_t init_finished;
+extern uint8_t init_finished;
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;

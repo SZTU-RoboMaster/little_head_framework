@@ -12,6 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "gimbal.h"
+#include "motor_dji.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -41,7 +42,7 @@ void Gimbal::init()
     motor_pitch_.angle_pid_.init(0.0f, 0.0f, 0.0f);
     motor_pitch_.omega_pid_.init(0.0f, 0.0f, 0.0f);
     // 电机初始化
-    motor_yaw_.init(&hcan1, 0x205, MOTOR_DJI_CONTROL_METHOD_ANGLE, 1.0f);
+    motor_yaw_.init(&hcan1, 0x205, MOTOR_DJI_CONTROL_METHOD_OMEGA, 1.0f);
     motor_pitch_.init(&hcan2, 0x206, MOTOR_DJI_CONTROL_METHOD_ANGLE, 1.0f);
 
     // 初始化云台状态
@@ -140,7 +141,8 @@ void Gimbal::control()
         control_output_.target_yaw_angle = config_.yaw_center_angle;
 
         if (std::abs(feedback_.pitch_angle - config_.pitch_center_angle) < 0.1f &&
-            std::abs(feedback_.yaw_angle - config_.yaw_center_angle) < 0.1f)
+            std::abs(wrap_center((double)(feedback_.yaw_angle - config_.yaw_center_angle),
+                                 (2.0f * M_PI))) < 0.1f)
         {
             status_.mode = GIMBAL_ACTIVE;
             status_.switching = GIMBAL_SWITCH_IDLE;

@@ -26,28 +26,18 @@
 /* function prototypes -------------------------------------------------------*/
 
 /**
- * @brief 构造函数
- */
-Vision::Vision()
-{
-    // 将当前类的指针赋值给静态指针,以供静态函数访问类成员变量
-    instance_ = this;
-
-    usb_init(vision_rx_callback);
-}
-
-/**
- * @brief 静态回调函数, 用于在静态函数中访问类成员变量
+ * @brief USB通信接收回调函数
  *
  * @param buf 接收的数据
  * @param len 数据长度
  */
-void Vision::vision_rx_callback(uint8_t *buf, uint32_t len)
+void Vision::usb_rx_callback(uint8_t *buf, uint32_t len)
 {
-    if (instance_ != nullptr)
-    {
-        instance_->usb_rx_callback(buf, len);
-    }
+
+    // 滑动窗口, 判断遥控器DR16是否在线
+    rx_flag_ += 1;
+
+    update(buf, len);
 }
 
 /**
@@ -76,21 +66,6 @@ void Vision::send()
     tx_data_.crc16 = get_CRC16_check_sum(reinterpret_cast<uint8_t *>(&tx_data_),
                                          sizeof(tx_data_) - sizeof(tx_data_.crc16), 0xffff);
     CDC_Transmit_FS(reinterpret_cast<uint8_t *>(&tx_data_), sizeof(tx_data_));
-}
-
-/**
- * @brief USB通信接收回调函数
- *
- * @param buf 接收的数据
- * @param len 数据长度
- */
-void Vision::usb_rx_callback(uint8_t *buf, uint32_t len)
-{
-
-    // 滑动窗口, 判断遥控器DR16是否在线
-    rx_flag_ += 1;
-
-    update(buf, len);
 }
 
 /**

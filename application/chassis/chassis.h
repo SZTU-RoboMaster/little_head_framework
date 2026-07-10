@@ -64,7 +64,7 @@ struct ChassisConfig
     float wheel_to_center_distance = 0.59463f;
 
     // 云台偏航角偏移
-    float gimbal_yaw_offset = 1.0f;
+    float gimbal_yaw_offset = -0.56f;
 };
 
 enum ChassisMode

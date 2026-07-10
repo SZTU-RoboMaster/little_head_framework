@@ -30,8 +30,8 @@ set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/Target/usbd_conf.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/App/usb_device.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/App/usbd_desc.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/App/usbd_cdc_if.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../USB_DEVICE/App/usbd_cdc_if.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/main.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/freertos.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/can.c
@@ -107,7 +107,9 @@ set(MX_LINK_LIBS
 	:libarm_cortexM4lf_math.a
     STM32_Drivers
     ${TOOLCHAIN_LINK_LIBRARIES}
-    USB_Device_Library	FreeRTOS	
+    USB_Device_Library
+	FreeRTOS
+	
 )
 # Interface library for includes and symbols
 add_library(stm32cubemx INTERFACE)

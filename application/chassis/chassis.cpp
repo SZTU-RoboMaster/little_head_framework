@@ -41,10 +41,10 @@ void Chassis::init()
         wheel_motor_[i].omega_pid_.init(300.0f, 0.0f, 0.0f);
     }
 
-    wheel_motor_[0].init(&hcan1, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, 14.0f);
-    wheel_motor_[1].init(&hcan1, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, 14.0f);
-    wheel_motor_[2].init(&hcan1, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
-    wheel_motor_[3].init(&hcan1, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, 14.0f);
+    wheel_motor_[0].init(&hcan1, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[1].init(&hcan1, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[2].init(&hcan1, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[3].init(&hcan1, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
 }
 
 void Chassis::update_input()

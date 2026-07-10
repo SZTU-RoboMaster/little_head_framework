@@ -10,11 +10,8 @@
  */
 
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
+
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -46,15 +43,10 @@ extern "C" {
 
 /* Exported variables ---------------------------------------------------------*/
 
-extern uint8_t init_finished;
-
 /* Exported function declarations ---------------------------------------------*/
 
 void task_init();
 
 void task_loop();
 
-#ifdef __cplusplus
-}
-#endif
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

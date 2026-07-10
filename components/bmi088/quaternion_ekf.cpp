@@ -100,8 +100,6 @@ void GravityKf::update(float gx, float gy, float gz, float ax, float ay, float a
 void QuaternionEkf::init(float process_noise1, float process_noise2, float measure_noise,
                          float lambda)
 {
-    // 将当前类的指针赋值给静态指针,以供静态函数访问类成员变量
-    instance_ = this;
 
     ins_.Q1 = process_noise1;
     ins_.Q2 = process_noise2;
@@ -120,6 +118,7 @@ void QuaternionEkf::init(float process_noise1, float process_noise2, float measu
     ins_.filter.xhat_data[2] = 0;
     ins_.filter.xhat_data[3] = 0;
     // 自定义函数初始化,用于扩展或增加kf的基础功能
+    ins_.filter.User_Ptr = this;
     ins_.filter.User_Func0_f = observe_callback;
     ins_.filter.User_Func1_f = linearize_callback;
     ins_.filter.User_Func2_f = set_h_callback;
@@ -384,21 +383,25 @@ void QuaternionEkf::update_xhat(KalmanFilter_t *kf)
 
 void QuaternionEkf::observe_callback(KalmanFilter_t *kf)
 {
-    instance_->observe(kf);
+    auto *self = static_cast<QuaternionEkf *>(kf->User_Ptr);
+    self->observe(kf);
 }
 
 void QuaternionEkf::linearize_callback(KalmanFilter_t *kf)
 {
-    instance_->linearize_f_and_fade_p(kf);
+    auto *self = static_cast<QuaternionEkf *>(kf->User_Ptr);
+    self->linearize_f_and_fade_p(kf);
 }
 
 void QuaternionEkf::set_h_callback(KalmanFilter_t *kf)
 {
-    instance_->set_h_matrix(kf);
+    auto *self = static_cast<QuaternionEkf *>(kf->User_Ptr);
+    self->set_h_matrix(kf);
 }
 
 void QuaternionEkf::update_xhat_callback(KalmanFilter_t *kf)
 {
-    instance_->update_xhat(kf);
+    auto *self = static_cast<QuaternionEkf *>(kf->User_Ptr);
+    self->update_xhat(kf);
 }
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

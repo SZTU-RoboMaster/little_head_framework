@@ -105,9 +105,6 @@ public:
 protected:
     // 初始化相关常量
 
-    // 静态指针用于在静态函数中访问类成员变量
-    inline static QuaternionEkf *instance_ = nullptr;
-
     // clang-format off
     // 状态转移雅可比矩阵初始值
     float f_matrix_[36] = {1, 0, 0, 0, 0, 0,
