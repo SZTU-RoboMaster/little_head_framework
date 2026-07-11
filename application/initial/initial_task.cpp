@@ -14,6 +14,7 @@
 #include "initial_task.h"
 
 #include "bsp_can.h"
+#include "bsp_dwt.h"
 #include "bsp_tim.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
@@ -198,6 +199,8 @@ void task1ms_tim7_callback()
 
 void task_init()
 {
+    dwt_init();
+
     dr16.init(&huart3);
     gimbal.dr16_ = &dr16;
     chassis.dr16_ = &dr16;

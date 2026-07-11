@@ -42,6 +42,14 @@ extern UsbManageObject usb_manage_obj;
 
 void usb_init(usb_callback_t callback);
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void USB_Rx_Callback(uint8_t *buf, uint32_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

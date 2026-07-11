@@ -12,9 +12,9 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "bmi088_interface.h"
+#include "bsp_dwt.h"
 #include "main.h"
 #include "stm32f4xx_hal.h"
-
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -96,34 +96,7 @@ uint8_t spi_rw_byte(uint8_t byte)
  */
 void bmi08_delay_us(uint32_t period, void *intf_ptr)
 {
-    uint32_t ticks = 0;
-    uint32_t told = 0;
-    uint32_t tnow = 0;
-    uint32_t tcnt = 0;
-    uint32_t reload = 0;
-    reload = SysTick->LOAD;
-    ticks = period * 168;
-    told = SysTick->VAL;
-    while (1)
-    {
-        tnow = SysTick->VAL;
-        if (tnow != told)
-        {
-            if (tnow < told)
-            {
-                tcnt += told - tnow;
-            }
-            else
-            {
-                tcnt += reload - tnow + told;
-            }
-            told = tnow;
-            if (tcnt >= ticks)
-            {
-                break;
-            }
-        }
-    }
+    delay_us(period);
 }
 
 /*!

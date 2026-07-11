@@ -139,6 +139,12 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+
+    if (htim->Instance == TIM6)
+    {
+        HAL_IncTick();
+    }
+
     // 判断程序初始化完成
     if (!init_finished)
     {
@@ -179,13 +185,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         if (tim5_manage_obj.callback_func != nullptr)
         {
             tim5_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM6)
-    {
-        if (tim6_manage_obj.callback_func != nullptr)
-        {
-            tim6_manage_obj.callback_func();
         }
     }
     else if (htim->Instance == TIM7)

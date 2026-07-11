@@ -1,7 +1,7 @@
 /**
- * @file task.h
+ * @file bsp_dwt.h
  * @author anchengc
- * @brief
+ * @brief DWT
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -11,48 +11,20 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /* Includes ------------------------------------------------------------------*/
+
+#include "stm32f4xx_hal.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
 
-/**
- * @brief Specialized
- *
- */
-// class
-// {
-// public:
-
-// protected:
-//     // 初始化相关常量
-
-//     // 常量
-
-//     // 内部变量
-
-//     // 读变量
-
-//     // 写变量
-
-//     // 读写变量
-
-//     // 内部函数
-// };
-
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
 
-void task_init();
+void dwt_init();
 
-void task_loop();
+void delay_us(uint32_t us);
 
-#ifdef __cplusplus
-}
-#endif
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+/************************ COPYRIGHT(C) SZTU-HJ **************************/
