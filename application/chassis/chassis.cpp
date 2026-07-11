@@ -33,7 +33,7 @@ void Chassis::init()
 {
 
     // 底盘角速度PID
-    omega_pid_.init(4.0f, 0.0f, 0.0f);
+    omega_pid_.init(5.0f, 0.0f, 0.0f);
 
     // 轮向电机初始化
     for (int i = 0; i < 4; i++)
@@ -41,10 +41,10 @@ void Chassis::init()
         wheel_motor_[i].omega_pid_.init(300.0f, 0.0f, 0.0f);
     }
 
-    wheel_motor_[0].init(&hcan1, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
-    wheel_motor_[1].init(&hcan1, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
-    wheel_motor_[2].init(&hcan1, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
-    wheel_motor_[3].init(&hcan1, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[0].init(&hcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[1].init(&hcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[2].init(&hcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+    wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
 }
 
 void Chassis::update_input()
@@ -106,8 +106,7 @@ void Chassis::control()
     }
     case CHASSIS_FOLLOW:
     {
-        yaw_error =
-            wrap_center((double)(input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * M_PI));
+        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         omega_pid_.set_target(0.0f);
         omega_pid_.set_feedback(yaw_error);
         omega_pid_.calculate();

@@ -72,7 +72,7 @@ public:
     // 电机对外接口信息
     MotorDjiRxData rx_data_;
 
-    void init(CAN_HandleTypeDef *hcan, uint16_t can_rx_id,
+    void init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id,
               MotorDjiControlMethod control_method = MOTOR_DJI_CONTROL_METHOD_OMEGA,
               float gearbox_rate = 1.0f, uint8_t reverse = false);
 
@@ -97,6 +97,8 @@ protected:
 
     // 绑定的CAN
     CanManageObject *can_manage_obj_;
+    // 发数据绑定的CAN id, C6系列0x200/0x1FF, GM系列0x1FE/0x2FE
+    uint16_t can_tx_id_;
     // 收数据绑定的CAN id, C6系列0x201~0x208, GM系列0x205~0x20b
     uint16_t can_rx_id_;
     // 发送缓存区
@@ -152,9 +154,11 @@ protected:
 /* Exported variables ---------------------------------------------------------*/
 
 extern uint8_t can1_0x200_tx_data[];
+extern uint8_t can1_0x1ff_tx_data[];
 extern uint8_t can1_0x1fe_tx_data[];
 extern uint8_t can1_0x2fe_tx_data[];
 extern uint8_t can2_0x200_tx_data[];
+extern uint8_t can2_0x1ff_tx_data[];
 extern uint8_t can2_0x1fe_tx_data[];
 extern uint8_t can2_0x2fe_tx_data[];
 

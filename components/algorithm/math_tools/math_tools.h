@@ -20,9 +20,9 @@
 /* Exported macros -----------------------------------------------------------*/
 
 // rpm换算到rad/s
-#define RPM_TO_RADPS (2.0f * M_PI / 60.0f)
+#define RPM_TO_RADPS (2.0f * PI / 60.0f)
 // deg换算到rad
-#define DEG_TO_RAD (M_PI / 180.0f)
+#define DEG_TO_RAD (PI / 180.0f)
 
 /* Exported types ------------------------------------------------------------*/
 

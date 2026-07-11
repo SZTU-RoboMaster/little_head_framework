@@ -72,6 +72,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/ist8310/ist8310driver.c
     components/ist8310/ist8310driver_middleware.c
     application/gimbal/gimbal.cpp
+    application/shoot/shoot.cpp
     application/chassis/chassis.cpp
     application/initial/initial_task.cpp
     bsp/usb/bsp_usb.cpp
@@ -98,6 +99,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/gimbal
     application/chassis
     application/initial
+    application/shoot
     bsp/usb
     components/vision
 )

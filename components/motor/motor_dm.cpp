@@ -50,7 +50,7 @@ uint8_t dm_motor_save_zero_msg[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0
  * @param kd MIT控制的K_D
  * @param __I_Max 最大电流, 与上位机串口中上电打印Imax保持一致
  */
-void MotorDm::init(CAN_HandleTypeDef *hcan, uint8_t can_id, uint8_t master_id,
+void MotorDm::init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
                    MotorDmControlMethod control_method, float p_max, float v_max, float t_max,
                    float kp, float kd, uint8_t reverse)
 {
@@ -217,7 +217,7 @@ void MotorDm::process_data(const uint8_t *rx_data)
     rx_data_.total_angle = rx_data_.position_cycle_count * 2.0f * p_max_ + rx_data_.position;
 
     // 计算角度, 归化到 -PI ~ PI
-    rx_data_.angle = wrap_center((double)rx_data_.total_angle, 2.0f * M_PI);
+    rx_data_.angle = wrap_center(rx_data_.total_angle, 2.0f * PI);
 
     // 存储预备信息
     rx_data_.last_position = rx_data_.position;

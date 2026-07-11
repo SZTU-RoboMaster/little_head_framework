@@ -20,6 +20,7 @@
 #include "chassis.h"
 #include "dr16.h"
 #include "gimbal.h"
+#include "shoot.h"
 #include "vision.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -33,6 +34,7 @@ uint32_t flag = 0;
 
 Chassis chassis;
 Gimbal gimbal;
+Shoot shoot;
 
 Dr16 dr16;
 Vision vision;
@@ -92,7 +94,25 @@ void device_can2_callback(CanRxBuffer *rx_buffer)
 {
     switch (rx_buffer->header.StdId)
     {
-    case (0x206):
+    case (0x201):
+    {
+        shoot.trigger_.can_rx_callback(rx_buffer->data);
+
+        break;
+    }
+    case (0x202):
+    {
+        shoot.friction_left_.can_rx_callback(rx_buffer->data);
+
+        break;
+    }
+    case (0x203):
+    {
+        shoot.friction_right_.can_rx_callback(rx_buffer->data);
+
+        break;
+    }
+    case (0x205):
     {
         gimbal.motor_pitch_.can_rx_callback(rx_buffer->data);
 
@@ -112,6 +132,11 @@ void dr16_uart3_callback(uint8_t *buffer, uint16_t length)
     dr16.uart_rx_callback(buffer, length);
 }
 
+/**
+ * @brief 外部中断回调函数
+ *
+ * @param gpio_pin 中断引脚
+ */
 void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
 {
     gimbal.bmi088_.exti_read_callback(gpio_pin);
@@ -148,6 +173,10 @@ void task1ms_tim7_callback()
         {
             chassis.wheel_motor_[i].check_alive_100ms();
         }
+
+        shoot.trigger_.check_alive_100ms();
+        shoot.friction_left_.check_alive_100ms();
+        shoot.friction_right_.check_alive_100ms();
     }
 
     gimbal.motor_yaw_.calculate();
@@ -156,9 +185,13 @@ void task1ms_tim7_callback()
     {
         chassis.wheel_motor_[i].calculate();
     }
+    shoot.trigger_.calculate();
+    shoot.friction_left_.calculate();
+    shoot.friction_right_.calculate();
     can_data_send(can1_manage_obj.can_handle, 0x200, can1_0x200_tx_data, 8);
     can_data_send(can1_manage_obj.can_handle, 0x1fe, can1_0x1fe_tx_data, 8);
     can_data_send(can2_manage_obj.can_handle, 0x1fe, can2_0x1fe_tx_data, 8);
+    can_data_send(can2_manage_obj.can_handle, 0x200, can2_0x200_tx_data, 8);
 
     flag++;
 }
@@ -168,9 +201,11 @@ void task_init()
     dr16.init(&huart3);
     gimbal.dr16_ = &dr16;
     chassis.dr16_ = &dr16;
+    shoot.dr16_ = &dr16;
 
     gimbal.init();
     chassis.init();
+    shoot.init();
 
     // HAL_Delay(300);
 
@@ -223,6 +258,14 @@ void task_loop()
         chassis.control();
         chassis.solve();
         chassis.output();
+
+        shoot.update_input();
+        shoot.update_feedback();
+        shoot.handle_safety();
+        shoot.set_mode();
+        shoot.update_control_state();
+        shoot.control();
+        shoot.output();
 
         vision.tx_data_.yaw = gimbal.ins_angle_[2];
         vision.send();

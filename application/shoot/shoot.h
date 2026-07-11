@@ -87,7 +87,7 @@ class Shoot
 {
 public:
     // 遥控器
-    Dr16 dr16_;
+    Dr16 *dr16_;
 
     // 拨弹盘电机
     MotorDji trigger_;

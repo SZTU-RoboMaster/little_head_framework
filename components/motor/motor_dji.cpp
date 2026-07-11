@@ -22,9 +22,11 @@
 // CAN通信发送缓冲区
 
 uint8_t can1_0x200_tx_data[8];
+uint8_t can1_0x1ff_tx_data[8];
 uint8_t can1_0x1fe_tx_data[8];
 uint8_t can1_0x2fe_tx_data[8];
 uint8_t can2_0x200_tx_data[8];
+uint8_t can2_0x1ff_tx_data[8];
 uint8_t can2_0x1fe_tx_data[8];
 uint8_t can2_0x2fe_tx_data[8];
 
@@ -39,154 +41,53 @@ uint8_t can2_0x2fe_tx_data[8];
  * @param can_id CAN id
  * @return uint8_t* 缓冲区指针
  */
-uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_id)
+uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id)
 {
-    uint8_t *tmp_tx_data_ptr = nullptr;
     if (hcan == &hcan1)
     {
-        switch (can_id)
+        switch (can_tx_id)
         {
-        case (0x201):
+        case (0x200):
         {
-            tmp_tx_data_ptr = &(can1_0x200_tx_data[0]);
-
-            break;
+            return &(can1_0x200_tx_data[(can_rx_id - 0x201) * 2]);
         }
-        case (0x202):
+        case (0x1ff):
         {
-            tmp_tx_data_ptr = &(can1_0x200_tx_data[2]);
-
-            break;
+            return &(can1_0x1ff_tx_data[(can_rx_id - 0x205) * 2]);
         }
-        case (0x203):
+        case (0x1fe):
         {
-            tmp_tx_data_ptr = &(can1_0x200_tx_data[4]);
-
-            break;
+            return &(can1_0x1fe_tx_data[(can_rx_id - 0x205) * 2]);
         }
-        case (0x204):
+        case (0x2fe):
         {
-            tmp_tx_data_ptr = &(can1_0x200_tx_data[6]);
-
-            break;
-        }
-        case (0x205):
-        {
-            tmp_tx_data_ptr = &(can1_0x1fe_tx_data[0]);
-
-            break;
-        }
-        case (0x206):
-        {
-            tmp_tx_data_ptr = &(can1_0x1fe_tx_data[2]);
-
-            break;
-        }
-        case (0x207):
-        {
-            tmp_tx_data_ptr = &(can1_0x1fe_tx_data[4]);
-
-            break;
-        }
-        case (0x208):
-        {
-            tmp_tx_data_ptr = &(can1_0x1fe_tx_data[6]);
-
-            break;
-        }
-        case (0x209):
-        {
-            tmp_tx_data_ptr = &(can1_0x2fe_tx_data[0]);
-
-            break;
-        }
-        case (0x20a):
-        {
-            tmp_tx_data_ptr = &(can1_0x2fe_tx_data[2]);
-
-            break;
-        }
-        case (0x20b):
-        {
-            tmp_tx_data_ptr = &(can1_0x2fe_tx_data[4]);
-
-            break;
+            return &(can1_0x2fe_tx_data[(can_rx_id - 0x209) * 2]);
         }
         }
     }
     else if (hcan == &hcan2)
     {
-        switch (can_id)
+        switch (can_tx_id)
         {
-        case (0x201):
+        case (0x200):
         {
-            tmp_tx_data_ptr = &(can2_0x200_tx_data[0]);
-
-            break;
+            return &(can2_0x200_tx_data[(can_rx_id - 0x201) * 2]);
         }
-        case (0x202):
+        case (0x1ff):
         {
-            tmp_tx_data_ptr = &(can2_0x200_tx_data[2]);
-
-            break;
+            return &(can2_0x1ff_tx_data[(can_rx_id - 0x205) * 2]);
         }
-        case (0x203):
+        case (0x1fe):
         {
-            tmp_tx_data_ptr = &(can2_0x200_tx_data[4]);
-
-            break;
+            return &(can2_0x1fe_tx_data[(can_rx_id - 0x205) * 2]);
         }
-        case (0x204):
+        case (0x2fe):
         {
-            tmp_tx_data_ptr = &(can2_0x200_tx_data[6]);
-
-            break;
-        }
-        case (0x205):
-        {
-            tmp_tx_data_ptr = &(can2_0x1fe_tx_data[0]);
-
-            break;
-        }
-        case (0x206):
-        {
-            tmp_tx_data_ptr = &(can2_0x1fe_tx_data[2]);
-
-            break;
-        }
-        case (0x207):
-        {
-            tmp_tx_data_ptr = &(can2_0x1fe_tx_data[4]);
-
-            break;
-        }
-        case (0x208):
-        {
-            tmp_tx_data_ptr = &(can2_0x1fe_tx_data[6]);
-
-            break;
-        }
-        case (0x209):
-        {
-            tmp_tx_data_ptr = &(can2_0x2fe_tx_data[0]);
-
-            break;
-        }
-        case (0x20a):
-        {
-            tmp_tx_data_ptr = &(can2_0x2fe_tx_data[2]);
-
-            break;
-        }
-        case (0x20b):
-        {
-            tmp_tx_data_ptr = &(can2_0x2fe_tx_data[4]);
-
-            break;
+            return &(can2_0x2fe_tx_data[(can_rx_id - 0x209) * 2]);
         }
         }
     }
-    return (tmp_tx_data_ptr);
+    return nullptr;
 }
 
 /**
@@ -197,7 +98,7 @@ uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_id)
  * @param control_method 控制方法
  * @param gearbox_rate 减速比
  */
-void MotorDji::init(CAN_HandleTypeDef *hcan, uint16_t can_rx_id,
+void MotorDji::init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id,
                     MotorDjiControlMethod control_method, float gearbox_rate, uint8_t reverse)
 {
     if (hcan->Instance == CAN1)
@@ -208,11 +109,12 @@ void MotorDji::init(CAN_HandleTypeDef *hcan, uint16_t can_rx_id,
     {
         can_manage_obj_ = &can2_manage_obj;
     }
+    can_tx_id_ = can_tx_id;
     can_rx_id_ = can_rx_id;
     control_method_ = control_method;
     gearbox_rate_ = gearbox_rate;
     reverse_ = reverse;
-    tx_data_ = allocate_tx_data(hcan, can_rx_id);
+    tx_data_ = allocate_tx_data(hcan, can_tx_id, can_rx_id);
 }
 
 /**
@@ -313,8 +215,9 @@ void MotorDji::process_data(const uint8_t *rx_data)
     }
 
     // 计算角度
-    rx_data_.total_angle = (rx_data_.round_count + (float)rx_data_.encoder / 8192.0f) * 2.0f * M_PI / gearbox_rate_;
-    rx_data_.angle = wrap_center((double)rx_data_.total_angle, 2.0f * M_PI);
+    rx_data_.total_angle =
+        (rx_data_.round_count + (float)rx_data_.encoder / 8192.0f) * 2.0f * PI / gearbox_rate_;
+    rx_data_.angle = wrap_center(rx_data_.total_angle, 2.0f * PI);
 
     // 存储预备信息
     rx_data_.last_encoder = rx_data_.encoder;

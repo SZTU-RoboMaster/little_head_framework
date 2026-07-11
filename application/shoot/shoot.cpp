@@ -31,39 +31,36 @@
 void Shoot::init()
 {
 
-    // 遥控器初始化
-    dr16_.init(&huart3);
-
     // 拨弹盘电机初始化
-    trigger_.angle_pid_.init(400.0f, 0.0f, 0.0f);
-    trigger_.omega_pid_.init(40.0f, 0.0f, 0.0f);
-    trigger_.init(&hcan2, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
+    trigger_.angle_pid_.init(30.0f, 0.0f, 0.0f);
+    trigger_.omega_pid_.init(1000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
+    trigger_.init(&hcan2, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
 
     // 摩擦轮电机初始化
     friction_left_.omega_pid_.init(40.0f, 0.0f, 0.0f);
-    friction_left_.init(&hcan2, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    friction_left_.init(&hcan2, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
     friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f);
-    friction_right_.init(&hcan2, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 }
 
 uint8_t sw_1_up, wheel_up;
 void Shoot::update_input()
 {
-    input_.sw_1 = dr16_.data_.sw_1;
-    input_.sw_2 = dr16_.data_.sw_2;
-    input_.wheel = dr16_.data_.wheel;
+    input_.sw_1 = dr16_->data_.sw_1;
+    input_.sw_2 = dr16_->data_.sw_2;
+    input_.wheel = dr16_->data_.wheel;
 
     //////////////////////////////////////////////////////////////////////////////////////////
     // 临时写个上升沿，后面写到遥控器里
-    static uint8_t last_sw_1, mod10 = 0;
+    static uint8_t last_sw_1, mod20 = 0;
     sw_1_up = (last_sw_1 == 3 && input_.sw_1 == 1) ? 1 : 0;
     last_sw_1 = input_.sw_1;
 
     static uint16_t last_wheel = 0;
     wheel_up = (last_wheel < 300 && input_.wheel > 300) ? 1 : 0;
-    if (++mod10 >= 20)
+    if (mod20++ >= 20)
     {
-        mod10 = 0;
+        mod20 = 0;
         last_wheel = input_.wheel;
     }
 
@@ -77,7 +74,7 @@ void Shoot::update_input()
 
 void Shoot::update_feedback()
 {
-    feedback_.trigger_angle = trigger_.rx_data_.angle;
+    feedback_.trigger_angle = trigger_.rx_data_.total_angle;
     feedback_.trigger_omega = trigger_.rx_data_.omega;
     feedback_.trigger_current = trigger_.rx_data_.current;
 }
@@ -116,7 +113,7 @@ void Shoot::set_mode()
     case SHOOT_SINGLE:
     case SHOOT_DOUBLE:
     case SHOOT_TRIPLE:
-        if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.1f)
+        if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.0135f)
         {
             shoot_mode_ = SHOOT_IDLE;
             return;
@@ -173,98 +170,27 @@ void Shoot::control()
 
         if (single_shot_pending_)
         {
-            control_output_.target_trigger_angle -= 2.0f * M_PI / 8.0f;
+            control_output_.target_trigger_angle -= 2.0f * PI / 8.0f;
             single_shot_pending_ = false;
         }
         break;
 
     case TRIGGER_SPEED:
         trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        control_output_.target_trigger_omega = -5000.0f;
+        control_output_.target_trigger_omega = -30.0f;
 
         break;
     case TRIGGER_BLOCK:
         trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_ANGLE);
         if (block_recovery_pending_)
         {
-            control_output_.target_trigger_angle = feedback_.trigger_angle - 2.0f * M_PI / 8.0f;
+            control_output_.target_trigger_angle = feedback_.trigger_angle - 2.0f * PI / 8.0f;
             block_recovery_pending_ = false;
         }
 
         break;
     }
 }
-
-// void Shoot::control()
-// {
-
-//     // 摩擦轮控制
-//     if (!fric_enabled)
-//     {
-//         friction_left.set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-//         friction_right.set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-//         control_output.target_left_fric_current = 0.0f;
-//         control_output.target_right_fric_current = 0.0f;
-//         friction_left.set_target_current(control_output.target_left_fric_current);
-//         friction_right.set_target_current(control_output.target_right_fric_current);
-
-//     }
-//     else
-//     {
-//         friction_left.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-//         friction_right.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-//         control_output.target_left_fric_omega = -fric_target_omega;
-//         control_output.target_right_fric_omega = fric_target_omega;
-//         friction_left.set_target_omega(control_output.target_left_fric_omega);
-//         friction_right.set_target_omega(control_output.target_right_fric_omega);
-//     }
-
-//     // 拨盘控制
-//     switch (trigger_state)
-//     {
-//     case TRIGGER_RELAX:
-//         trigger.set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-//         control_output.target_trigger_current = 0.0f;
-//         control_output.target_trigger_angle = feedback.trigger_angle;
-//         trigger.set_target_current(control_output.target_trigger_current);
-
-//         break;
-//     case TRIGGER_IDLE:
-//         trigger.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-//         control_output.target_trigger_omega = 0.0f;
-//         control_output.target_trigger_angle = feedback.trigger_angle;
-//         trigger.set_target_omega(control_output.target_trigger_omega);
-
-//         break;
-//     case TRIGGER_ANGLE:
-//         trigger.set_control_method(MOTOR_DJI_CONTROL_METHOD_ANGLE);
-
-//         if (single_shot_pending)
-//         {
-//             control_output.target_trigger_angle += 2.0f * M_PI / 8.0f;
-//             single_shot_pending = false;
-//         }
-//         trigger.set_target_angle(control_output.target_trigger_angle);
-//         break;
-
-//     case TRIGGER_SPEED:
-//         trigger.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-//         control_output.target_trigger_omega = -5000.0f;
-//         trigger.set_target_omega(control_output.target_trigger_omega);
-
-//         break;
-//     case TRIGGER_BLOCK:
-//         trigger.set_control_method(MOTOR_DJI_CONTROL_METHOD_ANGLE);
-//         if (block_recovery_pending)
-//         {
-//             control_output.target_trigger_angle = feedback.trigger_angle - 2.0f * M_PI / 8.0f;
-//             block_recovery_pending = false;
-//         }
-//         trigger.set_target_angle(control_output.target_trigger_angle);
-
-//         break;
-//     }
-// }
 
 void Shoot::output()
 {
