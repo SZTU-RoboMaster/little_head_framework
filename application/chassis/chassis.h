@@ -70,6 +70,7 @@ struct ChassisConfig
 enum ChassisMode
 {
     CHASSIS_RELAX,  // 底盘失能
+    CHASSIS_ONLY,   // 底盘独立
     CHASSIS_FOLLOW, // 底盘跟随
     CHASSIS_SPIN,   // 小陀螺
 };
@@ -105,8 +106,6 @@ public:
     void solve();
 
     void output();
-
-    inline void set_gimbal_yaw(float angle);
 
 protected:
     // 初始化相关常量
@@ -145,10 +144,5 @@ protected:
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
-
-inline void Chassis::set_gimbal_yaw(float angle)
-{
-    input_.gimbal_yaw = angle;
-}
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

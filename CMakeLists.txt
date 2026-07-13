@@ -65,8 +65,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/algorithm/math_tools/math_tools.cpp
     components/algorithm/kf/kalman_filter.c
     components/algorithm/pid/pid.cpp
-    components/ist8310/ist8310driver.c
-    components/ist8310/ist8310driver_middleware.c
+    # components/ist8310/ist8310driver.cpp
+    # components/ist8310/ist8310driver_middleware.cpp
     components/vision/vision.cpp
     Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_init_f32.c
     Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_add_f32.c
@@ -78,6 +78,10 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/shoot/shoot.cpp
     application/chassis/chassis.cpp
     application/initial/initial_task.cpp
+    application/INS/INS_task.cpp
+    application/gimbal/gimbal_task.cpp
+    application/chassis/chassis_task.cpp
+    application/shoot/shoot_task.cpp
 )
 
 # Add include paths
@@ -104,6 +108,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/chassis
     application/initial
     application/shoot
+    application/INS
 )
 
 # Add project symbols (macros)

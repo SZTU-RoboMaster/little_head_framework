@@ -1,7 +1,7 @@
 /**
- * @file task.h
+ * @file template.h
  * @author anchengc
- * @brief
+ * @brief 
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -11,10 +11,8 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /* Includes ------------------------------------------------------------------*/
+#include "shoot.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -45,12 +43,7 @@ extern "C" {
 // };
 
 /* Exported variables ---------------------------------------------------------*/
-
+extern Shoot shoot;
 /* Exported function declarations ---------------------------------------------*/
 
-void task_init();
-
-#ifdef __cplusplus
-}
-#endif
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

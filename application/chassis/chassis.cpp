@@ -79,7 +79,7 @@ void Chassis::set_mode()
         mode_ = CHASSIS_RELAX;
         break;
     case 3:
-        mode_ = CHASSIS_RELAX;
+        mode_ = CHASSIS_ONLY;
         break;
     case 1:
         mode_ = CHASSIS_FOLLOW;
@@ -92,7 +92,7 @@ void Chassis::set_mode()
 void Chassis::control()
 {
     // 控制
-    double yaw_error = 0.0f;
+    // double yaw_error = 0.0f;
     switch (mode_)
     {
     case CHASSIS_RELAX:
@@ -104,30 +104,41 @@ void Chassis::control()
         }
         break;
     }
-    case CHASSIS_FOLLOW:
+    case CHASSIS_ONLY:
     {
-        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
-        omega_pid_.set_target(0.0f);
-        omega_pid_.set_feedback(yaw_error);
-        omega_pid_.calculate();
         for (int i = 0; i < 4; i++)
         {
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
         control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
         control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
-        control_output_.target_omega = -omega_pid_.get_output();
+        control_output_.target_omega = input_.ch_2 / 660.0f * 4.27f;
+        break;
+    }
+    case CHASSIS_FOLLOW:
+    {
+        // yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        // omega_pid_.set_target(0.0f);
+        // omega_pid_.set_feedback(yaw_error);
+        // omega_pid_.calculate();
+        // for (int i = 0; i < 4; i++)
+        // {
+        //     wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
+        // }
+        // control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
+        // control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
+        // control_output_.target_omega = -omega_pid_.get_output();
         break;
     }
     case CHASSIS_SPIN:
     {
-        for (int i = 0; i < 4; i++)
-        {
-            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        }
-        control_output_.target_velocity_x = 0.0f;
-        control_output_.target_velocity_y = 0.0f;
-        control_output_.target_omega = input_.ch_1 * 0.0f;
+        // for (int i = 0; i < 4; i++)
+        // {
+        //     wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
+        // }
+        // control_output_.target_velocity_x = 0.0f;
+        // control_output_.target_velocity_y = 0.0f;
+        // control_output_.target_omega = input_.ch_1 * 0.0f;
         break;
     }
     }

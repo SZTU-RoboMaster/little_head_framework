@@ -132,8 +132,6 @@ protected:
     uint8_t fric_enabled_ = false;
     // 单发flag
     uint8_t single_shot_pending_ = false;
-    // 堵转flag
-    uint8_t block_recovery_pending_ = false;
 
     // 停火热量阈值
     float heat_ceasefire_threshold_ = 20.0f;

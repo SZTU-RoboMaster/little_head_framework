@@ -12,7 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "gimbal.h"
-#include "motor_dji.h"
+#include "INS_task.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -28,19 +28,14 @@
  * @brief
  *
  * @param
-
  */
 void Gimbal::init()
 {
-    // 陀螺仪还要优化
-    // 云台陀螺仪初始化
-    bmi088_.init();
-
     // 云台电机PID初始化
-    yaw_angle_pid_.init(60.0f, 0.0f, 0.0f);
-    motor_yaw_.omega_pid_.init(1000.0f, 0.0f, 0.0f);
-    motor_pitch_.angle_pid_.init(40.0f, 0.0f, 0.0f);
-    motor_pitch_.omega_pid_.init(1000.0f, 0.0f, 0.0f);
+    yaw_angle_pid_.init(6.0f, 0.0f, 0.3f);
+    motor_yaw_.omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    motor_pitch_.angle_pid_.init(10.0f, 0.0f, 0.0f);
+    motor_pitch_.omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     // 电机初始化
     motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_OMEGA, 1.0f);
     motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_ANGLE, 1.0f);
@@ -62,11 +57,11 @@ void Gimbal::update_input()
 
 void Gimbal::update_feedback()
 {
-    feedback_.imu_yaw_angle = ins_angle_[2];
+    feedback_.imu_yaw_angle = ins.quaternion_ekf_.ins_.angle[2];
     feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
     feedback_.pitch_angle = motor_pitch_.rx_data_.total_angle;
 
-    feedback_.yaw_omega = bmi088_.rx_data_.gyro[2];
+    feedback_.yaw_omega = ins.bmi088_.rx_data_.gyro[2];
     feedback_.pitch_omega = motor_pitch_.rx_data_.omega;
 }
 
@@ -126,6 +121,8 @@ void Gimbal::update_control_state()
 
 void Gimbal::control()
 {
+    float yaw_error = 0.0f;
+
     switch (status_.switching)
     {
     case GIMBAL_SWITCH_IDLE:
@@ -134,18 +131,24 @@ void Gimbal::control()
         // 后续把输入量改成control_judge的输出量
         control_output_.target_pitch_angle += input_.ch_3 / 660.0f / 500.0f;
         control_output_.target_yaw_angle += input_.ch_2 / 660.0f / 500.0f;
+        yaw_error =
+            wrap_center((feedback_.imu_yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
         break;
 
     case GIMBAL_SWITCH_TO_MIDDLE:
         control_output_.target_pitch_angle = config_.pitch_center_angle;
         control_output_.target_yaw_angle = config_.yaw_center_angle;
 
+        yaw_error =
+            wrap_center((feedback_.yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
         if (std::abs(feedback_.pitch_angle - config_.pitch_center_angle) < 0.1f &&
             std::abs(wrap_center((feedback_.yaw_angle - config_.yaw_center_angle), (2.0f * PI))) <
                 0.1f)
         {
             status_.mode = GIMBAL_ACTIVE;
             status_.switching = GIMBAL_SWITCH_IDLE;
+            control_output_.target_pitch_angle = feedback_.pitch_angle;
+            control_output_.target_yaw_angle = feedback_.imu_yaw_angle;
         }
         break;
 
@@ -153,10 +156,6 @@ void Gimbal::control()
         break;
     }
 
-    // PID计算yaw目标角速度
-    static float yaw_error = 0.0f;
-    yaw_error =
-        wrap_center((feedback_.imu_yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
     yaw_angle_pid_.set_target(0.0f);
     yaw_angle_pid_.set_feedback(yaw_error);
     yaw_angle_pid_.calculate();

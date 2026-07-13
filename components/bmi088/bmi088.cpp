@@ -99,9 +99,6 @@ int8_t Bmi088::init(void)
         rslt = enable_bmi08_interrupt();
     }
 
-    gravity_kf_.init(1, 2000);
-    quaternion_ekf_.init(10, 0.001, 1000000, 0.9996);
-
     return rslt;
 }
 
@@ -247,8 +244,6 @@ void Bmi088::exti_read_callback(uint16_t gpio_pin)
         rx_data_.gyro[2] = lsb_to_dps(raw_gyro_.z, (float)2000, 16) * DEG_TO_RAD;
 
         calibrate_gyro_bias_z(rx_data_.gyro[2]);
-
-        update_flag_ = 1;
     }
 }
 

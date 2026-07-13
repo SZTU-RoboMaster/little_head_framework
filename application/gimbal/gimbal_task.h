@@ -1,7 +1,7 @@
 /**
- * @file task.h
+ * @file template.hpp
  * @author anchengc
- * @brief
+ * @brief 
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -11,10 +11,8 @@
 
 #pragma once
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 /* Includes ------------------------------------------------------------------*/
+#include "gimbal.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -45,12 +43,8 @@ extern "C" {
 // };
 
 /* Exported variables ---------------------------------------------------------*/
+extern Gimbal gimbal;
 
 /* Exported function declarations ---------------------------------------------*/
 
-void task_init();
-
-#ifdef __cplusplus
-}
-#endif
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

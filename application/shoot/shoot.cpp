@@ -12,6 +12,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "shoot.h"
+#include "motor_dji.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -32,14 +33,14 @@ void Shoot::init()
 {
 
     // 拨弹盘电机初始化
-    trigger_.angle_pid_.init(30.0f, 0.0f, 0.0f);
-    trigger_.omega_pid_.init(1000.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
+    trigger_.angle_pid_.init(15.0f, 0.0f, 0.0f, 0.0f, 0.0f, 48.0f, 0.005f);
+    trigger_.omega_pid_.init(500.0f, 25000.40f, 0.0f, 0.0f, 3000.0f, 10000.0f);
     trigger_.init(&hcan2, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
 
     // 摩擦轮电机初始化
-    friction_left_.omega_pid_.init(40.0f, 0.0f, 0.0f);
+    friction_left_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     friction_left_.init(&hcan2, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
-    friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f);
+    friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 }
 
@@ -113,7 +114,7 @@ void Shoot::set_mode()
     case SHOOT_SINGLE:
     case SHOOT_DOUBLE:
     case SHOOT_TRIPLE:
-        if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.0135f)
+        if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
         {
             shoot_mode_ = SHOOT_IDLE;
             return;
@@ -146,8 +147,8 @@ void Shoot::control()
     }
     else
     {
-        control_output_.target_left_fric_omega = fric_target_omega_;
-        control_output_.target_right_fric_omega = -fric_target_omega_;
+        control_output_.target_left_fric_omega = -fric_target_omega_;
+        control_output_.target_right_fric_omega = fric_target_omega_;
     }
 
     // 拨盘控制
@@ -181,12 +182,10 @@ void Shoot::control()
 
         break;
     case TRIGGER_BLOCK:
-        trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_ANGLE);
-        if (block_recovery_pending_)
-        {
-            control_output_.target_trigger_angle = feedback_.trigger_angle - 2.0f * PI / 8.0f;
-            block_recovery_pending_ = false;
-        }
+        trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
+
+            control_output_.target_trigger_omega = 30.0f;
+
 
         break;
     }
@@ -281,7 +280,6 @@ void Shoot::update_block_state()
         break;
     case BLOCK_CONFIRMED:
         block_state_ = BLOCK_PROCESSING;
-        block_recovery_pending_ = true;
         cnt = 0;
 
         break;
@@ -289,6 +287,7 @@ void Shoot::update_block_state()
         if (cnt > block_recovery_time_threshold_)
         {
             block_state_ = BLOCK_NORMAL;
+
         }
 
         break;

@@ -18,11 +18,13 @@
 #include "bsp_tim.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
-#include "chassis.h"
 #include "dr16.h"
-#include "gimbal.h"
-#include "shoot.h"
+#include "gimbal_task.h"
+#include "INS_task.h"
+#include "chassis_task.h"
+#include "shoot_task.h"
 #include "vision.h"
+
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -33,12 +35,9 @@
 uint8_t init_finished = 0;
 uint32_t flag = 0;
 
-Chassis chassis;
-Gimbal gimbal;
-Shoot shoot;
-
 Dr16 dr16;
 Vision vision;
+
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -140,7 +139,15 @@ void dr16_uart3_callback(uint8_t *buffer, uint16_t length)
  */
 void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
 {
-    gimbal.bmi088_.exti_read_callback(gpio_pin);
+    if (gpio_pin == INT1_ACCEL_Pin || gpio_pin == INT1_GYRO_Pin)
+    {
+        ins.bmi088_.exti_read_callback(gpio_pin);
+
+        if (gpio_pin == INT1_GYRO_Pin && insTaskHandle != NULL)
+        {
+            osThreadFlagsSet(insTaskHandle, INS_DATA_READY_FLAG);
+        }
+    }
 }
 
 /**
@@ -206,12 +213,6 @@ void task_init()
     chassis.dr16_ = &dr16;
     shoot.dr16_ = &dr16;
 
-    gimbal.init();
-    chassis.init();
-    shoot.init();
-
-    // HAL_Delay(300);
-
     can_init(&hcan1, device_can1_callback);
     can_init(&hcan2, device_can2_callback);
     uart_init(&huart3, dr16_uart3_callback, 18);
@@ -219,60 +220,6 @@ void task_init()
     usb_init(vision_usb_callback);
 
     init_finished = 1;
-}
-
-void task_loop()
-{
-    if (gimbal.bmi088_.update_flag_)
-    {
-        gimbal.bmi088_.update_flag_ = 0;
-        gimbal.bmi088_.gravity_kf_.update(
-            gimbal.bmi088_.rx_data_.gyro[0], gimbal.bmi088_.rx_data_.gyro[1],
-            gimbal.bmi088_.rx_data_.gyro[2], gimbal.bmi088_.rx_data_.accel[0],
-            gimbal.bmi088_.rx_data_.accel[1], gimbal.bmi088_.rx_data_.accel[2], 0.001f);
-        gimbal.bmi088_.quaternion_ekf_.update(
-            gimbal.bmi088_.rx_data_.gyro[0], gimbal.bmi088_.rx_data_.gyro[1],
-            gimbal.bmi088_.rx_data_.gyro[2], gimbal.bmi088_.gravity_kf_.gravity_vec_[0],
-            gimbal.bmi088_.gravity_kf_.gravity_vec_[1], gimbal.bmi088_.gravity_kf_.gravity_vec_[2],
-            0.001f);
-        gimbal.ins_angle_[0] = gimbal.bmi088_.quaternion_ekf_.ins_.angle[0];
-        gimbal.ins_angle_[1] = -gimbal.bmi088_.quaternion_ekf_.ins_.angle[1];
-        gimbal.ins_angle_[2] = gimbal.bmi088_.quaternion_ekf_.ins_.angle[2];
-    }
-
-    static uint32_t pre_flag = 0;
-    if (flag != pre_flag)
-    {
-        pre_flag = flag;
-
-        gimbal.update_input();
-        gimbal.update_feedback();
-        gimbal.handle_safety();
-        gimbal.set_mode();
-        gimbal.update_control_state();
-        gimbal.control();
-        gimbal.output();
-
-        chassis.set_gimbal_yaw(gimbal.get_yaw());
-        chassis.update_input();
-        chassis.update_feedback();
-        chassis.handle_safety();
-        chassis.set_mode();
-        chassis.control();
-        chassis.solve();
-        chassis.output();
-
-        shoot.update_input();
-        shoot.update_feedback();
-        shoot.handle_safety();
-        shoot.set_mode();
-        shoot.update_control_state();
-        shoot.control();
-        shoot.output();
-
-        vision.tx_data_.yaw = gimbal.ins_angle_[2];
-        vision.send();
-    }
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

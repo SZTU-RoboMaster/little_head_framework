@@ -14,7 +14,7 @@
 #include "bmi088_interface.h"
 #include "bsp_dwt.h"
 #include "main.h"
-#include "stm32f4xx_hal.h"
+#include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -209,7 +209,7 @@ int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, enum bmi08_va
         /* Configure max read/write length (in bytes) ( Supported length depends on target machine) */
         bmi08->read_write_len = BMI08_READ_WRITE_LEN;
 
-        HAL_Delay(10);
+        osDelay(10);
     }
     else
     {

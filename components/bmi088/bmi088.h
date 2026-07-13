@@ -39,14 +39,6 @@ struct Bmi088RxData
 class Bmi088
 {
 public:
-    // 加速度计kf
-    GravityKf gravity_kf_;
-    // 四元数ekf
-    QuaternionEkf quaternion_ekf_;
-
-    // 数据更新标志位
-    uint8_t update_flag_ = 0;
-
     // BMI088处理后的数据
     Bmi088RxData rx_data_;
 

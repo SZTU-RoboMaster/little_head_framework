@@ -8,6 +8,7 @@
   * @history
   *  Version    Date            Author          Modification
   *  V1.0.0     Dec-26-2018     RM              1. done
+  *  V1.0.1     Jul-12-2026     anchengc        2. use dwt delay function for microsecond delay
   *
   @verbatim
   ==============================================================================
@@ -19,6 +20,8 @@
 
 #include "ist8310driver_middleWare.h"
 #include "main.h"
+#include "bsp_dwt.h"
+#include "stm32f4xx_hal_i2c.h"
 
 extern I2C_HandleTypeDef hi2c3;
 
@@ -153,32 +156,7 @@ void ist8310_delay_ms(uint16_t ms)
   */
 void ist8310_delay_us(uint16_t us)
 {
-    uint32_t ticks = 0;
-    uint32_t told = 0, tnow = 0, tcnt = 0;
-    uint32_t reload = 0;
-    reload = SysTick->LOAD;
-    ticks = us * 72;
-    told = SysTick->VAL;
-    while (1)
-    {
-        tnow = SysTick->VAL;
-        if (tnow != told)
-        {
-            if (tnow < told)
-            {
-                tcnt += told - tnow;
-            }
-            else
-            {
-                tcnt += reload - tnow + told;
-            }
-            told = tnow;
-            if (tcnt >= ticks)
-            {
-                break;
-            }
-        }
-    }
+    delay_us(us);
 }
 
 

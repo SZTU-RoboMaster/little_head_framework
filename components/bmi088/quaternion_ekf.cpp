@@ -11,7 +11,6 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "quaternion_ekf.h"
 #include "math_tools.h"
 
@@ -204,7 +203,7 @@ void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, flo
     ins_.q[3] = ins_.filter.FilteredValue[3];
     ins_.gyro_bias[0] = ins_.filter.FilteredValue[4];
     ins_.gyro_bias[1] = ins_.filter.FilteredValue[5];
-    ins_.gyro_bias[2] = 0.0011f;
+    ins_.gyro_bias[2] = 0;
 
     // 四元数反解欧拉角
     ins_.angle[0] = atan2f(2.0f * (ins_.q[0] * ins_.q[1] + ins_.q[2] * ins_.q[3]),

@@ -13,11 +13,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "bmi088.h"
 #include "dr16.h"
 #include "math_tools.h"
 #include "motor_dji.h"
-#include "quaternion_ekf.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -96,10 +94,6 @@ struct GimbalStatus
 class Gimbal
 {
 public:
-    // 云台陀螺仪
-    Bmi088 bmi088_;
-    float ins_angle_[3];
-
     // 遥控器
     Dr16 *dr16_;
 
@@ -125,8 +119,6 @@ public:
     void control();
 
     void output();
-
-    inline float get_yaw();
 
 protected:
     // 初始化相关常量
@@ -156,15 +148,10 @@ protected:
 
     // 内部函数
 
-    void gimbal_motor_nearest_transposition();
 };
 
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
 
-inline float Gimbal::get_yaw()
-{
-    return feedback_.yaw_angle;
-}
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/
