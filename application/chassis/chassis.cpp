@@ -12,12 +12,14 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "chassis.h"
+#include "gimbal.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+Chassis chassis;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -54,6 +56,7 @@ void Chassis::update_input()
     input_.ch_0 = -dr16_->data_.ch_0;
     input_.ch_2 = -dr16_->data_.ch_2;
     input_.sw_2 = dr16_->data_.sw_2;
+    input_.gimbal_yaw = gimbal.motor_yaw_.rx_data_.total_angle;
 }
 
 void Chassis::update_feedback()
@@ -92,7 +95,7 @@ void Chassis::set_mode()
 void Chassis::control()
 {
     // 控制
-    // double yaw_error = 0.0f;
+    float yaw_error = 0.0f;
     switch (mode_)
     {
     case CHASSIS_RELAX:
@@ -110,24 +113,24 @@ void Chassis::control()
         {
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
-        control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
-        control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
-        control_output_.target_omega = input_.ch_2 / 660.0f * 4.27f;
+        control_output_.target_velocity_x = cubic_map(input_.ch_1 / 660.0f, 0.5f) * 4.27f;
+        control_output_.target_velocity_y = cubic_map(input_.ch_0 / 660.0f, 0.5f) * 4.27f;
+        control_output_.target_omega = cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.27f;
         break;
     }
     case CHASSIS_FOLLOW:
     {
-        // yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
-        // omega_pid_.set_target(0.0f);
-        // omega_pid_.set_feedback(yaw_error);
-        // omega_pid_.calculate();
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        // }
-        // control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
-        // control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
-        // control_output_.target_omega = -omega_pid_.get_output();
+        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        omega_pid_.set_target(0.0f);
+        omega_pid_.set_feedback(yaw_error);
+        omega_pid_.calculate();
+        for (int i = 0; i < 4; i++)
+        {
+            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
+        }
+        control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
+        control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
+        control_output_.target_omega = -omega_pid_.get_output();
         break;
     }
     case CHASSIS_SPIN:

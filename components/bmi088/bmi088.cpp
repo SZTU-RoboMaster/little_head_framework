@@ -252,12 +252,16 @@ void Bmi088::calibrate_gyro_bias_z(volatile float gyro_z)
     static float sum = 0.0f;
     static uint16_t cnt = 0;
 
-    if (cnt < 20000)
+    if (cnt < 2000)
+    {
+        cnt++;
+    }
+    else if (cnt < 22000)
     {
         sum += gyro_z;
         cnt++;
     }
-    else if (cnt == 20000)
+    else if (cnt == 22000)
     {
         gyro_bias_z_ = sum / 20000.0f;
         cnt++;

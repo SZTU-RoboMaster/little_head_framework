@@ -30,11 +30,11 @@ struct GimbalInput
 
 struct GimbalFeedback
 {
-    float imu_yaw_angle;
     float yaw_angle;
-    float pitch_angle;
-    float yaw_omega;
-    float pitch_omega;
+    float imu_yaw_angle;
+    float imu_pitch_angle;
+    float imu_yaw_omega;
+    float imu_pitch_omega;
 };
 
 struct GimbalConfig
@@ -48,7 +48,7 @@ struct GimbalConfig
     // pitch轴KD值
     float pitch_kd = 3.0f;
     // pitch轴回中值
-    float pitch_center_angle = 1.6f;
+    float pitch_center_angle = 0.0f;
     // yaw轴回中值
     float yaw_center_angle = -0.56f;
     // yaw轴KP值
@@ -67,6 +67,12 @@ struct GimbalOutput
     float target_yaw_omega = 0.0f;
     // pitch轴目标角速度
     float target_pitch_omega = 0.0f;
+    // yaw轴目标电流
+    float target_yaw_current = 0.0f;
+    // pitch轴目标电流
+    float target_pitch_current = 0.0f;
+    // yaw轴目标角度误差
+    float target_yaw_error = 0.0f;
 };
 
 enum GimbalMode
@@ -100,9 +106,12 @@ public:
     // yaw轴电机
     MotorDji motor_yaw_;
     Pid yaw_angle_pid_;
+    Pid yaw_omega_pid_;
 
     // pitch轴电机
     MotorDji motor_pitch_;
+    Pid pitch_angle_pid_;
+    Pid pitch_omega_pid_;
 
     void init();
 
@@ -117,6 +126,8 @@ public:
     void update_control_state();
 
     void control();
+
+    void calculate();
 
     void output();
 
@@ -151,6 +162,7 @@ protected:
 };
 
 /* Exported variables ---------------------------------------------------------*/
+extern Gimbal gimbal;
 
 /* Exported function declarations ---------------------------------------------*/
 

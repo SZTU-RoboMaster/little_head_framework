@@ -43,7 +43,6 @@
 // };
 
 /* Exported variables ---------------------------------------------------------*/
-extern Gimbal gimbal;
 
 /* Exported function declarations ---------------------------------------------*/
 

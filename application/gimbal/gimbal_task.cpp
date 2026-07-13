@@ -17,7 +17,6 @@
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-Gimbal gimbal;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -45,6 +44,7 @@ extern "C" void gimbal_task(void *argument)
         gimbal.set_mode();
         gimbal.update_control_state();
         gimbal.control();
+        gimbal.calculate();
         gimbal.output();
 
         osDelayUntil(start + ticks);

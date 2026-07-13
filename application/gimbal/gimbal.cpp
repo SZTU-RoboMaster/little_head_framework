@@ -19,6 +19,7 @@
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
+Gimbal gimbal;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -32,13 +33,13 @@
 void Gimbal::init()
 {
     // 云台电机PID初始化
-    yaw_angle_pid_.init(6.0f, 0.0f, 0.3f);
-    motor_yaw_.omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
-    motor_pitch_.angle_pid_.init(10.0f, 0.0f, 0.0f);
-    motor_pitch_.omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    yaw_angle_pid_.init(6.0f, 0.0f, 0.3f, 0.0f, 0.0f, 0.0f, 0.005f);
+    yaw_omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    pitch_angle_pid_.init(10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.005f);
+    pitch_omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     // 电机初始化
-    motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_OMEGA, 1.0f);
-    motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_ANGLE, 1.0f);
+    motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
+    motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
 
     // 初始化云台状态
     status_.mode = GIMBAL_RELAX;
@@ -57,12 +58,12 @@ void Gimbal::update_input()
 
 void Gimbal::update_feedback()
 {
-    feedback_.imu_yaw_angle = ins.quaternion_ekf_.ins_.angle[2];
     feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
-    feedback_.pitch_angle = motor_pitch_.rx_data_.total_angle;
+    feedback_.imu_yaw_angle = ins.quaternion_ekf_.ins_.angle[2];
+    feedback_.imu_pitch_angle = ins.quaternion_ekf_.ins_.angle[1];
 
-    feedback_.yaw_omega = ins.bmi088_.rx_data_.gyro[2];
-    feedback_.pitch_omega = motor_pitch_.rx_data_.omega;
+    feedback_.imu_yaw_omega = ins.bmi088_.rx_data_.gyro[2];
+    feedback_.imu_pitch_omega = ins.bmi088_.rx_data_.gyro[1];
 }
 
 void Gimbal::handle_safety()
@@ -109,6 +110,8 @@ void Gimbal::update_control_state()
     {
     case GIMBAL_RELAX:
         // 云台失能，电机不输出
+        yaw_angle_pid_.set_integral_error(0.0f);
+        pitch_angle_pid_.set_integral_error(0.0f);
         break;
     case GIMBAL_ACTIVE:
         // 云台使能，电机输出
@@ -121,17 +124,15 @@ void Gimbal::update_control_state()
 
 void Gimbal::control()
 {
-    float yaw_error = 0.0f;
-
     switch (status_.switching)
     {
     case GIMBAL_SWITCH_IDLE:
         // 正常控制
 
         // 后续把输入量改成control_judge的输出量
-        control_output_.target_pitch_angle += input_.ch_3 / 660.0f / 500.0f;
-        control_output_.target_yaw_angle += input_.ch_2 / 660.0f / 500.0f;
-        yaw_error =
+        control_output_.target_pitch_angle += cubic_map(input_.ch_3 / 660.0f, 0.5f) * 5.0f * 0.001f;
+        control_output_.target_yaw_angle += cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.0f * 0.001f;
+        control_output_.target_yaw_error =
             wrap_center((feedback_.imu_yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
         break;
 
@@ -139,15 +140,14 @@ void Gimbal::control()
         control_output_.target_pitch_angle = config_.pitch_center_angle;
         control_output_.target_yaw_angle = config_.yaw_center_angle;
 
-        yaw_error =
+        control_output_.target_yaw_error =
             wrap_center((feedback_.yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
-        if (std::abs(feedback_.pitch_angle - config_.pitch_center_angle) < 0.1f &&
+        if (std::abs(feedback_.imu_pitch_angle - config_.pitch_center_angle) < 0.1f &&
             std::abs(wrap_center((feedback_.yaw_angle - config_.yaw_center_angle), (2.0f * PI))) <
                 0.1f)
         {
             status_.mode = GIMBAL_ACTIVE;
             status_.switching = GIMBAL_SWITCH_IDLE;
-            control_output_.target_pitch_angle = feedback_.pitch_angle;
             control_output_.target_yaw_angle = feedback_.imu_yaw_angle;
         }
         break;
@@ -155,34 +155,53 @@ void Gimbal::control()
     default:
         break;
     }
+}
 
-    yaw_angle_pid_.set_target(0.0f);
-    yaw_angle_pid_.set_feedback(yaw_error);
-    yaw_angle_pid_.calculate();
-    control_output_.target_yaw_omega = yaw_angle_pid_.get_output();
+void Gimbal::calculate()
+{
+    static uint8_t mod5 = 5;
 
     // 输出限幅
     control_output_.target_pitch_angle =
-        std::clamp(control_output_.target_pitch_angle, 0.90f, 2.25f);
+        std::clamp(control_output_.target_pitch_angle, -0.55f, 0.5f);
+
+    if (status_.mode == GIMBAL_RELAX && status_.switching == GIMBAL_SWITCH_IDLE)
+    {
+        control_output_.target_yaw_current = 0.0f;
+        control_output_.target_pitch_current = 0.0f;
+    }
+    else
+    {
+        if (mod5++ >= 5)
+        {
+            mod5 = 0;
+            yaw_angle_pid_.set_target(0.0f);
+            yaw_angle_pid_.set_feedback(control_output_.target_yaw_error);
+            yaw_angle_pid_.calculate();
+
+            pitch_angle_pid_.set_target(control_output_.target_pitch_angle);
+            pitch_angle_pid_.set_feedback(feedback_.imu_pitch_angle);
+            pitch_angle_pid_.calculate();
+        }
+
+        control_output_.target_yaw_omega = yaw_angle_pid_.get_output();
+        yaw_omega_pid_.set_target(control_output_.target_yaw_omega);
+        yaw_omega_pid_.set_feedback(feedback_.imu_yaw_omega);
+        yaw_omega_pid_.calculate();
+        control_output_.target_pitch_omega = pitch_angle_pid_.get_output();
+        pitch_omega_pid_.set_target(control_output_.target_pitch_omega);
+        pitch_omega_pid_.set_feedback(feedback_.imu_pitch_omega);
+        pitch_omega_pid_.calculate();
+
+        control_output_.target_yaw_current = yaw_omega_pid_.get_output();
+        control_output_.target_pitch_current = pitch_omega_pid_.get_output();
+    }
 }
 
 void Gimbal::output()
 {
-    if (status_.mode == GIMBAL_RELAX && status_.switching == GIMBAL_SWITCH_IDLE)
-    {
-        motor_yaw_.set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-        motor_pitch_.set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-        motor_yaw_.set_target_current(0.0f);
-        motor_pitch_.set_target_current(0.0f);
-    }
-    else
-    {
-        motor_yaw_.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        motor_pitch_.set_control_method(MOTOR_DJI_CONTROL_METHOD_ANGLE);
-
-        motor_yaw_.set_target_omega(control_output_.target_yaw_omega);
-        motor_pitch_.set_target_angle(control_output_.target_pitch_angle);
-    }
+    motor_yaw_.set_target_current(control_output_.target_yaw_current);
+    motor_pitch_.set_target_current(control_output_.target_pitch_current);
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

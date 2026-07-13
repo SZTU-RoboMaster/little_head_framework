@@ -36,6 +36,8 @@ float uint_to_float(uint32_t x_int, float x_min, float x_max, size_t bits);
 
 uint32_t float_to_uint(float x, float x_min, float x_max, size_t bits);
 
+float cubic_map(float x, float expo);
+
 /**
  * @brief 归化函数
  *

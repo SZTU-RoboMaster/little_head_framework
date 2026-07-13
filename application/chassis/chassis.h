@@ -142,6 +142,7 @@ protected:
 };
 
 /* Exported variables ---------------------------------------------------------*/
+extern Chassis chassis;
 
 /* Exported function declarations ---------------------------------------------*/
 

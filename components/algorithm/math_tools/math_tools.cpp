@@ -75,4 +75,22 @@ uint32_t float_to_uint(float x, float x_min, float x_max, size_t bits)
     return (uint32_t)((x - offset) * ((float)((1 << bits) - 1)) / span);
 }
 
+/**
+ * @brief 三次映射函数
+ *
+ * @param x 输入值
+ * @param expo 指数系数
+ * @return float 映射值
+ */
+float cubic_map(float x, float expo)
+{
+    if (expo == 0.0f)
+    {
+        return x;
+    }
+    else
+    {
+        return (1.0f - expo) * x + expo * x * x * x;
+    }
+}
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

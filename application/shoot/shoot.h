@@ -180,6 +180,7 @@ protected:
 };
 
 /* Exported variables ---------------------------------------------------------*/
+extern Shoot shoot;
 
 /* Exported function declarations ---------------------------------------------*/
 
