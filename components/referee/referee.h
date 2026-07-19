@@ -96,29 +96,6 @@ public:
 
     void check_alive_1000ms();
 
-protected:
-    // 初始化相关常量
-
-    // 绑定的UART
-    UartManageObject *uart_manage_obj_;
-
-    // 常量
-
-    // 内部变量
-
-    // 当前时刻的裁判系统接收flag
-    uint32_t rx_flag_ = 0;
-    // 前一时刻的裁判系统接收flag
-    uint32_t last_rx_flag_ = 0;
-
-    // 发送序列号
-    uint8_t sequence_ = 0;
-
-    // UI是否是初次绘制, 没绘制过是0
-    uint8_t ui_change_flag_[10][10] = {0};
-
-    // 读变量
-
     // 裁判系统状态
     RefereeStatus status_ = REFEREE_STATUS_DISABLE;
     // 比赛状态
@@ -168,6 +145,29 @@ protected:
     RefereeRxDataMapCommandData map_command_data_;
     // 自定义客户端发送给机器人的自定义指令
     RefereeRxDataClientRobotData client_robot_data_;
+
+protected:
+    // 初始化相关常量
+
+    // 绑定的UART
+    UartManageObject *uart_manage_obj_;
+
+    // 常量
+
+    // 内部变量
+
+    // 当前时刻的裁判系统接收flag
+    uint32_t rx_flag_ = 0;
+    // 前一时刻的裁判系统接收flag
+    uint32_t last_rx_flag_ = 0;
+
+    // 发送序列号
+    uint8_t sequence_ = 0;
+
+    // UI是否是初次绘制, 没绘制过是0
+    uint8_t ui_change_flag_[10][10] = {0};
+
+    // 读变量
 
     // 写变量
 

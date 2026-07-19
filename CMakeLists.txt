@@ -82,6 +82,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/gimbal/gimbal_task.cpp
     application/chassis/chassis_task.cpp
     application/shoot/shoot_task.cpp
+    application/vision/vision_task.cpp
 )
 
 # Add include paths
@@ -109,6 +110,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/initial
     application/shoot
     application/INS
+    application/vision
 )
 
 # Add project symbols (macros)

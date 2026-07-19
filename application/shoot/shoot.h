@@ -14,6 +14,7 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "dr16.h"
+#include "referee.h"
 #include "motor_dji.h"
 
 /* Exported macros -----------------------------------------------------------*/
@@ -25,6 +26,12 @@ struct ShootInput
     uint8_t sw_1;  // 发射控制
     uint8_t sw_2;  // 云台控制
     int16_t wheel; // 拨轮
+    // 当前热量
+    float current_ref_heat_ = 0.0f;
+    // 热量限制上限
+    float heat_limit_ = 0.0f;
+    // 热量冷却速度
+    float heat_cooling_rate_ = 0.0f;
 };
 
 struct ShootFeedback
@@ -32,6 +39,10 @@ struct ShootFeedback
     float trigger_angle;
     float trigger_omega;
     float trigger_current;
+    float left_fric_omega;
+    float right_fric_omega;
+    float left_fric_current;
+    float right_fric_current;
 };
 
 struct ShootOutput
@@ -62,6 +73,14 @@ enum ShootMode
     SHOOT_CONTINUE,
 };
 
+enum  FrictionState
+{
+    FRCTION_RELAX,
+    FRCTION_IDLE,
+    FRCTION_SUSPECT,
+    FRCTION_CONFIRMED,
+};
+
 enum TriggerState
 {
     TRIGGER_RELAX,
@@ -88,6 +107,9 @@ class Shoot
 public:
     // 遥控器
     Dr16 *dr16_;
+
+    // 裁判系统
+    Referee *referee_;
 
     // 拨弹盘电机
     MotorDji trigger_;
@@ -124,7 +146,7 @@ protected:
     // 堵转时间阈值
     uint16_t block_time_threshold_ = 500;
     // 堵转处理时间阈值
-    uint16_t block_recovery_time_threshold_ = 300;
+    uint16_t block_recovery_time_threshold_ = 500;
 
     // 内部变量
 
@@ -152,6 +174,9 @@ protected:
     // 发射机构输出
     ShootOutput control_output_;
 
+    // 摩擦轮状态
+    FrictionState friction_state_;
+
     // 拨盘状态
     TriggerState trigger_state_;
 
@@ -162,10 +187,6 @@ protected:
 
     // 当前热量
     float current_heat_ = 0.0f;
-    // 热量限制上限
-    float heat_limit_ = 0.0f;
-    // 热量冷却速度
-    float heat_cooling_rate_ = 0.0f;
 
     // 读写变量
 
@@ -173,6 +194,9 @@ protected:
     float fric_target_omega_ = 700.0f;
 
     // 内部函数
+    void update_friction_state();
+
+    void update_heat_state();
 
     void update_trigger_state();
 

@@ -19,11 +19,12 @@
 #include "bsp_uart.h"
 #include "bsp_usb.h"
 #include "dr16.h"
+#include "referee.h"
 #include "gimbal_task.h"
 #include "INS_task.h"
 #include "chassis_task.h"
 #include "shoot_task.h"
-#include "vision.h"
+#include "vision_task.h"
 
 
 /* Private macros ------------------------------------------------------------*/
@@ -36,7 +37,7 @@ uint8_t init_finished = 0;
 uint32_t flag = 0;
 
 Dr16 dr16;
-Vision vision;
+Referee referee;
 
 
 /* Private function declarations ---------------------------------------------*/
@@ -133,6 +134,17 @@ void dr16_uart3_callback(uint8_t *buffer, uint16_t length)
 }
 
 /**
+ * @brief UART6裁判系统回调函数
+ *
+ * @param buffer UART6收到的消息
+ * @param length 长度
+ */
+void referee_uart6_callback(uint8_t *buffer, uint16_t length)
+{
+    referee.uart_rx_callback(buffer, length);
+}
+
+/**
  * @brief 外部中断回调函数
  *
  * @param gpio_pin 中断引脚
@@ -167,6 +179,13 @@ void vision_usb_callback(uint8_t *buf, uint32_t len)
  */
 void task1ms_tim7_callback()
 {
+    static uint8_t alive_mod1000 = 0;
+    if (alive_mod1000++ >= 1000)
+    {
+        alive_mod1000 = 0;
+        referee.check_alive_1000ms();
+    }
+
     static uint8_t alive_mod100 = 0;
     if (alive_mod100++ >= 100)
     {
@@ -212,10 +231,13 @@ void task_init()
     gimbal.dr16_ = &dr16;
     chassis.dr16_ = &dr16;
     shoot.dr16_ = &dr16;
+    shoot.referee_ = &referee;
+    referee.init(&huart6);
 
     can_init(&hcan1, device_can1_callback);
     can_init(&hcan2, device_can2_callback);
     uart_init(&huart3, dr16_uart3_callback, 18);
+    uart_init(&huart6, referee_uart6_callback, 255);
     tim_init(&htim7, task1ms_tim7_callback);
     usb_init(vision_usb_callback);
 

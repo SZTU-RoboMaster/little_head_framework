@@ -35,7 +35,7 @@ void Shoot::init()
 
     // 拨弹盘电机初始化
     trigger_.angle_pid_.init(15.0f, 0.0f, 0.0f, 0.0f, 0.0f, 48.0f, 0.005f);
-    trigger_.omega_pid_.init(500.0f, 25000.40f, 0.0f, 0.0f, 3000.0f, 10000.0f);
+    trigger_.omega_pid_.init(1200.0f, 60000.0f, 0.0f, 0.0f, 5000.0f, 10000.0f);
     trigger_.init(&hcan2, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
 
     // 摩擦轮电机初始化
@@ -51,6 +51,9 @@ void Shoot::update_input()
     input_.sw_1 = dr16_->data_.sw_1;
     input_.sw_2 = dr16_->data_.sw_2;
     input_.wheel = dr16_->data_.wheel;
+    input_.current_ref_heat_ = referee_->power_heat_data_.shooter_17mm_barrel_heat;
+    input_.heat_limit_ = referee_->robot_state_.shooter_barrel_heat_limit;
+    input_.heat_cooling_rate_ = referee_->robot_state_.shooter_barrel_cooling_value;
 
     //////////////////////////////////////////////////////////////////////////////////////////
     // 临时写个上升沿，后面写到遥控器里
@@ -79,6 +82,10 @@ void Shoot::update_feedback()
     feedback_.trigger_angle = trigger_.rx_data_.total_angle;
     feedback_.trigger_omega = trigger_.rx_data_.omega;
     feedback_.trigger_current = trigger_.rx_data_.current;
+    feedback_.left_fric_omega = friction_left_.rx_data_.omega;
+    feedback_.right_fric_omega = friction_right_.rx_data_.omega;
+    feedback_.left_fric_current = friction_left_.rx_data_.current;
+    feedback_.right_fric_current = friction_right_.rx_data_.current;
 }
 
 void Shoot::handle_safety()
@@ -133,6 +140,8 @@ void Shoot::set_mode()
 
 void Shoot::update_control_state()
 {
+    update_friction_state();
+    update_heat_state();
     update_block_state();
     update_trigger_state();
 }
@@ -179,14 +188,13 @@ void Shoot::control()
 
     case TRIGGER_SPEED:
         trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        control_output_.target_trigger_omega = -30.0f;
+        control_output_.target_trigger_omega = -10.0f;
 
         break;
     case TRIGGER_BLOCK:
         trigger_.set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
 
-            control_output_.target_trigger_omega = 30.0f;
-
+        control_output_.target_trigger_omega = 15.0f;
 
         break;
     }
@@ -201,6 +209,90 @@ void Shoot::output()
     friction_left_.set_target_omega(control_output_.target_left_fric_omega);
 
     friction_right_.set_target_omega(control_output_.target_right_fric_omega);
+}
+
+void Shoot::update_friction_state()
+{
+    // TODO: templost不是最优解，考虑滤波或均值
+    static uint16_t cnt, templost = 0;
+
+    cnt++;
+    if (!fric_enabled_)
+    {
+        friction_state_ = FRCTION_RELAX;
+        cnt = 0;
+        return;
+    }
+
+    switch (friction_state_)
+    {
+    case FRCTION_RELAX:
+        if (abs(feedback_.left_fric_omega) > 690.0f && abs(feedback_.right_fric_omega) > 690.0f)
+        {
+            friction_state_ = FRCTION_IDLE;
+            cnt = 0;
+        }
+        break;
+    case FRCTION_IDLE:
+        if (abs(feedback_.left_fric_current) > 700.0f && abs(feedback_.right_fric_current) > 700.0f)
+        {
+            friction_state_ = FRCTION_SUSPECT;
+            cnt = 0;
+        }
+        break;
+    case FRCTION_SUSPECT:
+        if (cnt >= 45)
+        {
+            friction_state_ = FRCTION_CONFIRMED;
+            cnt = 0;
+            templost = 0;
+        }
+        if (abs(feedback_.left_fric_current) < 500.0f || abs(feedback_.right_fric_current) < 500.0f)
+        {
+            if (templost++ >= 5)
+            {
+                friction_state_ = FRCTION_IDLE;
+                cnt = 0;
+                templost = 0;
+            }
+        }
+        else
+        {
+            templost = 0;
+        }
+        break;
+    case FRCTION_CONFIRMED:
+        current_heat_ += 10.0f;
+        friction_state_ = FRCTION_IDLE;
+        cnt = 0;
+        break;
+    default:
+        friction_state_ = FRCTION_RELAX;
+        cnt = 0;
+        break;
+    }
+}
+
+void Shoot::update_heat_state()
+{
+    static float last_heat = input_.current_ref_heat_;
+
+    // 1ms冷却
+    current_heat_ -= input_.heat_cooling_rate_ * 0.001f;
+    if (current_heat_ < 0.0f)
+    {
+        current_heat_ = 0.0f;
+    }
+
+    // 热量校准
+    if (input_.current_ref_heat_ != last_heat)
+    {
+        current_heat_ = input_.current_ref_heat_;
+        last_heat = input_.current_ref_heat_;
+    }
+
+    // 火控
+    
 }
 
 void Shoot::update_trigger_state()
@@ -288,7 +380,6 @@ void Shoot::update_block_state()
         if (cnt > block_recovery_time_threshold_)
         {
             block_state_ = BLOCK_NORMAL;
-
         }
 
         break;

@@ -40,7 +40,7 @@ void Chassis::init()
     // 轮向电机初始化
     for (int i = 0; i < 4; i++)
     {
-        wheel_motor_[i].omega_pid_.init(300.0f, 0.0f, 0.0f);
+        wheel_motor_[i].omega_pid_.init(400.0f, 0.0f, 0.0f);
     }
 
     wheel_motor_[0].init(&hcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));

@@ -19,7 +19,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "FreeRTOS.h"
-#include "cmsis_os2.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -73,6 +72,12 @@ const osThreadAttr_t shootTask_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
+osThreadId_t visionTaskHandle;
+const osThreadAttr_t visionTask_attributes = {
+  .name = "visionTask",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
 
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -89,7 +94,7 @@ void INS_task(void * argument);
 void gimbal_task(void * argument);
 void chassis_task(void * argument);
 void shoot_task(void * argument);
-
+void vision_task(void * argument);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -133,6 +138,7 @@ void MX_FREERTOS_Init(void) {
   gimbalTaskHandle = osThreadNew(gimbal_task, NULL, &gimbalTask_attributes);
   chassisTaskHandle = osThreadNew(chassis_task, NULL, &chassisTask_attributes);
   shootTaskHandle = osThreadNew(shoot_task, NULL, &shootTask_attributes);
+  visionTaskHandle = osThreadNew(vision_task, NULL, &visionTask_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -192,6 +198,15 @@ __weak void chassis_task(void * argument)
 }
 
 __weak void shoot_task(void * argument)
+{
+    /* Infinite loop */
+    for (;;)
+    {
+        osDelay(1);
+    }
+}
+
+__weak void vision_task(void * argument)
 {
     /* Infinite loop */
     for (;;)

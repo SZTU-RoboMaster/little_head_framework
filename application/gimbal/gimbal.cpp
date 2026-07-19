@@ -33,10 +33,10 @@ Gimbal gimbal;
 void Gimbal::init()
 {
     // 云台电机PID初始化
-    yaw_angle_pid_.init(6.0f, 0.0f, 0.3f, 0.0f, 0.0f, 0.0f, 0.005f);
-    yaw_omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    yaw_angle_pid_.init(6.0f, 0.0f, 0.6f, 0.0f, 0.0f, 0.0f, 0.005f);
+    yaw_omega_pid_.init(2000.0f, 40000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     pitch_angle_pid_.init(10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.005f);
-    pitch_omega_pid_.init(1000.0f, 20000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    pitch_omega_pid_.init(2000.0f, 40000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     // 电机初始化
     motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
     motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
