@@ -55,6 +55,7 @@ void Chassis::update_input()
     input_.ch_1 = dr16_->data_.ch_1;
     input_.ch_0 = -dr16_->data_.ch_0;
     input_.ch_2 = -dr16_->data_.ch_2;
+    input_.sw_1 = dr16_->data_.sw_1;
     input_.sw_2 = dr16_->data_.sw_2;
     input_.gimbal_yaw = gimbal.motor_yaw_.rx_data_.total_angle;
 }
@@ -82,10 +83,10 @@ void Chassis::set_mode()
         mode_ = CHASSIS_RELAX;
         break;
     case 3:
-        mode_ = CHASSIS_ONLY;
+        mode_ = CHASSIS_FOLLOW;
         break;
     case 1:
-        mode_ = CHASSIS_FOLLOW;
+        mode_ = CHASSIS_SPIN;
         break;
     default:
         break;
@@ -135,13 +136,19 @@ void Chassis::control()
     }
     case CHASSIS_SPIN:
     {
-        // for (int i = 0; i < 4; i++)
-        // {
-        //     wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        // }
-        // control_output_.target_velocity_x = 0.0f;
-        // control_output_.target_velocity_y = 0.0f;
-        // control_output_.target_omega = input_.ch_1 * 0.0f;
+        for (int i = 0; i < 4; i++)
+        {
+            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
+        }
+
+        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        float sin_yaw = arm_sin_f32(yaw_error);
+        float cos_yaw = arm_cos_f32(yaw_error);
+        float vx_temp = input_.ch_1 / 660.0f * 4.27f;
+        float vy_temp = input_.ch_0 / 660.0f * 4.27f;
+        control_output_.target_velocity_x = vx_temp * cos_yaw + vy_temp * sin_yaw;
+        control_output_.target_velocity_y = vx_temp * (-sin_yaw) + vy_temp * cos_yaw;
+        control_output_.target_omega = config_.spin_vw;
         break;
     }
     }

@@ -26,6 +26,13 @@ struct GimbalInput
     int16_t ch_3; // pitch
     int16_t ch_2; // yaw
     uint8_t sw_2; // 云台控制方式
+    float vision_yaw;   // 视觉yaw
+    float vision_pitch; // 视觉pitch
+    float vision_yaw_vel;   // 视觉yaw速度
+    float vision_pitch_vel; // 视觉pitch速度
+    float vision_yaw_acc;   // 视觉yaw加速度
+    float vision_pitch_acc; // 视觉pitch加速度
+    uint8_t vision_target_lock; // 视觉目标锁定状态
 };
 
 struct GimbalFeedback
@@ -55,6 +62,10 @@ struct GimbalConfig
     float yaw_kp;
     // yaw轴KD值
     float yaw_kd;
+    // yaw轴前馈系数
+    float yaw_ff_p = 0.0f;
+    // pitch轴前馈系数
+    float pitch_ff_p = 0.0f;
 };
 
 struct GimbalOutput
@@ -67,6 +78,14 @@ struct GimbalOutput
     float target_yaw_omega = 0.0f;
     // pitch轴目标角速度
     float target_pitch_omega = 0.0f;
+    // yaw轴前馈角速度
+    float target_yaw_feedforward_omega = 0.0f;
+    // pitch轴前馈角速度
+    float target_pitch_feedforward_omega = 0.0f;
+    // yaw轴前馈角加速度
+    float target_yaw_feedforward_acc = 0.0f;
+    // pitch轴前馈角加速度
+    float target_pitch_feedforward_acc = 0.0f;
     // yaw轴目标电流
     float target_yaw_current = 0.0f;
     // pitch轴目标电流
@@ -155,6 +174,7 @@ protected:
     // 读写变量
 
     // 云台输出
+    GimbalOutput control_judge_;
     GimbalOutput control_output_;
 
     // 内部函数

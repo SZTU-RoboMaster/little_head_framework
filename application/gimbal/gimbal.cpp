@@ -13,6 +13,7 @@
 
 #include "gimbal.h"
 #include "INS_task.h"
+#include "vision_task.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -54,6 +55,14 @@ void Gimbal::update_input()
     input_.ch_3 = dr16_->data_.ch_3;
     input_.ch_2 = -dr16_->data_.ch_2;
     input_.sw_2 = dr16_->data_.sw_2;
+
+    input_.vision_yaw = vision.rx_data_.yaw;
+    input_.vision_pitch = vision.rx_data_.pitch;
+    input_.vision_yaw_vel = vision.rx_data_.yaw_vel;
+    input_.vision_pitch_vel = vision.rx_data_.pitch_vel;
+    input_.vision_yaw_acc = vision.rx_data_.yaw_acc;
+    input_.vision_pitch_acc = vision.rx_data_.pitch_acc;
+    input_.vision_target_lock = vision.rx_data_.target_lock;
 }
 
 void Gimbal::update_feedback()
@@ -80,8 +89,10 @@ void Gimbal::set_mode()
         status_.switching = GIMBAL_SWITCH_IDLE;
         break;
     case 3:
-        status_.mode = GIMBAL_RELAX;
-        status_.switching = GIMBAL_SWITCH_IDLE;
+        if (status_.mode != GIMBAL_ACTIVE)
+        {
+            status_.switching = GIMBAL_SWITCH_TO_MIDDLE;
+        }
         break;
     case 1:
         if (status_.mode != GIMBAL_ACTIVE)
@@ -115,11 +126,35 @@ void Gimbal::update_control_state()
         break;
     case GIMBAL_ACTIVE:
         // 云台使能，电机输出
+        if (vision.vision_status_ == VISION_STATUS_ENABLE && input_.vision_target_lock == 49)
+        {
+            control_judge_.target_yaw_angle = input_.vision_yaw;
+            control_judge_.target_pitch_angle = input_.vision_pitch;
+            control_output_.target_yaw_feedforward_omega = input_.vision_yaw_vel;
+            control_output_.target_pitch_feedforward_omega = input_.vision_pitch_vel;
+            control_output_.target_yaw_feedforward_acc = 0.0f;
+            control_output_.target_pitch_feedforward_acc = 0.0f;
+        }
+        else
+        {
+            control_judge_.target_yaw_angle +=
+                cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.0f * 0.001f;
+            control_judge_.target_pitch_angle +=
+                cubic_map(input_.ch_3 / 660.0f, 0.5f) * 5.0f * 0.001f;
+            control_output_.target_yaw_feedforward_omega = 0.0f;
+            control_output_.target_pitch_feedforward_omega = 0.0f;
+            control_output_.target_yaw_feedforward_acc = 0.0f;
+            control_output_.target_pitch_feedforward_acc = 0.0f;
+        }
         break;
 
     default:
         break;
     }
+
+    // 输出限幅
+    control_judge_.target_pitch_angle =
+        std::clamp(control_judge_.target_pitch_angle, -0.55f, 0.5f);
 }
 
 void Gimbal::control()
@@ -129,11 +164,10 @@ void Gimbal::control()
     case GIMBAL_SWITCH_IDLE:
         // 正常控制
 
-        // 后续把输入量改成control_judge的输出量
-        control_output_.target_pitch_angle += cubic_map(input_.ch_3 / 660.0f, 0.5f) * 5.0f * 0.001f;
-        control_output_.target_yaw_angle += cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.0f * 0.001f;
+        control_output_.target_pitch_angle = control_judge_.target_pitch_angle;
+        control_output_.target_yaw_angle = control_judge_.target_yaw_angle;
         control_output_.target_yaw_error =
-            wrap_center((feedback_.imu_yaw_angle - control_output_.target_yaw_angle), (2.0f * PI));
+            wrap_center((feedback_.imu_yaw_angle - control_judge_.target_yaw_angle), (2.0f * PI));
         break;
 
     case GIMBAL_SWITCH_TO_MIDDLE:
@@ -148,7 +182,8 @@ void Gimbal::control()
         {
             status_.mode = GIMBAL_ACTIVE;
             status_.switching = GIMBAL_SWITCH_IDLE;
-            control_output_.target_yaw_angle = feedback_.imu_yaw_angle;
+            control_judge_.target_yaw_angle = feedback_.imu_yaw_angle;
+            control_judge_.target_pitch_angle = feedback_.imu_pitch_angle;
         }
         break;
 
@@ -160,10 +195,6 @@ void Gimbal::control()
 void Gimbal::calculate()
 {
     static uint8_t mod5 = 5;
-
-    // 输出限幅
-    control_output_.target_pitch_angle =
-        std::clamp(control_output_.target_pitch_angle, -0.55f, 0.5f);
 
     if (status_.mode == GIMBAL_RELAX && status_.switching == GIMBAL_SWITCH_IDLE)
     {
@@ -185,16 +216,22 @@ void Gimbal::calculate()
         }
 
         control_output_.target_yaw_omega = yaw_angle_pid_.get_output();
-        yaw_omega_pid_.set_target(control_output_.target_yaw_omega);
+        yaw_omega_pid_.set_target(control_output_.target_yaw_omega +
+        control_output_.target_yaw_feedforward_omega);
         yaw_omega_pid_.set_feedback(feedback_.imu_yaw_omega);
         yaw_omega_pid_.calculate();
         control_output_.target_pitch_omega = pitch_angle_pid_.get_output();
-        pitch_omega_pid_.set_target(control_output_.target_pitch_omega);
+        pitch_omega_pid_.set_target(control_output_.target_pitch_omega +
+        control_output_.target_pitch_feedforward_omega);
         pitch_omega_pid_.set_feedback(feedback_.imu_pitch_omega);
         pitch_omega_pid_.calculate();
 
-        control_output_.target_yaw_current = yaw_omega_pid_.get_output();
-        control_output_.target_pitch_current = pitch_omega_pid_.get_output();
+        control_output_.target_yaw_current =
+            yaw_omega_pid_.get_output() +
+            control_output_.target_yaw_feedforward_acc * config_.yaw_ff_p;
+        control_output_.target_pitch_current =
+            pitch_omega_pid_.get_output() +
+            control_output_.target_pitch_feedforward_acc * config_.pitch_ff_p;
     }
 }
 

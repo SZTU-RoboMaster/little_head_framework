@@ -192,6 +192,7 @@ void task1ms_tim7_callback()
         alive_mod100 = 0;
 
         dr16.check_alive_100ms();
+        vision.check_alive_100ms();
 
         gimbal.motor_yaw_.check_alive_100ms();
         gimbal.motor_pitch_.check_alive_100ms();

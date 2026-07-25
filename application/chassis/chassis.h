@@ -27,6 +27,7 @@ struct ChassisInput
     int16_t ch_1;     // x
     int16_t ch_0;     // y
     int16_t ch_2;     // yaw
+    uint8_t sw_1;     // 底盘控制方式
     uint8_t sw_2;     // 底盘控制方式
     float gimbal_yaw; // 云台偏航角
 };
@@ -65,6 +66,9 @@ struct ChassisConfig
 
     // 云台偏航角偏移
     float gimbal_yaw_offset = -0.56f;
+
+    // 小陀螺vw
+    float spin_vw = 7.0f;
 };
 
 enum ChassisMode
