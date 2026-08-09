@@ -12,13 +12,20 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "vision.h"
+
 /* Exported macros -----------------------------------------------------------*/
+inline constexpr char kInsTopicName[] = "/ins";
 
 /* Exported types ------------------------------------------------------------*/
+struct InsMessage
+{
+    float angle[3];
+    float gyro[3];
+    float acc[3];
+    float quaternion[4];
+};
 
 /* Exported variables ---------------------------------------------------------*/
-extern Vision vision;
 
 /* Exported function declarations ---------------------------------------------*/
 

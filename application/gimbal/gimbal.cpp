@@ -12,7 +12,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "gimbal.h"
-#include "INS_task.h"
 #include "vision_task.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -44,6 +43,8 @@ void Gimbal::init()
 
     // 初始化云台状态
     status_.mode = GIMBAL_RELAX;
+
+    ins_subscriber_ = MessageCenter::instance().subscribe<InsMessage>(kInsTopicName);
 }
 
 /**
@@ -67,12 +68,14 @@ void Gimbal::update_input()
 
 void Gimbal::update_feedback()
 {
-    feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
-    feedback_.imu_yaw_angle = ins.quaternion_ekf_.ins_.angle[2];
-    feedback_.imu_pitch_angle = ins.quaternion_ekf_.ins_.angle[1];
+    ins_subscriber_.update(ins_message_);
 
-    feedback_.imu_yaw_omega = ins.bmi088_.rx_data_.gyro[2];
-    feedback_.imu_pitch_omega = ins.bmi088_.rx_data_.gyro[1];
+    feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
+
+    feedback_.imu_yaw_angle = ins_message_.angle[2];
+    feedback_.imu_pitch_angle = ins_message_.angle[1];
+    feedback_.imu_yaw_omega = ins_message_.gyro[2];
+    feedback_.imu_pitch_omega = ins_message_.gyro[1];
 }
 
 void Gimbal::handle_safety()
@@ -153,8 +156,7 @@ void Gimbal::update_control_state()
     }
 
     // 输出限幅
-    control_judge_.target_pitch_angle =
-        std::clamp(control_judge_.target_pitch_angle, -0.55f, 0.5f);
+    control_judge_.target_pitch_angle = std::clamp(control_judge_.target_pitch_angle, -0.55f, 0.5f);
 }
 
 void Gimbal::control()
@@ -217,12 +219,12 @@ void Gimbal::calculate()
 
         control_output_.target_yaw_omega = yaw_angle_pid_.get_output();
         yaw_omega_pid_.set_target(control_output_.target_yaw_omega +
-        control_output_.target_yaw_feedforward_omega);
+                                  control_output_.target_yaw_feedforward_omega);
         yaw_omega_pid_.set_feedback(feedback_.imu_yaw_omega);
         yaw_omega_pid_.calculate();
         control_output_.target_pitch_omega = pitch_angle_pid_.get_output();
         pitch_omega_pid_.set_target(control_output_.target_pitch_omega +
-        control_output_.target_pitch_feedforward_omega);
+                                    control_output_.target_pitch_feedforward_omega);
         pitch_omega_pid_.set_feedback(feedback_.imu_pitch_omega);
         pitch_omega_pid_.calculate();
 

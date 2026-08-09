@@ -24,6 +24,10 @@
 /* Private function declarations ---------------------------------------------*/
 
 /* function prototypes -------------------------------------------------------*/
+void Vision::init()
+{
+    ins_subscriber_ = MessageCenter::instance().subscribe<InsMessage>(kInsTopicName);
+}
 
 /**
  * @brief USB通信接收回调函数
@@ -34,10 +38,10 @@
 void Vision::usb_rx_callback(uint8_t *buf, uint32_t len)
 {
 
-    // 滑动窗口, 判断遥控器DR16是否在线
+    // 滑动窗口, 判断vision是否在线
     rx_flag_ += 1;
 
-    update(buf, len);
+    update_rx(buf, len);
 }
 
 /**
@@ -68,13 +72,24 @@ void Vision::send()
     CDC_Transmit_FS(reinterpret_cast<uint8_t *>(&tx_data_), sizeof(tx_data_));
 }
 
+void Vision::update_tx()
+{
+    ins_subscriber_.update(ins_message_);
+
+    tx_data_.pitch = ins_message_.angle[1];
+    tx_data_.yaw = ins_message_.angle[2];
+    tx_data_.pitch_vel = ins_message_.gyro[1];
+    tx_data_.yaw_vel = ins_message_.gyro[2];
+    std::memcpy(tx_data_.quaternion, ins_message_.quaternion, sizeof(ins_message_.quaternion));
+}
+
 /**
  * @brief
  *
  * @param
 
  */
-void Vision::update(uint8_t *buf, uint32_t len)
+void Vision::update_rx(uint8_t *buf, uint32_t len)
 {
     if (len == 0 || buf == nullptr)
     {

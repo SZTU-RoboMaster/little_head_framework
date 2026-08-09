@@ -12,9 +12,10 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bsp_usb.h"
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
@@ -66,18 +67,21 @@ struct __attribute__((packed)) VisionData
 class Vision
 {
 public:
-
     RobotData tx_data_;
 
     VisionData rx_data_;
 
     VisionStatus vision_status_ = VISION_STATUS_DISABLE;
 
+    void init();
+
     void usb_rx_callback(uint8_t *buf, uint32_t len);
 
     void check_alive_100ms();
 
     void send();
+
+    void update_tx();
 
 protected:
     // 初始化相关常量
@@ -96,6 +100,8 @@ protected:
     uint32_t last_rx_flag_ = 0;
 
     // 读变量
+    Subscriber<InsMessage> ins_subscriber_;
+    InsMessage ins_message_;
 
     // 写变量
 
@@ -103,7 +109,7 @@ protected:
 
     // 内部函数
 
-    void update(uint8_t *buf, uint32_t len);
+    void update_rx(uint8_t *buf, uint32_t len);
 };
 
 /* Exported variables ---------------------------------------------------------*/

@@ -1,7 +1,7 @@
 /**
  * @file template.hpp
  * @author anchengc
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -17,6 +17,9 @@
 #include "quaternion_ekf.h"
 
 #include "cmsis_os.h"
+
+#include "message_center.h"
+#include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/
 #define INS_DATA_READY_FLAG (1U << 0)
@@ -42,6 +45,10 @@ public:
 
     void init();
 
+    void update();
+
+    void publish();
+
 protected:
     // 初始化相关常量
 
@@ -52,6 +59,7 @@ protected:
     // 读变量
 
     // 写变量
+    Publisher<InsMessage> publisher_;
 
     // 读写变量
 

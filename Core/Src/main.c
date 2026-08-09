@@ -92,7 +92,6 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  MX_USB_DEVICE_Init();
 
   /* USER CODE END SysInit */
 

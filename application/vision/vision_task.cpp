@@ -1,7 +1,7 @@
 /**
  * @file template.cpp
  * @author anchengc
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -11,7 +11,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "vision_task.h"
-#include "INS_task.h"
 #include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -33,17 +32,15 @@ Vision vision;
  */
 extern "C" void vision_task(void *argument)
 {
+    vision.init();
+
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)
     {
-        ticks ++;
-        vision.tx_data_.pitch = ins.quaternion_ekf_.ins_.angle[1];
-        vision.tx_data_.yaw = ins.quaternion_ekf_.ins_.angle[2];
-        vision.tx_data_.pitch_vel = ins.bmi088_.rx_data_.gyro[1];
-        vision.tx_data_.yaw_vel = ins.bmi088_.rx_data_.gyro[2];
-        memcpy(vision.tx_data_.quaternion, ins.quaternion_ekf_.ins_.q, sizeof(ins.quaternion_ekf_.ins_.q));
+        ticks++;
 
+        vision.update_tx();
         vision.send();
 
         osDelayUntil(start + ticks);

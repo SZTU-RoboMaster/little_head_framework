@@ -12,26 +12,27 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "dr16.h"
 #include "math_tools.h"
 #include "motor_dji.h"
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
 
 struct GimbalInput
 {
-    int16_t ch_3; // pitch
-    int16_t ch_2; // yaw
-    uint8_t sw_2; // 云台控制方式
-    float vision_yaw;   // 视觉yaw
-    float vision_pitch; // 视觉pitch
-    float vision_yaw_vel;   // 视觉yaw速度
-    float vision_pitch_vel; // 视觉pitch速度
-    float vision_yaw_acc;   // 视觉yaw加速度
-    float vision_pitch_acc; // 视觉pitch加速度
+    int16_t ch_3;               // pitch
+    int16_t ch_2;               // yaw
+    uint8_t sw_2;               // 云台控制方式
+    float vision_yaw;           // 视觉yaw
+    float vision_pitch;         // 视觉pitch
+    float vision_yaw_vel;       // 视觉yaw速度
+    float vision_pitch_vel;     // 视觉pitch速度
+    float vision_yaw_acc;       // 视觉yaw加速度
+    float vision_pitch_acc;     // 视觉pitch加速度
     uint8_t vision_target_lock; // 视觉目标锁定状态
 };
 
@@ -161,6 +162,8 @@ protected:
     // 内部变量
 
     // 读变量
+    Subscriber<InsMessage> ins_subscriber_;
+    InsMessage ins_message_;
 
     // 写变量
 
@@ -178,7 +181,6 @@ protected:
     GimbalOutput control_output_;
 
     // 内部函数
-
 };
 
 /* Exported variables ---------------------------------------------------------*/
