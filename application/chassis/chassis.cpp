@@ -12,14 +12,12 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "chassis.h"
-#include "gimbal.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-Chassis chassis;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -47,17 +45,22 @@ void Chassis::init()
     wheel_motor_[1].init(&hcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
     wheel_motor_[2].init(&hcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
     wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
+
+    gimbal_subscriber_ = MessageCenter::instance().subscribe<GimbalMessage>(kGimbalTopicName);
+    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
 }
 
 void Chassis::update_input()
 {
+    gimbal_subscriber_.update(gimbal_message_);
+    dr16_subscriber_.update(dr16_message_);
+
     // 读取遥控器输入
-    input_.ch_1 = dr16_->data_.ch_1;
-    input_.ch_0 = -dr16_->data_.ch_0;
-    input_.ch_2 = -dr16_->data_.ch_2;
-    input_.sw_1 = dr16_->data_.sw_1;
-    input_.sw_2 = dr16_->data_.sw_2;
-    input_.gimbal_yaw = gimbal.motor_yaw_.rx_data_.total_angle;
+    input_.ch_1 = dr16_message_.ch_1;
+    input_.ch_0 = -dr16_message_.ch_0;
+    input_.ch_2 = -dr16_message_.ch_2;
+    input_.sw_1 = dr16_message_.sw_1;
+    input_.sw_2 = dr16_message_.sw_2;
 }
 
 void Chassis::update_feedback()
@@ -67,11 +70,18 @@ void Chassis::update_feedback()
         feedback_.wheel_omega[i] = wheel_motor_[i].rx_data_.omega;
     }
     mecanum_forward_kinematics();
+    feedback_.gimbal_yaw = gimbal_message_.yaw_total_angle;
 }
 
 void Chassis::handle_safety()
 {
     // 安全处理
+    if (!dr16_subscriber_.is_fresh(100))
+    {
+        dr16_message_ = {};
+        input_ = {};
+        mode_ = CHASSIS_RELAX;
+    }
 }
 
 void Chassis::set_mode()
@@ -121,7 +131,7 @@ void Chassis::control()
     }
     case CHASSIS_FOLLOW:
     {
-        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         omega_pid_.set_target(0.0f);
         omega_pid_.set_feedback(yaw_error);
         omega_pid_.calculate();
@@ -141,7 +151,7 @@ void Chassis::control()
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
 
-        yaw_error = wrap_center((input_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         float sin_yaw = arm_sin_f32(yaw_error);
         float cos_yaw = arm_cos_f32(yaw_error);
         float vx_temp = input_.ch_1 / 660.0f * 4.27f;

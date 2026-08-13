@@ -12,11 +12,11 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
-#include "dr16.h"
-#include "referee.h"
 #include "motor_dji.h"
+#include "referee.h"
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
@@ -73,7 +73,7 @@ enum ShootMode
     SHOOT_CONTINUE,
 };
 
-enum  FrictionState
+enum FrictionState
 {
     FRCTION_RELAX,
     FRCTION_IDLE,
@@ -105,9 +105,6 @@ enum BlockState
 class Shoot
 {
 public:
-    // 遥控器
-    Dr16 *dr16_;
-
     // 裁判系统
     Referee *referee_;
 
@@ -161,6 +158,8 @@ protected:
     float heat_slowdown_threshold_ = 50.0f;
 
     // 读变量
+    Subscriber<Dr16Message> dr16_subscriber_;
+    Dr16Message dr16_message_;
 
     // 发射机构输入
     ShootInput input_;

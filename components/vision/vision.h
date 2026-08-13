@@ -20,16 +20,6 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-/**
- * @brief 视觉自瞄状态
- *
- */
-enum VisionStatus
-{
-    VISION_STATUS_DISABLE = 0,
-    VISION_STATUS_ENABLE,
-};
-
 struct __attribute__((packed)) RobotData
 {
     uint8_t head[2] = {'H', 'J'};
@@ -56,7 +46,7 @@ struct __attribute__((packed)) VisionData
     uint8_t target_lock = 50; // 49: lock, 50: unlock
     uint8_t fire_command = 0;
     // uint8_t target = 0; // 0: empty, 1: hero, 2: engineer, 3: infantry3, 4: infantry4, 5:infantry5,
-                        // 6: empty, 7: sentry, 8: outpost, 9: base
+                           // 6: empty, 7: sentry, 8: outpost, 9: base
     uint16_t crc16 = 0;
 };
 
@@ -67,17 +57,9 @@ struct __attribute__((packed)) VisionData
 class Vision
 {
 public:
-    RobotData tx_data_;
-
-    VisionData rx_data_;
-
-    VisionStatus vision_status_ = VISION_STATUS_DISABLE;
-
     void init();
 
     void usb_rx_callback(uint8_t *buf, uint32_t len);
-
-    void check_alive_100ms();
 
     void send();
 
@@ -100,16 +82,19 @@ protected:
     uint32_t last_rx_flag_ = 0;
 
     // 读变量
+    RobotData tx_data_;
     Subscriber<InsMessage> ins_subscriber_;
     InsMessage ins_message_;
 
     // 写变量
+    VisionData rx_data_;
+    Publisher<VisionMessage> vision_publisher_;
 
     // 读写变量
 
     // 内部函数
-
     void update_rx(uint8_t *buf, uint32_t len);
+    void publish();
 };
 
 /* Exported variables ---------------------------------------------------------*/

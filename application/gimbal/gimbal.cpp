@@ -12,14 +12,12 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "gimbal.h"
-#include "vision_task.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-Gimbal gimbal;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -44,7 +42,10 @@ void Gimbal::init()
     // 初始化云台状态
     status_.mode = GIMBAL_RELAX;
 
+    gimbal_publisher_ = MessageCenter::instance().advertise<GimbalMessage>(kGimbalTopicName);
     ins_subscriber_ = MessageCenter::instance().subscribe<InsMessage>(kInsTopicName);
+    vision_subscriber_ = MessageCenter::instance().subscribe<VisionMessage>(kVisionTopicName);
+    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
 }
 
 /**
@@ -53,17 +54,21 @@ void Gimbal::init()
  */
 void Gimbal::update_input()
 {
-    input_.ch_3 = dr16_->data_.ch_3;
-    input_.ch_2 = -dr16_->data_.ch_2;
-    input_.sw_2 = dr16_->data_.sw_2;
+    vision_subscriber_.update(vision_message_);
+    vision_online_flag_ = vision_subscriber_.is_fresh(100);
+    dr16_subscriber_.update(dr16_message_);
 
-    input_.vision_yaw = vision.rx_data_.yaw;
-    input_.vision_pitch = vision.rx_data_.pitch;
-    input_.vision_yaw_vel = vision.rx_data_.yaw_vel;
-    input_.vision_pitch_vel = vision.rx_data_.pitch_vel;
-    input_.vision_yaw_acc = vision.rx_data_.yaw_acc;
-    input_.vision_pitch_acc = vision.rx_data_.pitch_acc;
-    input_.vision_target_lock = vision.rx_data_.target_lock;
+    input_.ch_3 = dr16_message_.ch_3;
+    input_.ch_2 = -dr16_message_.ch_2;
+    input_.sw_2 = dr16_message_.sw_2;
+
+    input_.vision_yaw = vision_message_.yaw;
+    input_.vision_pitch = vision_message_.pitch;
+    input_.vision_yaw_vel = vision_message_.yaw_vel;
+    input_.vision_pitch_vel = vision_message_.pitch_vel;
+    input_.vision_yaw_acc = vision_message_.yaw_acc;
+    input_.vision_pitch_acc = vision_message_.pitch_acc;
+    input_.vision_target_lock = vision_message_.target_lock;
 }
 
 void Gimbal::update_feedback()
@@ -81,6 +86,12 @@ void Gimbal::update_feedback()
 void Gimbal::handle_safety()
 {
     // 安全处理
+    if (!dr16_subscriber_.is_fresh(100))
+    {
+        dr16_message_ = {};
+        input_ = {};
+        status_.mode = GIMBAL_RELAX;
+    }
 }
 
 void Gimbal::set_mode()
@@ -129,7 +140,7 @@ void Gimbal::update_control_state()
         break;
     case GIMBAL_ACTIVE:
         // 云台使能，电机输出
-        if (vision.vision_status_ == VISION_STATUS_ENABLE && input_.vision_target_lock == 49)
+        if (vision_online_flag_ && input_.vision_target_lock == 49)
         {
             control_judge_.target_yaw_angle = input_.vision_yaw;
             control_judge_.target_pitch_angle = input_.vision_pitch;
@@ -241,6 +252,9 @@ void Gimbal::output()
 {
     motor_yaw_.set_target_current(control_output_.target_yaw_current);
     motor_pitch_.set_target_current(control_output_.target_pitch_current);
+
+    GimbalMessage gimbal_message = {.yaw_total_angle = feedback_.yaw_angle};
+    gimbal_publisher_.publish(gimbal_message);
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

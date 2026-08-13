@@ -26,6 +26,7 @@
 /* function prototypes -------------------------------------------------------*/
 void Vision::init()
 {
+    vision_publisher_ = MessageCenter::instance().advertise<VisionMessage>(kVisionTopicName);
     ins_subscriber_ = MessageCenter::instance().subscribe<InsMessage>(kInsTopicName);
 }
 
@@ -37,31 +38,8 @@ void Vision::init()
  */
 void Vision::usb_rx_callback(uint8_t *buf, uint32_t len)
 {
-
-    // 滑动窗口, 判断vision是否在线
-    rx_flag_ += 1;
-
     update_rx(buf, len);
-}
-
-/**
- * @brief TIM定时器中断定期检测是否存活
- *
- */
-void Vision::check_alive_100ms()
-{
-    // 判断该时间段内是否接收过数据
-    if (rx_flag_ == last_rx_flag_)
-    {
-        // 视觉断开连接
-        vision_status_ = VISION_STATUS_DISABLE;
-    }
-    else
-    {
-        // 视觉保持连接
-        vision_status_ = VISION_STATUS_ENABLE;
-    }
-    last_rx_flag_ = rx_flag_;
+    publish();
 }
 
 void Vision::send()
@@ -70,6 +48,20 @@ void Vision::send()
     tx_data_.crc16 = get_CRC16_check_sum(reinterpret_cast<uint8_t *>(&tx_data_),
                                          sizeof(tx_data_) - sizeof(tx_data_.crc16), 0xffff);
     CDC_Transmit_FS(reinterpret_cast<uint8_t *>(&tx_data_), sizeof(tx_data_));
+}
+
+void Vision::publish()
+{
+    VisionMessage msg = {.yaw = rx_data_.yaw,
+                         .yaw_vel = rx_data_.yaw_vel,
+                         .yaw_acc = rx_data_.yaw_acc,
+                         .pitch = rx_data_.pitch,
+                         .pitch_vel = rx_data_.pitch_vel,
+                         .pitch_acc = rx_data_.pitch_acc,
+                         .target_lock = rx_data_.target_lock,
+                         .fire_command = rx_data_.fire_command};
+
+    vision_publisher_.publish(msg);
 }
 
 void Vision::update_tx()

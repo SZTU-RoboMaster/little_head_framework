@@ -18,14 +18,15 @@
 #include "bsp_tim.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
+
 #include "dr16.h"
 #include "referee.h"
-#include "gimbal_task.h"
+
 #include "INS_task.h"
 #include "chassis_task.h"
+#include "gimbal_task.h"
 #include "shoot_task.h"
 #include "vision_task.h"
-
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -38,7 +39,6 @@ uint32_t flag = 0;
 
 Dr16 dr16;
 Referee referee;
-
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -192,7 +192,6 @@ void task1ms_tim7_callback()
         alive_mod100 = 0;
 
         dr16.check_alive_100ms();
-        vision.check_alive_100ms();
 
         gimbal.motor_yaw_.check_alive_100ms();
         gimbal.motor_pitch_.check_alive_100ms();
@@ -229,9 +228,6 @@ void task_init()
     dwt_init();
 
     dr16.init(&huart3);
-    gimbal.dr16_ = &dr16;
-    chassis.dr16_ = &dr16;
-    shoot.dr16_ = &dr16;
     shoot.referee_ = &referee;
     referee.init(&huart6);
 

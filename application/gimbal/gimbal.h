@@ -12,7 +12,6 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "dr16.h"
 #include "math_tools.h"
 #include "motor_dji.h"
 
@@ -120,9 +119,6 @@ struct GimbalStatus
 class Gimbal
 {
 public:
-    // 遥控器
-    Dr16 *dr16_;
-
     // yaw轴电机
     MotorDji motor_yaw_;
     Pid yaw_angle_pid_;
@@ -160,12 +156,18 @@ protected:
     GimbalConfig config_;
 
     // 内部变量
+    uint8_t vision_online_flag_ = 0;
 
     // 读变量
     Subscriber<InsMessage> ins_subscriber_;
     InsMessage ins_message_;
+    Subscriber<VisionMessage> vision_subscriber_;
+    VisionMessage vision_message_;
+    Subscriber<Dr16Message> dr16_subscriber_;
+    Dr16Message dr16_message_;
 
     // 写变量
+    Publisher<GimbalMessage> gimbal_publisher_;
 
     // 云台输入
     GimbalInput input_;
@@ -184,7 +186,6 @@ protected:
 };
 
 /* Exported variables ---------------------------------------------------------*/
-extern Gimbal gimbal;
 
 /* Exported function declarations ---------------------------------------------*/
 

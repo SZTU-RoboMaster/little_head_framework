@@ -12,9 +12,10 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bsp_uart.h"
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
@@ -27,56 +28,6 @@ enum Dr16Status
 {
     DR16_STATUS_DISABLE = 0,
     DR16_STATUS_ENABLE,
-};
-
-/**
- * @brief  remote control information
- */
-struct Dr16Data
-{
-    /* rocker channel information */
-    int16_t ch_0;
-    int16_t ch_1;
-    int16_t ch_2;
-    int16_t ch_3;
-    /* left and right lever information */
-    uint8_t sw_1;
-    uint8_t sw_2;
-    /* mouse movement and button information */
-    struct
-    {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-
-        uint8_t left;
-        uint8_t right;
-    } mouse;
-    /* keyboard key information */
-    union
-    {
-        uint16_t key_code;
-        struct
-        {
-            uint16_t w : 1;
-            uint16_t s : 1;
-            uint16_t a : 1;
-            uint16_t d : 1;
-            uint16_t shift : 1;
-            uint16_t ctrl : 1;
-            uint16_t q : 1;
-            uint16_t e : 1;
-            uint16_t r : 1;
-            uint16_t f : 1;
-            uint16_t g : 1;
-            uint16_t z : 1;
-            uint16_t x : 1;
-            uint16_t c : 1;
-            uint16_t v : 1;
-            uint16_t b : 1;
-        } bit;
-    } kb;
-    int16_t wheel;
 };
 
 /**
@@ -93,7 +44,7 @@ public:
     void check_alive_100ms();
 
     // 遥控器DR16对外接口信息
-    Dr16Data data_;
+    Dr16Message data_;
 
 protected:
     // 初始化相关常量
@@ -116,6 +67,7 @@ protected:
     Dr16Status dr16_status_ = DR16_STATUS_DISABLE;
 
     // 写变量
+    Publisher<Dr16Message> dr16_publisher_;
 
     // 读写变量
 

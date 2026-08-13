@@ -43,14 +43,18 @@ void Shoot::init()
     friction_left_.init(&hcan2, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
     friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+
+    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
 }
 
 uint8_t sw_1_up, wheel_up;
 void Shoot::update_input()
 {
-    input_.sw_1 = dr16_->data_.sw_1;
-    input_.sw_2 = dr16_->data_.sw_2;
-    input_.wheel = dr16_->data_.wheel;
+    dr16_subscriber_.update(dr16_message_);
+
+    input_.sw_1 = dr16_message_.sw_1;
+    input_.sw_2 = dr16_message_.sw_2;
+    input_.wheel = dr16_message_.wheel;
     input_.current_ref_heat_ = referee_->power_heat_data_.shooter_17mm_barrel_heat;
     input_.heat_limit_ = referee_->robot_state_.shooter_barrel_heat_limit;
     input_.heat_cooling_rate_ = referee_->robot_state_.shooter_barrel_cooling_value;
@@ -90,6 +94,11 @@ void Shoot::update_feedback()
 
 void Shoot::handle_safety()
 {
+    if (!dr16_subscriber_.is_fresh(100))
+    {
+        dr16_message_ = {};
+        fric_enabled_ = false;
+    }
 }
 
 void Shoot::set_mode()

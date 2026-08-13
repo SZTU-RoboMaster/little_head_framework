@@ -12,11 +12,12 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
-#include "dr16.h"
 #include "math_tools.h"
 #include "motor_dji.h"
 #include "pid.h"
+
+#include "message_center.h"
+#include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -24,12 +25,11 @@
 
 struct ChassisInput
 {
-    int16_t ch_1;     // x
-    int16_t ch_0;     // y
-    int16_t ch_2;     // yaw
-    uint8_t sw_1;     // 底盘控制方式
-    uint8_t sw_2;     // 底盘控制方式
-    float gimbal_yaw; // 云台偏航角
+    int16_t ch_1; // x
+    int16_t ch_0; // y
+    int16_t ch_2; // yaw
+    uint8_t sw_1; // 底盘控制方式
+    uint8_t sw_2; // 底盘控制方式
 };
 
 struct ChassisFeedback
@@ -38,6 +38,7 @@ struct ChassisFeedback
     float velocity_x;
     float velocity_y;
     float omega;
+    float gimbal_yaw; // yaw电机角度
 };
 
 struct ChassisOutput
@@ -86,9 +87,6 @@ enum ChassisMode
 class Chassis
 {
 public:
-    // 遥控器
-    Dr16 *dr16_;
-
     // 底盘角速度PID
     Pid omega_pid_;
 
@@ -122,6 +120,10 @@ protected:
     // 内部变量
 
     // 读变量
+    Subscriber<GimbalMessage> gimbal_subscriber_;
+    GimbalMessage gimbal_message_;
+    Subscriber<Dr16Message> dr16_subscriber_;
+    Dr16Message dr16_message_;
 
     // 写变量
 
@@ -146,7 +148,6 @@ protected:
 };
 
 /* Exported variables ---------------------------------------------------------*/
-extern Chassis chassis;
 
 /* Exported function declarations ---------------------------------------------*/
 

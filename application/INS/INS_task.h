@@ -38,11 +38,6 @@ public:
     // imu
     Bmi088 bmi088_;
 
-    // 加速度kf
-    GravityKf gravity_kf_;
-    // 四元数ekf
-    QuaternionEkf quaternion_ekf_;
-
     void init();
 
     void update();
@@ -55,6 +50,11 @@ protected:
     // 常量
 
     // 内部变量
+
+    // 加速度kf
+    GravityKf gravity_kf_;
+    // 四元数ekf
+    QuaternionEkf quaternion_ekf_;
 
     // 读变量
 

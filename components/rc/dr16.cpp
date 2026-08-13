@@ -43,6 +43,8 @@ void Dr16::init(UART_HandleTypeDef *huart)
     {
         uart_manage_obj_ = &uart6_manage_obj;
     }
+
+    dr16_publisher_ = MessageCenter::instance().advertise<Dr16Message>(kDr16TopicName);
 }
 
 /**
@@ -63,6 +65,7 @@ void Dr16::uart_rx_callback(uint8_t *rx_data, uint16_t length)
     rx_flag_ += 1;
 
     process_data(rx_data, length);
+    dr16_publisher_.publish(data_);
 }
 
 /**

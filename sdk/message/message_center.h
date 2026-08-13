@@ -21,20 +21,22 @@ inline constexpr std::size_t kMaxTopicNameLength = 31;
 inline constexpr std::size_t kMaxPayloadSize = 256;
 
 /* Exported types ------------------------------------------------------------*/
+
+// forward declaration
 template <typename T> class Publisher;
-
 template <typename T> class Subscriber;
-
 class MessageCenter;
 
+/**
+ * @brief Specialized Topic
+ *
+ */
 class Topic
 {
 public:
 private:
     friend class MessageCenter;
-
     template <typename T> friend class Publisher;
-
     template <typename T> friend class Subscriber;
 
     char name_[kMaxTopicNameLength + 1];
@@ -57,6 +59,10 @@ private:
     bool is_fresh(uint32_t last_timestamp_ms, bool received, uint32_t timeout_ms) const;
 };
 
+/**
+ * @brief Specialized Publisher
+ *
+ */
 template <typename T> class Publisher
 {
     static_assert(sizeof(T) <= kMaxPayloadSize);
@@ -79,6 +85,10 @@ private:
     Topic *topic_ = nullptr;
 };
 
+/**
+ * @brief Specialized Subscriber
+ *
+ */
 template <typename T> class Subscriber
 {
     static_assert(sizeof(T) <= kMaxPayloadSize);
@@ -110,6 +120,10 @@ private:
     bool received_ = false;
 };
 
+/**
+ * @brief Specialized MessageCenter
+ *
+ */
 class MessageCenter
 {
 public:
