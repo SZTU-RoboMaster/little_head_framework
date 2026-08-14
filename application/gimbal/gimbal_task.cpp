@@ -1,7 +1,7 @@
 /**
  * @file template.cpp
  * @author anchengc
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -12,12 +12,14 @@
 /* Includes ------------------------------------------------------------------*/
 #include "gimbal_task.h"
 #include "cmsis_os.h"
+
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 Gimbal gimbal;
+Command command;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -32,12 +34,15 @@ Gimbal gimbal;
 extern "C" void gimbal_task(void *argument)
 {
     gimbal.init();
+    command.init();
 
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)
     {
         ticks++;
+
+        command.update();
 
         gimbal.update_input();
         gimbal.update_feedback();

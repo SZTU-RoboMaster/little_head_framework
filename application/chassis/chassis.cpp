@@ -47,20 +47,13 @@ void Chassis::init()
     wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f));
 
     gimbal_subscriber_ = MessageCenter::instance().subscribe<GimbalMessage>(kGimbalTopicName);
-    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
+    cmd_subscriber_ = MessageCenter::instance().subscribe<ChassisCmdMessage>(kCmdChassisTopicName);
 }
 
 void Chassis::update_input()
 {
-    gimbal_subscriber_.update(gimbal_message_);
-    dr16_subscriber_.update(dr16_message_);
-
-    // 读取遥控器输入
-    input_.ch_1 = dr16_message_.ch_1;
-    input_.ch_0 = -dr16_message_.ch_0;
-    input_.ch_2 = -dr16_message_.ch_2;
-    input_.sw_1 = dr16_message_.sw_1;
-    input_.sw_2 = dr16_message_.sw_2;
+    gimbal_subscriber_.update(gimbal_msg_);
+    cmd_subscriber_.update(cmd_msg_);
 }
 
 void Chassis::update_feedback()
@@ -70,32 +63,30 @@ void Chassis::update_feedback()
         feedback_.wheel_omega[i] = wheel_motor_[i].rx_data_.omega;
     }
     mecanum_forward_kinematics();
-    feedback_.gimbal_yaw = gimbal_message_.yaw_total_angle;
+    feedback_.gimbal_yaw = gimbal_msg_.yaw_total_angle;
 }
 
 void Chassis::handle_safety()
 {
     // 安全处理
-    if (!dr16_subscriber_.is_fresh(100))
+    if (!cmd_subscriber_.is_fresh(100))
     {
-        dr16_message_ = {};
-        input_ = {};
-        mode_ = CHASSIS_RELAX;
+        cmd_msg_ = {};
     }
 }
 
 void Chassis::set_mode()
 {
     // 设置模式
-    switch (input_.sw_2)
+    switch (cmd_msg_.chassis_mode)
     {
-    case 2:
+    case CHASSIS_CMD_RELAX:
         mode_ = CHASSIS_RELAX;
         break;
-    case 3:
+    case CHASSIS_CMD_FOLLOW:
         mode_ = CHASSIS_FOLLOW;
         break;
-    case 1:
+    case CHASSIS_CMD_SPIN:
         mode_ = CHASSIS_SPIN;
         break;
     default:
@@ -124,9 +115,9 @@ void Chassis::control()
         {
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
-        control_output_.target_velocity_x = cubic_map(input_.ch_1 / 660.0f, 0.5f) * 4.27f;
-        control_output_.target_velocity_y = cubic_map(input_.ch_0 / 660.0f, 0.5f) * 4.27f;
-        control_output_.target_omega = cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.27f;
+        control_output_.target_velocity_x = cmd_msg_.rc_vx;
+        control_output_.target_velocity_y = cmd_msg_.rc_vy;
+        control_output_.target_omega = cmd_msg_.rc_vw;
         break;
     }
     case CHASSIS_FOLLOW:
@@ -139,8 +130,8 @@ void Chassis::control()
         {
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
-        control_output_.target_velocity_x = input_.ch_1 / 660.0f * 4.27f;
-        control_output_.target_velocity_y = input_.ch_0 / 660.0f * 4.27f;
+        control_output_.target_velocity_x = cmd_msg_.rc_vx;
+        control_output_.target_velocity_y = cmd_msg_.rc_vy;
         control_output_.target_omega = -omega_pid_.get_output();
         break;
     }
@@ -154,8 +145,8 @@ void Chassis::control()
         yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         float sin_yaw = arm_sin_f32(yaw_error);
         float cos_yaw = arm_cos_f32(yaw_error);
-        float vx_temp = input_.ch_1 / 660.0f * 4.27f;
-        float vy_temp = input_.ch_0 / 660.0f * 4.27f;
+        float vx_temp = cmd_msg_.rc_vx;
+        float vy_temp = cmd_msg_.rc_vy;
         control_output_.target_velocity_x = vx_temp * cos_yaw + vy_temp * sin_yaw;
         control_output_.target_velocity_y = vx_temp * (-sin_yaw) + vy_temp * cos_yaw;
         control_output_.target_omega = config_.spin_vw;

@@ -1,7 +1,7 @@
 /**
  * @file template.hpp
  * @author anchengc
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2026-05-30 0.1 初版
  *
@@ -12,6 +12,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#include "command.h"
 #include "gimbal.h"
 
 /* Exported macros -----------------------------------------------------------*/

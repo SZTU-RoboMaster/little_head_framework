@@ -44,7 +44,7 @@ void Dr16::init(UART_HandleTypeDef *huart)
         uart_manage_obj_ = &uart6_manage_obj;
     }
 
-    dr16_publisher_ = MessageCenter::instance().advertise<Dr16Message>(kDr16TopicName);
+    publisher_ = MessageCenter::instance().advertise<Dr16Message>(kDr16TopicName);
 }
 
 /**
@@ -65,7 +65,7 @@ void Dr16::uart_rx_callback(uint8_t *rx_data, uint16_t length)
     rx_flag_ += 1;
 
     process_data(rx_data, length);
-    dr16_publisher_.publish(data_);
+    publisher_.publish(data_);
 }
 
 /**
@@ -96,7 +96,7 @@ void Dr16::check_alive_100ms()
  */
 void Dr16::process_data(uint8_t *rx_data, uint16_t length)
 {
-
+    // clang-format off
     data_.ch_0 = ((rx_data[0] | rx_data[1] << 8) & 0x07ff) - 1024;
     data_.ch_1 = ((rx_data[1] >> 3 | rx_data[2] << 5) & 0x07ff) - 1024;
     data_.ch_2 = ((rx_data[2] >> 6 | rx_data[3] << 2 | rx_data[4] << 10) & 0x07ff) - 1024;
@@ -107,7 +107,7 @@ void Dr16::process_data(uint8_t *rx_data, uint16_t length)
         (std::abs(data_.ch_2) > 660) ||
         (std::abs(data_.ch_3) > 660))
     {
-        data_ = {};
+        data_ = {.sw_2 = 2};
         return;
     }
 
@@ -128,6 +128,7 @@ void Dr16::process_data(uint8_t *rx_data, uint16_t length)
 
     data_.kb.key_code = (rx_data[14] | rx_data[15] << 8);
     data_.wheel = (rx_data[16] | rx_data[17] << 8) - 1024;
+    // clang-format on
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

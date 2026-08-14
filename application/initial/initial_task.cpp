@@ -21,6 +21,7 @@
 
 #include "dr16.h"
 #include "referee.h"
+#include "vt13.h"
 
 #include "INS_task.h"
 #include "chassis_task.h"
@@ -38,6 +39,7 @@ uint8_t init_finished = 0;
 uint32_t flag = 0;
 
 Dr16 dr16;
+Vt13 vt13;
 Referee referee;
 
 /* Private function declarations ---------------------------------------------*/
@@ -123,6 +125,17 @@ void device_can2_callback(CanRxBuffer *rx_buffer)
 }
 
 /**
+ * @brief UART1遥控器回调函数
+ *
+ * @param buffer UART1收到的消息
+ * @param length 长度
+ */
+void vt13_uart1_callback(uint8_t *buffer, uint16_t length)
+{
+    vt13.uart_rx_callback(buffer, length);
+}
+
+/**
  * @brief UART3遥控器回调函数
  *
  * @param buffer UART3收到的消息
@@ -192,6 +205,7 @@ void task1ms_tim7_callback()
         alive_mod100 = 0;
 
         dr16.check_alive_100ms();
+        vt13.check_alive_100ms();
 
         gimbal.motor_yaw_.check_alive_100ms();
         gimbal.motor_pitch_.check_alive_100ms();
@@ -228,11 +242,13 @@ void task_init()
     dwt_init();
 
     dr16.init(&huart3);
+    vt13.init(&huart1);
     shoot.referee_ = &referee;
     referee.init(&huart6);
 
     can_init(&hcan1, device_can1_callback);
     can_init(&hcan2, device_can2_callback);
+    uart_init(&huart1, vt13_uart1_callback, 21);
     uart_init(&huart3, dr16_uart3_callback, 18);
     uart_init(&huart6, referee_uart6_callback, 255);
     tim_init(&htim7, task1ms_tim7_callback);

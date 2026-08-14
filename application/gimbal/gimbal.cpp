@@ -42,10 +42,10 @@ void Gimbal::init()
     // 初始化云台状态
     status_.mode = GIMBAL_RELAX;
 
-    gimbal_publisher_ = MessageCenter::instance().advertise<GimbalMessage>(kGimbalTopicName);
+    publisher_ = MessageCenter::instance().advertise<GimbalMessage>(kGimbalTopicName);
     ins_subscriber_ = MessageCenter::instance().subscribe<InsMessage>(kInsTopicName);
     vision_subscriber_ = MessageCenter::instance().subscribe<VisionMessage>(kVisionTopicName);
-    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
+    cmd_subscriber_ = MessageCenter::instance().subscribe<GimbalCmdMessage>(kCmdGimbalTopicName);
 }
 
 /**
@@ -54,61 +54,41 @@ void Gimbal::init()
  */
 void Gimbal::update_input()
 {
-    vision_subscriber_.update(vision_message_);
+    vision_subscriber_.update(vision_msg_);
     vision_online_flag_ = vision_subscriber_.is_fresh(100);
-    dr16_subscriber_.update(dr16_message_);
-
-    input_.ch_3 = dr16_message_.ch_3;
-    input_.ch_2 = -dr16_message_.ch_2;
-    input_.sw_2 = dr16_message_.sw_2;
-
-    input_.vision_yaw = vision_message_.yaw;
-    input_.vision_pitch = vision_message_.pitch;
-    input_.vision_yaw_vel = vision_message_.yaw_vel;
-    input_.vision_pitch_vel = vision_message_.pitch_vel;
-    input_.vision_yaw_acc = vision_message_.yaw_acc;
-    input_.vision_pitch_acc = vision_message_.pitch_acc;
-    input_.vision_target_lock = vision_message_.target_lock;
+    cmd_subscriber_.update(cmd_msg_);
 }
 
 void Gimbal::update_feedback()
 {
-    ins_subscriber_.update(ins_message_);
+    ins_subscriber_.update(ins_msg_);
 
     feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
 
-    feedback_.imu_yaw_angle = ins_message_.angle[2];
-    feedback_.imu_pitch_angle = ins_message_.angle[1];
-    feedback_.imu_yaw_omega = ins_message_.gyro[2];
-    feedback_.imu_pitch_omega = ins_message_.gyro[1];
+    feedback_.imu_yaw_angle = ins_msg_.angle[2];
+    feedback_.imu_pitch_angle = ins_msg_.angle[1];
+    feedback_.imu_yaw_omega = ins_msg_.gyro[2];
+    feedback_.imu_pitch_omega = ins_msg_.gyro[1];
 }
 
 void Gimbal::handle_safety()
 {
     // 安全处理
-    if (!dr16_subscriber_.is_fresh(100))
+    if (!cmd_subscriber_.is_fresh(100))
     {
-        dr16_message_ = {};
-        input_ = {};
-        status_.mode = GIMBAL_RELAX;
+        cmd_msg_ = {};
     }
 }
 
 void Gimbal::set_mode()
 {
-    switch (input_.sw_2)
+    switch (cmd_msg_.gimbal_mode)
     {
-    case 2:
+    case GIMBAL_CMD_RELAX:
         status_.mode = GIMBAL_RELAX;
         status_.switching = GIMBAL_SWITCH_IDLE;
         break;
-    case 3:
-        if (status_.mode != GIMBAL_ACTIVE)
-        {
-            status_.switching = GIMBAL_SWITCH_TO_MIDDLE;
-        }
-        break;
-    case 1:
+    case GIMBAL_CMD_ACTIVE:
         if (status_.mode != GIMBAL_ACTIVE)
         {
             status_.switching = GIMBAL_SWITCH_TO_MIDDLE;
@@ -140,21 +120,19 @@ void Gimbal::update_control_state()
         break;
     case GIMBAL_ACTIVE:
         // 云台使能，电机输出
-        if (vision_online_flag_ && input_.vision_target_lock == 49)
+        if (vision_online_flag_ && vision_msg_.target_lock == 49)
         {
-            control_judge_.target_yaw_angle = input_.vision_yaw;
-            control_judge_.target_pitch_angle = input_.vision_pitch;
-            control_output_.target_yaw_feedforward_omega = input_.vision_yaw_vel;
-            control_output_.target_pitch_feedforward_omega = input_.vision_pitch_vel;
+            control_judge_.target_yaw_angle = vision_msg_.yaw;
+            control_judge_.target_pitch_angle = vision_msg_.pitch;
+            control_output_.target_yaw_feedforward_omega = vision_msg_.yaw_vel;
+            control_output_.target_pitch_feedforward_omega = vision_msg_.pitch_vel;
             control_output_.target_yaw_feedforward_acc = 0.0f;
             control_output_.target_pitch_feedforward_acc = 0.0f;
         }
         else
         {
-            control_judge_.target_yaw_angle +=
-                cubic_map(input_.ch_2 / 660.0f, 0.5f) * 4.0f * 0.001f;
-            control_judge_.target_pitch_angle +=
-                cubic_map(input_.ch_3 / 660.0f, 0.5f) * 5.0f * 0.001f;
+            control_judge_.target_yaw_angle += cmd_msg_.yaw_rate * 0.001f;
+            control_judge_.target_pitch_angle += cmd_msg_.pitch_rate * 0.001f;
             control_output_.target_yaw_feedforward_omega = 0.0f;
             control_output_.target_pitch_feedforward_omega = 0.0f;
             control_output_.target_yaw_feedforward_acc = 0.0f;
@@ -253,8 +231,8 @@ void Gimbal::output()
     motor_yaw_.set_target_current(control_output_.target_yaw_current);
     motor_pitch_.set_target_current(control_output_.target_pitch_current);
 
-    GimbalMessage gimbal_message = {.yaw_total_angle = feedback_.yaw_angle};
-    gimbal_publisher_.publish(gimbal_message);
+    GimbalMessage msg = {.yaw_total_angle = feedback_.yaw_angle};
+    publisher_.publish(msg);
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

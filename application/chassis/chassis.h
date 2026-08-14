@@ -23,15 +23,6 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-struct ChassisInput
-{
-    int16_t ch_1; // x
-    int16_t ch_0; // y
-    int16_t ch_2; // yaw
-    uint8_t sw_1; // 底盘控制方式
-    uint8_t sw_2; // 底盘控制方式
-};
-
 struct ChassisFeedback
 {
     float wheel_omega[4];
@@ -121,14 +112,12 @@ protected:
 
     // 读变量
     Subscriber<GimbalMessage> gimbal_subscriber_;
-    GimbalMessage gimbal_message_;
-    Subscriber<Dr16Message> dr16_subscriber_;
-    Dr16Message dr16_message_;
+    GimbalMessage gimbal_msg_;
+    Subscriber<ChassisCmdMessage> cmd_subscriber_;
+    ChassisCmdMessage cmd_msg_;
 
     // 写变量
 
-    // 底盘输入
-    ChassisInput input_;
     // 底盘反馈
     ChassisFeedback feedback_;
     // 底盘状态

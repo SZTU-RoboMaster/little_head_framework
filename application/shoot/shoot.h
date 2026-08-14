@@ -21,19 +21,6 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-struct ShootInput
-{
-    uint8_t sw_1;  // 发射控制
-    uint8_t sw_2;  // 云台控制
-    int16_t wheel; // 拨轮
-    // 当前热量
-    float current_ref_heat_ = 0.0f;
-    // 热量限制上限
-    float heat_limit_ = 0.0f;
-    // 热量冷却速度
-    float heat_cooling_rate_ = 0.0f;
-};
-
 struct ShootFeedback
 {
     float trigger_angle;
@@ -43,6 +30,13 @@ struct ShootFeedback
     float right_fric_omega;
     float left_fric_current;
     float right_fric_current;
+
+    // 当前热量
+    float current_ref_heat_ = 0.0f;
+    // 热量限制上限
+    float heat_limit_ = 0.0f;
+    // 热量冷却速度
+    float heat_cooling_rate_ = 0.0f;
 };
 
 struct ShootOutput
@@ -147,10 +141,14 @@ protected:
 
     // 内部变量
 
-    // 摩擦轮flag
+    // 使能摩擦轮
     uint8_t fric_enabled_ = false;
-    // 单发flag
+    // 单发请求
+    uint8_t single_shot_request_ = false;
+    // 单发锁存
     uint8_t single_shot_pending_ = false;
+    // 单发序号
+    uint32_t last_single_shot_seq_ = 0;
 
     // 停火热量阈值
     float heat_ceasefire_threshold_ = 20.0f;
@@ -158,11 +156,8 @@ protected:
     float heat_slowdown_threshold_ = 50.0f;
 
     // 读变量
-    Subscriber<Dr16Message> dr16_subscriber_;
-    Dr16Message dr16_message_;
-
-    // 发射机构输入
-    ShootInput input_;
+    Subscriber<ShootCmdMessage> cmd_subscriber_;
+    ShootCmdMessage cmd_msg_;
 
     // 发射机构反馈
     ShootFeedback feedback_;

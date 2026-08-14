@@ -12,9 +12,10 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bsp_uart.h"
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
@@ -29,59 +30,7 @@ enum Vt13Status
     VT13_STATUS_ENABLE,
 };
 
-/**
- * @brief  remote control information
- */
-struct Vt13Data
-{
-    uint8_t sof_1;
-    uint8_t sof_2;
-    int16_t ch_0;
-    int16_t ch_1;
-    int16_t ch_2;
-    int16_t ch_3;
-    uint8_t mode_sw;
-    uint8_t pause;
-    uint8_t fn_1;
-    uint8_t fn_2;
-    int16_t wheel;
-    uint8_t trigger;
-    /* mouse movement and button information */
-    struct
-    {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-        uint8_t left;
-        uint8_t right;
-        uint8_t middle;
-    } mouse;
-    /* keyboard key information */
-    union
-    {
-        uint16_t key_code;
-        struct
-        {
-            uint16_t w : 1;
-            uint16_t s : 1;
-            uint16_t a : 1;
-            uint16_t d : 1;
-            uint16_t shift : 1;
-            uint16_t ctrl : 1;
-            uint16_t q : 1;
-            uint16_t e : 1;
-            uint16_t r : 1;
-            uint16_t f : 1;
-            uint16_t g : 1;
-            uint16_t z : 1;
-            uint16_t x : 1;
-            uint16_t c : 1;
-            uint16_t v : 1;
-            uint16_t b : 1;
-        } bit;
-    } kb;
-    uint16_t crc16;
-};
+
 
 /**
  * @brief Specialized, 遥控器VT13
@@ -116,9 +65,10 @@ protected:
     // 遥控器VT13状态
     Vt13Status vt13_status_ = VT13_STATUS_DISABLE;
     // 遥控器VT13对外接口信息
-    Vt13Data data_;
+    Vt13Message data_;
 
     // 写变量
+    Publisher<Vt13Message> publisher_;
 
     // 读写变量
 

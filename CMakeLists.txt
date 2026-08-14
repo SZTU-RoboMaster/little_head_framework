@@ -84,6 +84,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/shoot/shoot_task.cpp
     application/vision/vision_task.cpp
     sdk/message/message_center.cpp
+    application/command/command.cpp
 )
 
 # Add include paths
@@ -113,6 +114,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/INS
     application/vision
     sdk/message
+    application/command
 )
 
 # Add project symbols (macros)

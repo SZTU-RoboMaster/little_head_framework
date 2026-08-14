@@ -43,9 +43,6 @@ public:
 
     void check_alive_100ms();
 
-    // 遥控器DR16对外接口信息
-    Dr16Message data_;
-
 protected:
     // 初始化相关常量
 
@@ -56,18 +53,20 @@ protected:
 
     // 内部变量
 
-    // 当前时刻的遥控器DR16接收flag
+    // 当前时刻的遥控器接收flag
     uint32_t rx_flag_ = 0;
-    // 前一时刻的遥控器DR16接收flag
+    // 前一时刻的遥控器接收flag
     uint32_t last_rx_flag_ = 0;
 
     // 读变量
 
-    // 遥控器DR16状态
+    // 遥控器状态
     Dr16Status dr16_status_ = DR16_STATUS_DISABLE;
+    // 遥控器数据
+    Dr16Message data_;
 
     // 写变量
-    Publisher<Dr16Message> dr16_publisher_;
+    Publisher<Dr16Message> publisher_;
 
     // 读写变量
 

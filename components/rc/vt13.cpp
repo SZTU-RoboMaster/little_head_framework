@@ -44,6 +44,7 @@ void Vt13::init(UART_HandleTypeDef *huart)
     {
         uart_manage_obj_ = &uart6_manage_obj;
     }
+    publisher_ = MessageCenter::instance().advertise<Vt13Message>(kVt13TopicName);
 }
 
 /**
@@ -64,6 +65,7 @@ void Vt13::uart_rx_callback(uint8_t *rx_data, uint16_t length)
     rx_flag_ += 1;
 
     process_data(rx_data, length);
+    publisher_.publish(data_);
 }
 
 /**
@@ -94,22 +96,18 @@ void Vt13::check_alive_100ms()
  */
 void Vt13::process_data(uint8_t *rx_data, uint16_t length)
 {
-
+    // clang-format off
     data_.sof_1 = rx_data[0];
     data_.sof_2 = rx_data[1];
     if (data_.sof_1 != 0xA9 || data_.sof_2 != 0x53)
     {
-        data_ = {};
+        data_ = {.mode_sw = 0};
         return;
     }
 
     if (!verify_CRC16_check_sum(rx_data, length))
     {
-        data_ = {};
-        return;
-    }
-    {
-        data_ = {};
+        data_ = {.mode_sw = 0};
         return;
     }
 
@@ -123,7 +121,7 @@ void Vt13::process_data(uint8_t *rx_data, uint16_t length)
         (std::abs(data_.ch_2) > 660) ||
         (std::abs(data_.ch_3) > 660))
     {
-        data_ = {};
+        data_ = {.mode_sw = 0};
         return;
     }
 
@@ -151,6 +149,7 @@ void Vt13::process_data(uint8_t *rx_data, uint16_t length)
 
     data_.kb.key_code = (rx_data[17] | rx_data[18] << 8);
     data_.crc16 = (rx_data[19] | rx_data[20] << 8);
+    // clang-format on
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

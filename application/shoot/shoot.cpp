@@ -32,7 +32,6 @@ Shoot shoot;
  */
 void Shoot::init()
 {
-
     // 拨弹盘电机初始化
     trigger_.angle_pid_.init(15.0f, 0.0f, 0.0f, 0.0f, 0.0f, 48.0f, 0.005f);
     trigger_.omega_pid_.init(1200.0f, 60000.0f, 0.0f, 0.0f, 5000.0f, 10000.0f);
@@ -44,41 +43,18 @@ void Shoot::init()
     friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 
-    dr16_subscriber_ = MessageCenter::instance().subscribe<Dr16Message>(kDr16TopicName);
+    cmd_subscriber_ = MessageCenter::instance().subscribe<ShootCmdMessage>(kCmdShootTopicName);
 }
 
-uint8_t sw_1_up, wheel_up;
 void Shoot::update_input()
 {
-    dr16_subscriber_.update(dr16_message_);
-
-    input_.sw_1 = dr16_message_.sw_1;
-    input_.sw_2 = dr16_message_.sw_2;
-    input_.wheel = dr16_message_.wheel;
-    input_.current_ref_heat_ = referee_->power_heat_data_.shooter_17mm_barrel_heat;
-    input_.heat_limit_ = referee_->robot_state_.shooter_barrel_heat_limit;
-    input_.heat_cooling_rate_ = referee_->robot_state_.shooter_barrel_cooling_value;
-
-    //////////////////////////////////////////////////////////////////////////////////////////
-    // 临时写个上升沿，后面写到遥控器里
-    static uint8_t last_sw_1, mod20 = 0;
-    sw_1_up = (last_sw_1 == 3 && input_.sw_1 == 1) ? 1 : 0;
-    last_sw_1 = input_.sw_1;
-
-    static uint16_t last_wheel = 0;
-    wheel_up = (last_wheel < 300 && input_.wheel > 300) ? 1 : 0;
-    if (mod20++ >= 20)
+    const auto cmd_update = cmd_subscriber_.update(cmd_msg_);
+    fric_enabled_ = cmd_msg_.fric_enabled;
+    single_shot_request_ = cmd_msg_.single_shot_seq > last_single_shot_seq_;
+    if (cmd_update)
     {
-        mod20 = 0;
-        last_wheel = input_.wheel;
+        last_single_shot_seq_ = cmd_msg_.single_shot_seq;
     }
-
-    // 上升沿切换摩擦轮flag
-    if (sw_1_up)
-    {
-        fric_enabled_ = !fric_enabled_;
-    }
-    //////////////////////////////////////////////////////////////////////////////////////////
 }
 
 void Shoot::update_feedback()
@@ -90,14 +66,20 @@ void Shoot::update_feedback()
     feedback_.right_fric_omega = friction_right_.rx_data_.omega;
     feedback_.left_fric_current = friction_left_.rx_data_.current;
     feedback_.right_fric_current = friction_right_.rx_data_.current;
+
+    feedback_.current_ref_heat_ = referee_->power_heat_data_.shooter_17mm_barrel_heat;
+    feedback_.heat_limit_ = referee_->robot_state_.shooter_barrel_heat_limit;
+    feedback_.heat_cooling_rate_ = referee_->robot_state_.shooter_barrel_cooling_value;
 }
 
 void Shoot::handle_safety()
 {
-    if (!dr16_subscriber_.is_fresh(100))
+    // 安全处理
+    if (!cmd_subscriber_.is_fresh(100))
     {
-        dr16_message_ = {};
+        cmd_msg_ = {};
         fric_enabled_ = false;
+        single_shot_request_ = false;
     }
 }
 
@@ -116,32 +98,35 @@ void Shoot::set_mode()
         shoot_mode_ = SHOOT_IDLE;
         break;
     case SHOOT_IDLE:
-        if (input_.sw_1 == 2)
+        if (cmd_msg_.continue_shoot)
         {
             shoot_mode_ = SHOOT_CONTINUE;
             return;
         }
-        if (wheel_up)
+        if (single_shot_request_)
         {
             shoot_mode_ = SHOOT_SINGLE;
             single_shot_pending_ = true;
-            return;
         }
         break;
     case SHOOT_SINGLE:
     case SHOOT_DOUBLE:
     case SHOOT_TRIPLE:
+        if (trigger_state_ == TRIGGER_BLOCK)
+        {
+            shoot_mode_ = SHOOT_IDLE;
+            control_output_.target_trigger_angle = feedback_.trigger_angle;
+            return;
+        }
         if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
         {
             shoot_mode_ = SHOOT_IDLE;
-            return;
         }
         break;
     case SHOOT_CONTINUE:
-        if (input_.sw_1 != 2)
+        if (!cmd_msg_.continue_shoot)
         {
             shoot_mode_ = SHOOT_IDLE;
-            return;
         }
         break;
     }
@@ -284,24 +269,23 @@ void Shoot::update_friction_state()
 
 void Shoot::update_heat_state()
 {
-    static float last_heat = input_.current_ref_heat_;
+    static float last_heat = feedback_.current_ref_heat_;
 
     // 1ms冷却
-    current_heat_ -= input_.heat_cooling_rate_ * 0.001f;
+    current_heat_ -= feedback_.heat_cooling_rate_ * 0.001f;
     if (current_heat_ < 0.0f)
     {
         current_heat_ = 0.0f;
     }
 
     // 热量校准
-    if (input_.current_ref_heat_ != last_heat)
+    if (feedback_.current_ref_heat_ != last_heat)
     {
-        current_heat_ = input_.current_ref_heat_;
-        last_heat = input_.current_ref_heat_;
+        current_heat_ = feedback_.current_ref_heat_;
+        last_heat = feedback_.current_ref_heat_;
     }
 
     // 火控
-    
 }
 
 void Shoot::update_trigger_state()
