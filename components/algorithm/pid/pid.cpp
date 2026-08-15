@@ -125,6 +125,10 @@ void Pid::calculate()
         {
             speed_ratio = 0.0f;
         }
+        else
+        {
+            speed_ratio = 0.0f;
+        }
     }
     // 积分限幅
     if (integral_output_limit_ != 0.0f)

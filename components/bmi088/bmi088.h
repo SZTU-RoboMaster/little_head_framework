@@ -15,7 +15,6 @@
 
 #include "bmi088_interface.h"
 #include "bmi08x.h"
-#include "quaternion_ekf.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -42,9 +41,6 @@ public:
     // BMI088处理后的数据
     Bmi088RxData rx_data_;
 
-    // z轴陀螺仪零飘值
-    float gyro_bias_z_;
-
     int8_t init();
 
     void exti_read_callback(uint16_t gpio_pin);
@@ -66,6 +62,8 @@ protected:
     bmi08_sensor_data raw_accel_;
     // 陀螺仪源数据
     bmi08_sensor_data raw_gyro_;
+    // z轴陀螺仪零飘值
+    float gyro_bias_z_;
 
     // 读变量
 

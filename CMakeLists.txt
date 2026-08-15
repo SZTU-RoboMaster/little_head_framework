@@ -50,6 +50,9 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     bsp/uart/bsp_uart.cpp
     bsp/usb/bsp_usb.cpp
     bsp/dwt/bsp_dwt.cpp
+    bsp/led/bsp_led.cpp
+    bsp/buzzer/bsp_buzzer.cpp
+    bsp/imu_pwm/bsp_imu_pwm.cpp
     components/motor/motor_dji.cpp
     components/motor/motor_dm.cpp
     components/rc/dr16.cpp
@@ -96,6 +99,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     bsp/uart
     bsp/usb
     bsp/dwt
+    bsp/led
+    bsp/buzzer
+    bsp/imu_pwm
     components/motor
     components/rc
     components/support

@@ -206,7 +206,6 @@ float Bmi088::lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
  */
 void Bmi088::exti_read_callback(uint16_t gpio_pin)
 {
-    static uint8_t mod160 = 160;
     static int32_t sensor_temp = 0;
     if (gpio_pin == INT1_ACCEL_Pin)
     {
@@ -227,12 +226,9 @@ void Bmi088::exti_read_callback(uint16_t gpio_pin)
             rx_data_.accel[2] = lsb_to_mps2(raw_accel_.z, 6, 16);
         }
 
-        if (mod160++ >= 160)
-        {
-            mod160 = 0;
-            bmi08a_get_sensor_temperature(&bmi08dev_, &sensor_temp);
-            rx_data_.temp = (float)sensor_temp / 1000.0f;
-        }
+        bmi08a_get_sensor_temperature(&bmi08dev_, &sensor_temp);
+        rx_data_.temp = (float)sensor_temp / 1000.0f;
+
     }
     else if (gpio_pin == INT1_GYRO_Pin)
     {

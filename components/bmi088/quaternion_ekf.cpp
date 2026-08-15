@@ -12,7 +12,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "quaternion_ekf.h"
-#include "math_tools.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -177,7 +176,7 @@ void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, flo
     ins_.filter.F_data[20] = -halfgxdt;
 
     // 归一化加速度向量作为量测向量
-    accel_inv_norm = inv_sqrt(ax * ax + ay * ay + az * az);
+    accel_inv_norm = 1.0f / sqrtf(ax * ax + ay * ay + az * az);
     ins_.filter.MeasuredVector[0] = ax * accel_inv_norm;
     ins_.filter.MeasuredVector[1] = ay * accel_inv_norm;
     ins_.filter.MeasuredVector[2] = az * accel_inv_norm;
@@ -231,7 +230,7 @@ void QuaternionEkf::linearize_f_and_fade_p(KalmanFilter_t *kf)
     q3 = kf->xhatminus_data[3];
 
     // 四元数归一化
-    q_inv_norm = inv_sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    q_inv_norm = 1.0f / sqrtf(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
     for (uint8_t i = 0; i < 4; i++)
     {
         kf->xhatminus_data[i] *= q_inv_norm;

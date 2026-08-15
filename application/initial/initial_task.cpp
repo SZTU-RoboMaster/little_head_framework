@@ -13,8 +13,11 @@
 
 #include "initial_task.h"
 
+#include "bsp_buzzer.h"
 #include "bsp_can.h"
 #include "bsp_dwt.h"
+#include "bsp_imu_pwm.h"
+#include "bsp_led.h"
 #include "bsp_tim.h"
 #include "bsp_uart.h"
 #include "bsp_usb.h"
@@ -253,7 +256,11 @@ void task_init()
     uart_init(&huart6, referee_uart6_callback, 255);
     tim_init(&htim7, task1ms_tim7_callback);
     usb_init(vision_usb_callback);
+    imu_pwm_init();
+    led_init();
+    buzzer_init();
 
+    aRGB_led_show(0xFFFFFFFF);
     init_finished = 1;
 }
 

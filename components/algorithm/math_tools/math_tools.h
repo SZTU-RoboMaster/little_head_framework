@@ -12,10 +12,10 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "arm_math.h"
 #include "stm32f4xx_hal.h"
 #include <algorithm>
+#include <cstring>
 
 /* Exported macros -----------------------------------------------------------*/
 

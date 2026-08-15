@@ -13,7 +13,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "bmi088.h"
-#include "math_tools.h"
+#include "bsp_imu_pwm.h"
+#include "pid.h"
 #include "quaternion_ekf.h"
 
 #include "cmsis_os.h"
@@ -44,6 +45,8 @@ public:
 
     void publish();
 
+    void temp_control();
+
 protected:
     // 初始化相关常量
 
@@ -51,6 +54,8 @@ protected:
 
     // 内部变量
 
+    // imu温控pid
+    Pid imu_temp_pid_;
     // 加速度kf
     GravityKf gravity_kf_;
     // 四元数ekf
