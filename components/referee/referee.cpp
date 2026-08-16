@@ -263,7 +263,7 @@ void Referee::handle_data(uint8_t *frame)
         std::memcpy(&shoot_data_, frame + REF_HEADER_CMDID_LEN, sizeof(RefereeRxDataShootData));
         break;
     }
-    case (REFEREE_CMD_ID_BULLET_REMAINING):
+    case (REFEREE_CMD_ID_PROJECTILE_ALLOWANCE):
     {
         std::memcpy(&projectile_allowance_, frame + REF_HEADER_CMDID_LEN, sizeof(RefereeRxDataProjectileAllowance));
         break;
