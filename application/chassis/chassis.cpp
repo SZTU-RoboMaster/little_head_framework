@@ -142,7 +142,7 @@ void Chassis::control()
             wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
         }
 
-        yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
+        yaw_error = wrap_center((config_.gimbal_yaw_offset - feedback_.gimbal_yaw), (2.0f * PI));
         float sin_yaw = arm_sin_f32(yaw_error);
         float cos_yaw = arm_cos_f32(yaw_error);
         float vx_temp = cmd_msg_.rc_vx;

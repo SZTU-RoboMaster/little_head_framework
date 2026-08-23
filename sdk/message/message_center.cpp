@@ -108,8 +108,8 @@ bool Topic::publish_msg(const void *data)
     return true;
 }
 
-bool Topic::update_msg(void *data, uint32_t &last_sequence, uint32_t &last_timestamp_ms,
-                       bool &received)
+bool Topic::update_msg(void *data, uint64_t &last_sequence, uint32_t &last_timestamp_ms,
+                       bool &first_in)
 {
     if (!is_active_ || !has_value_ || data == nullptr || last_sequence == sequence_)
     {
@@ -119,13 +119,13 @@ bool Topic::update_msg(void *data, uint32_t &last_sequence, uint32_t &last_times
     std::memcpy(data, data_, payload_size_);
     last_sequence = sequence_;
     last_timestamp_ms = timestamp_ms_;
-    received = true;
+    first_in = false;
     return true;
 }
 
-bool Topic::is_fresh(uint32_t last_timestamp_ms, bool received, uint32_t timeout_ms) const
+bool Topic::is_fresh(uint32_t last_timestamp_ms, bool first_in, uint32_t timeout_ms) const
 {
-    if (!received)
+    if (first_in)
     {
         return false;
     }

@@ -43,7 +43,7 @@ private:
     uint8_t data_[kMaxPayloadSize];
     std::size_t payload_size_;
 
-    uint32_t sequence_;
+    uint64_t sequence_;
     uint32_t timestamp_ms_;
 
     bool is_active_;
@@ -53,10 +53,10 @@ private:
 private:
     bool publish_msg(const void *data);
 
-    bool update_msg(void *data, uint32_t &last_sequence, uint32_t &last_timestamp_ms,
-                    bool &received);
+    bool update_msg(void *data, uint64_t &last_sequence, uint32_t &last_timestamp_ms,
+                    bool &first_in);
 
-    bool is_fresh(uint32_t last_timestamp_ms, bool received, uint32_t timeout_ms) const;
+    bool is_fresh(uint32_t last_timestamp_ms, bool first_in, uint32_t timeout_ms) const;
 };
 
 /**
@@ -99,12 +99,12 @@ public:
     bool update(T &data)
     {
         return topic_ != nullptr &&
-               topic_->update_msg(&data, last_sequence_, last_timestamp_ms_, received_);
+               topic_->update_msg(&data, last_sequence_, last_timestamp_ms_, first_in_);
     }
 
     bool is_fresh(uint32_t timeout_ms) const
     {
-        return topic_ != nullptr && topic_->is_fresh(last_timestamp_ms_, received_, timeout_ms);
+        return topic_ != nullptr && topic_->is_fresh(last_timestamp_ms_, first_in_, timeout_ms);
     }
 
 private:
@@ -115,9 +115,9 @@ private:
     }
 
     Topic *topic_ = nullptr;
-    uint32_t last_sequence_ = 0;
+    uint64_t last_sequence_ = 0;
     uint32_t last_timestamp_ms_ = 0;
-    bool received_ = false;
+    bool first_in_ = true;
 };
 
 /**

@@ -82,6 +82,12 @@ struct GimbalMessage
     float yaw_total_angle = 0.0f;
 };
 
+/**
+ * @brief 底盘控制数据
+ * @brief command发布
+ * @brief chassis订阅
+ *
+ */
 struct ChassisCmdMessage
 {
     ChassisCmdMode chassis_mode = CHASSIS_CMD_RELAX;
@@ -90,6 +96,12 @@ struct ChassisCmdMessage
     float rc_vw = 0.0f;
 };
 
+/**
+ * @brief 云台控制数据
+ * @brief command发布
+ * @brief gimbal订阅
+ *
+ */
 struct GimbalCmdMessage
 {
     GimbalCmdMode gimbal_mode = GIMBAL_CMD_RELAX;
@@ -97,6 +109,12 @@ struct GimbalCmdMessage
     float pitch_rate = 0.0f;
 };
 
+/**
+ * @brief 发射控制数据
+ * @brief command发布
+ * @brief shoot订阅
+ *
+ */
 struct ShootCmdMessage
 {
     uint8_t fric_enabled = 0;
@@ -107,7 +125,7 @@ struct ShootCmdMessage
 /**
  * @brief dr16数据
  * @brief dr16发布
- * @brief gimbal chassis订阅
+ * @brief command订阅
  *
  */
 struct Dr16Message
@@ -160,7 +178,7 @@ struct Dr16Message
 /**
  * @brief vt13数据
  * @brief vt13发布
- * @brief gimbal chassis订阅
+ * @brief command订阅
  *
  */
 struct Vt13Message
