@@ -195,15 +195,15 @@ void vision_usb_callback(uint8_t *buf, uint32_t len)
  */
 void task1ms_tim7_callback()
 {
-    static uint8_t alive_mod1000 = 0;
-    if (alive_mod1000++ >= 1000)
+    static uint16_t alive_mod1000 = 0;
+    if (++alive_mod1000 >= 1000)
     {
         alive_mod1000 = 0;
         referee.check_alive_1000ms();
     }
 
     static uint8_t alive_mod100 = 0;
-    if (alive_mod100++ >= 100)
+    if (++alive_mod100 >= 100)
     {
         alive_mod100 = 0;
 

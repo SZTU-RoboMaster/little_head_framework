@@ -125,8 +125,6 @@ public:
 
     void set_mode();
 
-    void update_control_state();
-
     void control();
 
     void calculate();
@@ -163,7 +161,6 @@ protected:
     // 读写变量
 
     // 云台输出
-    GimbalOutput control_judge_;
     GimbalOutput control_output_;
 
     // 内部函数

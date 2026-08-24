@@ -48,7 +48,6 @@ extern "C" void gimbal_task(void *argument)
         gimbal.update_feedback();
         gimbal.handle_safety();
         gimbal.set_mode();
-        gimbal.update_control_state();
         gimbal.control();
         gimbal.calculate();
         gimbal.output();
