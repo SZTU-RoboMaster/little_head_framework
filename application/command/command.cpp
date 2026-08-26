@@ -125,8 +125,8 @@ void Command::update()
         gimbal_cmd.yaw_rate = cubic_map(-dr16_msg_.ch_2 / 660.0f, 0.5f) * 4.0f;
         gimbal_cmd.pitch_rate = cubic_map(dr16_msg_.ch_3 / 660.0f, 0.5f) * 5.0f;
 
-        chassis_cmd.rc_vx = cubic_map(dr16_msg_.ch_1 / 660.0f, 0.5f) * 4.27f;
-        chassis_cmd.rc_vy = cubic_map(-dr16_msg_.ch_0 / 660.0f, 0.5f) * 4.27f;
+        chassis_cmd.rc_vx = cubic_map(dr16_msg_.ch_1 / 660.0f, 0.5f) * 3.54f;
+        chassis_cmd.rc_vy = cubic_map(-dr16_msg_.ch_0 / 660.0f, 0.5f) * 3.54f;
         chassis_cmd.rc_vw = cubic_map(-dr16_msg_.ch_2 / 660.0f, 0.5f) * 4.27f;
 
         shoot_cmd.fric_enabled = fric_enabled_;

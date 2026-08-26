@@ -23,6 +23,39 @@
 
 /* Exported types ------------------------------------------------------------*/
 
+struct ChassisConfig
+{
+    // 轮子半径
+    float wheel_radius = 0.07689f;
+
+    // 前后轮到底盘中心的距离
+    float half_length = 0.193560273f;
+
+    // 左右轮到底盘中心的距离
+    float half_width = 0.167982291f;
+
+    // 旋转半径
+    float rotation_radius = half_length + half_width; // 0.361542564f
+
+    // 云台偏航角偏移
+    float gimbal_yaw_offset = -0.56f;
+
+    // 小陀螺vw
+    float spin_vw = 7.0f;
+
+    // 小陀螺相位滞后的等效时间常数
+    float spin_phase_delay = 0.06f;
+
+    // 轮向电机最大角速度
+    float max_wheel_omega = 46.0f;
+
+    // 平移最大加速度
+    float max_acceleration = 3.0f;
+
+    // 平移最大减速度
+    float max_deceleration = 5.0f;
+};
+
 struct ChassisFeedback
 {
     float wheel_omega[4];
@@ -46,21 +79,6 @@ struct ChassisOutput
 
     // 轮向电机目标电流
     float wheel_target_current[4];
-};
-
-struct ChassisConfig
-{
-    // 轮子半径
-    float wheel_radius = 0.075f;
-
-    // 轮子到底盘中心的距离
-    float wheel_to_center_distance = 0.59463f;
-
-    // 云台偏航角偏移
-    float gimbal_yaw_offset = -0.56f;
-
-    // 小陀螺vw
-    float spin_vw = 7.0f;
 };
 
 enum ChassisMode
@@ -106,9 +124,10 @@ protected:
     // 常量
 
     // 底盘配置
-    ChassisConfig config_;
+    static constexpr ChassisConfig config_{};
 
     // 内部变量
+    ChassisCmdMessage last_cmd_msg_;
 
     // 读变量
     Subscriber<GimbalMessage> gimbal_subscriber_;
@@ -132,8 +151,12 @@ protected:
 
     // 麦轮逆解算
     void mecanum_inverse_kinematics();
-    // 麦轮解算
+    // 麦轮正解算
     void mecanum_forward_kinematics();
+    // 轮速缩放
+    void wheel_omega_scaling();
+    // 有限加速度
+    void limit_acceleration();
 };
 
 /* Exported variables ---------------------------------------------------------*/
