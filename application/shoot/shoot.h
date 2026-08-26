@@ -13,7 +13,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "motor_dji.h"
-#include "referee.h"
 
 #include "message_center.h"
 #include "message_def.h"
@@ -99,9 +98,6 @@ enum BlockState
 class Shoot
 {
 public:
-    // 裁判系统
-    Referee *referee_;
-
     // 拨弹盘电机
     MotorDji trigger_;
 
@@ -158,6 +154,8 @@ protected:
     // 读变量
     Subscriber<ShootCmdMessage> cmd_subscriber_;
     ShootCmdMessage cmd_msg_;
+    Subscriber<RefereeMessage> referee_subscriber_;
+    RefereeMessage referee_msg_;
 
     // 发射机构反馈
     ShootFeedback feedback_;

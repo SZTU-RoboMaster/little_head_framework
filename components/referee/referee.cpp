@@ -47,6 +47,7 @@ void Referee::init(UART_HandleTypeDef *huart)
     {
         uart_manage_obj_ = &uart6_manage_obj;
     }
+    publisher_ = MessageCenter::instance().advertise<RefereeMessage>(kRefereeTopicName);
 }
 
 /**
@@ -60,6 +61,15 @@ void Referee::uart_rx_callback(uint8_t *rx_data, uint16_t length)
     rx_flag_ += 1;
 
     process_data(rx_data, length);
+
+    referee_msg_ = {
+        .shooter_17mm_barrel_heat = power_heat_data_.shooter_17mm_barrel_heat,
+        .shooter_barrel_heat_limit = robot_state_.shooter_barrel_heat_limit,
+        .shooter_barrel_cooling_value = robot_state_.shooter_barrel_cooling_value,
+        .chassis_power_limit = robot_state_.chassis_power_limit,
+        .buffer_energy = power_heat_data_.buffer_energy,
+    };
+    publisher_.publish(referee_msg_);
 }
 
 /**
@@ -174,7 +184,8 @@ void Referee::process_data(uint8_t *rx_data, uint16_t length)
                 p_obj->unpack_step = STEP_HEADER_SOF;
                 p_obj->index = 0;
 
-                if (verify_CRC16_check_sum(p_obj->protocol_packet, REF_HEADER_CRC_CMDID_LEN + p_obj->data_len))
+                if (verify_CRC16_check_sum(p_obj->protocol_packet,
+                                           REF_HEADER_CRC_CMDID_LEN + p_obj->data_len))
                 {
                     handle_data(p_obj->protocol_packet);
                 }
@@ -203,6 +214,7 @@ void Referee::handle_data(uint8_t *frame)
 
     switch (cmd_id)
     {
+        // clang-format off
     case (REFEREE_CMD_ID_GAME_STATUS):
     {
         std::memcpy(&game_status_, frame + REF_HEADER_CMDID_LEN, sizeof(RefereeRxDataGameStatus));
@@ -313,6 +325,9 @@ void Referee::handle_data(uint8_t *frame)
         std::memcpy(&client_robot_data_, frame + REF_HEADER_CMDID_LEN, sizeof(RefereeRxDataClientRobotData));
         break;
     }
+    default:
+        break;
+        // clang-format on
     }
 }
 

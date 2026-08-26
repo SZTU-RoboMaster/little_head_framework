@@ -88,6 +88,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/vision/vision_task.cpp
     sdk/message/message_center.cpp
     application/command/command.cpp
+    application/chassis/power_control/power_controller.cpp
 )
 
 # Add include paths
@@ -121,6 +122,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/vision
     sdk/message
     application/command
+    application/chassis/power_control
 )
 
 # Add project symbols (macros)

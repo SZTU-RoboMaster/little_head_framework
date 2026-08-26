@@ -12,10 +12,11 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "referee_protocol.h"
 #include <bsp_uart.h>
 
+#include "message_center.h"
+#include "message_def.h"
 /* Exported macros -----------------------------------------------------------*/
 
 static constexpr uint8_t REF_PROTOCOL_HEADER = 0xA5;
@@ -47,12 +48,12 @@ struct __attribute__((packed)) RefereeUartData
  */
 enum UnpackStep
 {
-    STEP_HEADER_SOF  = 0,
-    STEP_LENGTH_LOW  = 1,
+    STEP_HEADER_SOF = 0,
+    STEP_LENGTH_LOW = 1,
     STEP_LENGTH_HIGH = 2,
-    STEP_FRAME_SEQ   = 3,
+    STEP_FRAME_SEQ = 3,
     STEP_HEADER_CRC8 = 4,
-    STEP_DATA_CRC16  = 5,
+    STEP_DATA_CRC16 = 5,
 };
 
 struct UnpackData
@@ -98,6 +99,28 @@ public:
 
     // 裁判系统状态
     RefereeStatus status_ = REFEREE_STATUS_DISABLE;
+
+protected:
+    // 初始化相关常量
+
+    // 绑定的UART
+    UartManageObject *uart_manage_obj_;
+
+    // 常量
+
+    // 内部变量
+
+    // 当前时刻的裁判系统接收flag
+    uint32_t rx_flag_ = 0;
+    // 前一时刻的裁判系统接收flag
+    uint32_t last_rx_flag_ = 0;
+
+    // 发送序列号
+    uint8_t sequence_ = 0;
+
+    // UI是否是初次绘制, 没绘制过是0
+    uint8_t ui_change_flag_[10][10] = {0};
+
     // 比赛状态
     RefereeRxDataGameStatus game_status_;
     // 比赛结果
@@ -146,32 +169,13 @@ public:
     // 自定义客户端发送给机器人的自定义指令
     RefereeRxDataClientRobotData client_robot_data_;
 
-protected:
-    // 初始化相关常量
-
-    // 绑定的UART
-    UartManageObject *uart_manage_obj_;
-
-    // 常量
-
-    // 内部变量
-
-    // 当前时刻的裁判系统接收flag
-    uint32_t rx_flag_ = 0;
-    // 前一时刻的裁判系统接收flag
-    uint32_t last_rx_flag_ = 0;
-
-    // 发送序列号
-    uint8_t sequence_ = 0;
-
-    // UI是否是初次绘制, 没绘制过是0
-    uint8_t ui_change_flag_[10][10] = {0};
-
     // 读变量
 
     // 写变量
-
     RefereeTxDataInteractionFigure graphic_config_[10][10];
+
+    Publisher<RefereeMessage> publisher_;
+    RefereeMessage referee_msg_;
 
     // 读写变量
 

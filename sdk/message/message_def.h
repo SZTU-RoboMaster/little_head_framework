@@ -15,14 +15,17 @@
 #include <cstdint>
 
 /* Exported macros -----------------------------------------------------------*/
-inline constexpr char kInsTopicName[] = "/ins";
-inline constexpr char kVisionTopicName[] = "/vision";
-inline constexpr char kGimbalTopicName[] = "/gimbal";
-inline constexpr char kDr16TopicName[] = "/dr16";
-inline constexpr char kVt13TopicName[] = "/vt13";
-inline constexpr char kCmdGimbalTopicName[] = "/command/gimbal";
-inline constexpr char kCmdChassisTopicName[] = "/command/chassis";
-inline constexpr char kCmdShootTopicName[] = "/command/shoot";
+static constexpr char kInsTopicName[] = "/ins";
+static constexpr char kVisionTopicName[] = "/vision";
+static constexpr char kGimbalTopicName[] = "/gimbal";
+static constexpr char kDr16TopicName[] = "/dr16";
+static constexpr char kVt13TopicName[] = "/vt13";
+static constexpr char kCmdGimbalTopicName[] = "/command/gimbal";
+static constexpr char kCmdChassisTopicName[] = "/command/chassis";
+static constexpr char kCmdShootTopicName[] = "/command/shoot";
+static constexpr char kChassisTopicName[] = "/chassis";
+static constexpr char kPowerControllerTopicName[] = "/powercontroller";
+static constexpr char kRefereeTopicName[] = "/referee";
 
 /* Exported types ------------------------------------------------------------*/
 enum GimbalCmdMode
@@ -120,6 +123,46 @@ struct ShootCmdMessage
     uint8_t fric_enabled = 0;
     uint8_t continue_shoot = 0;
     uint32_t single_shot_seq = 0;
+};
+
+/**
+ * @brief 裁判系统反馈数据
+ * @brief referee发布
+ * @brief shoot powercontroller订阅
+ *
+ */
+struct RefereeMessage
+{
+    uint16_t shooter_17mm_barrel_heat = 0;
+    uint16_t shooter_barrel_heat_limit = 65535;
+    uint16_t shooter_barrel_cooling_value = 0;
+
+    uint16_t chassis_power_limit = 50;
+    uint16_t buffer_energy = 50;
+};
+
+/**
+ * @brief 底盘数据
+ * @brief chassis发布
+ * @brief powercontroller订阅
+ *
+ */
+struct ChassisMessage
+{
+    float feedback_omega[4]{0.0f};
+    float cmd_omega[4]{0.0f};
+    float cmd_current[4]{0.0f};
+};
+
+/**
+ * @brief 功控数据
+ * @brief powercontroller发布
+ * @brief chassis订阅
+ *
+ */
+struct PowerControllerMessage
+{
+    float target_current[4]{0.0f};
 };
 
 /**

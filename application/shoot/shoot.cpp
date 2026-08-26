@@ -44,6 +44,7 @@ void Shoot::init()
     friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 
     cmd_subscriber_ = MessageCenter::instance().subscribe<ShootCmdMessage>(kCmdShootTopicName);
+    referee_subscriber_ = MessageCenter::instance().subscribe<RefereeMessage>(kRefereeTopicName);
 }
 
 void Shoot::update_input()
@@ -55,6 +56,8 @@ void Shoot::update_input()
     {
         last_single_shot_seq_ = cmd_msg_.single_shot_seq;
     }
+
+    referee_subscriber_.update(referee_msg_);
 }
 
 void Shoot::update_feedback()
@@ -67,9 +70,9 @@ void Shoot::update_feedback()
     feedback_.left_fric_current = friction_left_.rx_data_.current;
     feedback_.right_fric_current = friction_right_.rx_data_.current;
 
-    feedback_.current_ref_heat_ = referee_->power_heat_data_.shooter_17mm_barrel_heat;
-    feedback_.heat_limit_ = referee_->robot_state_.shooter_barrel_heat_limit;
-    feedback_.heat_cooling_rate_ = referee_->robot_state_.shooter_barrel_cooling_value;
+    feedback_.current_ref_heat_ = referee_msg_.shooter_17mm_barrel_heat;
+    feedback_.heat_limit_ = referee_msg_.shooter_barrel_heat_limit;
+    feedback_.heat_cooling_rate_ = referee_msg_.shooter_barrel_cooling_value;
 }
 
 void Shoot::handle_safety()

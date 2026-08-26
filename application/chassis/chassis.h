@@ -44,7 +44,8 @@ struct ChassisConfig
     float spin_vw = 7.0f;
 
     // 小陀螺相位滞后的等效时间常数
-    float spin_phase_delay = 0.06f;
+    // TODO: 有没有必要考虑功控的影响
+    float spin_phase_delay = 0.03f;
 
     // 轮向电机最大角速度
     float max_wheel_omega = 46.0f;
@@ -101,6 +102,8 @@ public:
 
     // 轮向电机
     MotorDji wheel_motor_[4];
+    // 轮向电机角速度PID
+    Pid wheel_omega_pid_[4];
 
     void init();
 
@@ -134,8 +137,11 @@ protected:
     GimbalMessage gimbal_msg_;
     Subscriber<ChassisCmdMessage> cmd_subscriber_;
     ChassisCmdMessage cmd_msg_;
+    Subscriber<PowerControllerMessage> power_controller_subscriber_;
+    PowerControllerMessage power_controller_msg_;
 
     // 写变量
+    Publisher<ChassisMessage> publisher_;
 
     // 底盘反馈
     ChassisFeedback feedback_;

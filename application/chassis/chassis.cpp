@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "chassis.h"
+#include "motor_dji.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -37,25 +38,29 @@ void Chassis::init()
     // 轮向电机初始化
     for (int i = 0; i < 4; i++)
     {
-        wheel_motor_[i].omega_pid_.init(360.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
+        wheel_omega_pid_[i].init(360.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     }
 
-    wheel_motor_[0].init(&hcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f),
+    wheel_motor_[0].init(&hcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
                          true);
-    wheel_motor_[1].init(&hcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f),
+    wheel_motor_[1].init(&hcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
                          false);
-    wheel_motor_[2].init(&hcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f),
+    wheel_motor_[2].init(&hcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
                          false);
-    wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_OMEGA, (3591.0f / 187.0f),
+    wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
                          true);
 
+    publisher_ = MessageCenter::instance().advertise<ChassisMessage>(kChassisTopicName);
     gimbal_subscriber_ = MessageCenter::instance().subscribe<GimbalMessage>(kGimbalTopicName);
     cmd_subscriber_ = MessageCenter::instance().subscribe<ChassisCmdMessage>(kCmdChassisTopicName);
+    power_controller_subscriber_ =
+        MessageCenter::instance().subscribe<PowerControllerMessage>(kPowerControllerTopicName);
 }
 
 void Chassis::update_input()
 {
     gimbal_subscriber_.update(gimbal_msg_);
+    power_controller_subscriber_.update(power_controller_msg_);
     const auto cmd_update = cmd_subscriber_.update(cmd_msg_);
 
     if (cmd_update)
@@ -112,19 +117,14 @@ void Chassis::control()
     case CHASSIS_RELAX:
     {
         last_cmd_msg_ = {};
-        for (int i = 0; i < 4; i++)
-        {
-            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_CURRENT);
-            control_output_.wheel_target_current[i] = 0.0f;
-        }
+
+        control_output_.target_velocity_x = 0.0f;
+        control_output_.target_velocity_y = 0.0f;
+        control_output_.target_omega = 0.0f;
         break;
     }
     case CHASSIS_ONLY:
     {
-        for (int i = 0; i < 4; i++)
-        {
-            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        }
         control_output_.target_velocity_x = cmd_msg_.rc_vx;
         control_output_.target_velocity_y = cmd_msg_.rc_vy;
         control_output_.target_omega = cmd_msg_.rc_vw;
@@ -136,10 +136,7 @@ void Chassis::control()
         omega_pid_.set_target(0.0f);
         omega_pid_.set_feedback(yaw_error);
         omega_pid_.calculate();
-        for (int i = 0; i < 4; i++)
-        {
-            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        }
+
         control_output_.target_velocity_x = cmd_msg_.rc_vx;
         control_output_.target_velocity_y = cmd_msg_.rc_vy;
         control_output_.target_omega = -omega_pid_.get_output();
@@ -147,11 +144,6 @@ void Chassis::control()
     }
     case CHASSIS_SPIN:
     {
-        for (int i = 0; i < 4; i++)
-        {
-            wheel_motor_[i].set_control_method(MOTOR_DJI_CONTROL_METHOD_OMEGA);
-        }
-
         yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         // 计算旋转速度补偿
         yaw_error -= std::atan(config_.spin_phase_delay * feedback_.omega);
@@ -171,7 +163,10 @@ void Chassis::solve()
 {
     if (mode_ == CHASSIS_RELAX)
     {
-        return;
+        for (int i = 0; i < 4; i++)
+        {
+            control_output_.wheel_target_current[i] = 0.0f;
+        }
     }
     else
     {
@@ -179,26 +174,35 @@ void Chassis::solve()
         mecanum_inverse_kinematics();
         // 轮速缩放
         wheel_omega_scaling();
+
+        for (int i = 0; i < 4; i++)
+        {
+            wheel_omega_pid_[i].set_target(control_output_.wheel_target_omega[i]);
+            wheel_omega_pid_[i].set_feedback(feedback_.wheel_omega[i]);
+            wheel_omega_pid_[i].calculate();
+            control_output_.wheel_target_current[i] = wheel_omega_pid_[i].get_output();
+        }
     }
 }
 
 void Chassis::output()
 {
-    // 输出
-    if (mode_ == CHASSIS_RELAX)
+    ChassisMessage chassis_msg;
+    for (int i = 0; i < 4; i++)
     {
-        for (int i = 0; i < 4; i++)
+        if (mode_ == CHASSIS_RELAX)
         {
-            wheel_motor_[i].set_target_current(control_output_.wheel_target_current[i]);
+            wheel_motor_[i].set_target_current(0.0f);
         }
-    }
-    else
-    {
-        for (int i = 0; i < 4; i++)
+        else
         {
-            wheel_motor_[i].set_target_omega(control_output_.wheel_target_omega[i]);
+            wheel_motor_[i].set_target_current(power_controller_msg_.target_current[i]);
         }
+        chassis_msg.feedback_omega[i] = feedback_.wheel_omega[i];
+        chassis_msg.cmd_omega[i] = control_output_.wheel_target_omega[i];
+        chassis_msg.cmd_current[i] = control_output_.wheel_target_current[i];
     }
+    publisher_.publish(chassis_msg);
 }
 
 /**
@@ -275,8 +279,10 @@ void Chassis::limit_acceleration()
     float dy = cmd_msg_.rc_vy - last_cmd_msg_.rc_vy;
 
     float delta_square = dx * dx + dy * dy;
-    float max_acc_delta_square = config_.max_acceleration * config_.max_acceleration * 0.001f * 0.001f;
-    float max_dec_delta_square = config_.max_deceleration * config_.max_deceleration * 0.001f * 0.001f;
+    float max_acc_delta_square =
+        config_.max_acceleration * config_.max_acceleration * 0.001f * 0.001f;
+    float max_dec_delta_square =
+        config_.max_deceleration * config_.max_deceleration * 0.001f * 0.001f;
 
     bool acc_reverse = last_cmd_msg_.rc_vx * dx + last_cmd_msg_.rc_vy * dy < 0.0f;
 

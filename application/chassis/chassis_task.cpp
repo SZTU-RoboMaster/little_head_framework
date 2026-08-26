@@ -19,6 +19,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 Chassis chassis;
+PowerController power_controller;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -32,6 +33,7 @@ Chassis chassis;
 extern "C" void chassis_task(void *argument)
 {
     chassis.init();
+    power_controller.init(POWER_CONTROL_ENABLE);
 
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
@@ -46,6 +48,8 @@ extern "C" void chassis_task(void *argument)
         chassis.control();
         chassis.solve();
         chassis.output();
+
+        power_controller.update();
 
         osDelayUntil(start + ticks);
     }

@@ -246,7 +246,6 @@ void task_init()
 
     dr16.init(&huart3);
     vt13.init(&huart1);
-    shoot.referee_ = &referee;
     referee.init(&huart6);
 
     can_init(&hcan1, device_can1_callback);
