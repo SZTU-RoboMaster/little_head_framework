@@ -33,21 +33,13 @@ struct GimbalFeedback
 struct GimbalConfig
 {
     // pitch轴最小值
-    float pitch_min_angle;
+    float pitch_min_imu_angle = -0.55f;
     // pitch轴最大值
-    float pitch_max_angle;
-    // pitch轴KP值
-    float pitch_kp = 30.0f;
-    // pitch轴KD值
-    float pitch_kd = 3.0f;
+    float pitch_max_imu_angle = 0.5f;
     // pitch轴回中值
     float pitch_center_angle = 0.0f;
     // yaw轴回中值
     float yaw_center_angle = -0.56f;
-    // yaw轴KP值
-    float yaw_kp;
-    // yaw轴KD值
-    float yaw_kd;
     // yaw轴前馈系数
     float yaw_ff_p = 0.0f;
     // pitch轴前馈系数

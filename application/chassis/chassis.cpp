@@ -33,7 +33,7 @@ void Chassis::init()
 {
 
     // 底盘角速度PID
-    omega_pid_.init(5.0f, 0.0f, 0.0f);
+    omega_pid_.init(7.0f, 0.0f, 0.0f);
 
     // 轮向电机初始化
     for (int i = 0; i < 4; i++)
@@ -284,15 +284,15 @@ void Chassis::limit_acceleration()
     float max_dec_delta_square =
         config_.max_deceleration * config_.max_deceleration * 0.001f * 0.001f;
 
-    bool acc_reverse = last_cmd_msg_.rc_vx * dx + last_cmd_msg_.rc_vy * dy < 0.0f;
+    bool is_positive = last_cmd_msg_.rc_vx * dx + last_cmd_msg_.rc_vy * dy > 0.0f;
 
-    if (!acc_reverse && delta_square > max_acc_delta_square)
+    if (is_positive && delta_square > max_acc_delta_square)
     {
         float scale = std::sqrt(max_acc_delta_square / delta_square);
         cmd_msg_.rc_vx = last_cmd_msg_.rc_vx + dx * scale;
         cmd_msg_.rc_vy = last_cmd_msg_.rc_vy + dy * scale;
     }
-    else if (acc_reverse && delta_square > max_dec_delta_square)
+    else if (!is_positive && delta_square > max_dec_delta_square)
     {
         float scale = std::sqrt(max_dec_delta_square / delta_square);
         cmd_msg_.rc_vx = last_cmd_msg_.rc_vx + dx * scale;

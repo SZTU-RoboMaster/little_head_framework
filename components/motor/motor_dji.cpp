@@ -125,7 +125,7 @@ void MotorDji::init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx
 void MotorDji::can_rx_callback(const uint8_t *rx_data)
 {
     // 滑动窗口, 判断电机是否在线
-    rx_flag_ += 1;
+    rx_flag_++;
 
     process_data(rx_data);
 }
@@ -150,6 +150,19 @@ void MotorDji::check_alive_100ms()
         status_ = MOTOR_DJI_STATUS_ENABLE;
     }
     last_rx_flag_ = rx_flag_;
+
+    if (cmd_flag_ == last_cmd_flag_)
+    {
+        // 电机未接收到新的控制指令
+        angle_pid_.set_integral_error(0.0f);
+        omega_pid_.set_integral_error(0.0f);
+        cmd_online_ = false;
+    }
+    else
+    {
+        cmd_online_ = true;
+    }
+    last_cmd_flag_ = cmd_flag_;
 }
 
 /**
@@ -158,7 +171,7 @@ void MotorDji::check_alive_100ms()
  */
 void MotorDji::calculate()
 {
-    if (status_ == MOTOR_DJI_STATUS_ENABLE)
+    if (status_ == MOTOR_DJI_STATUS_ENABLE && cmd_online_ == true)
     {
         calculate_control();
         output_value_ = reverse_ ? -target_current_ : target_current_;

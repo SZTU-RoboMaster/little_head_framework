@@ -54,7 +54,7 @@ struct ChassisConfig
     float max_acceleration = 3.0f;
 
     // 平移最大减速度
-    float max_deceleration = 5.0f;
+    float max_deceleration = 6.0f;
 };
 
 struct ChassisFeedback

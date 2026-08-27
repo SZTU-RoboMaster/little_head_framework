@@ -119,6 +119,13 @@ protected:
     // 计算周期计数, 用于降低角度环计算频率
     uint8_t calculate_mod5_ = 5;
 
+    // 当前时刻的电机控制flag
+    uint32_t cmd_flag_ = 0;
+    // 前一时刻的电机控制flag
+    uint32_t last_cmd_flag_ = 0;
+    // 控制指令是否在线
+    uint8_t cmd_online_ = false;
+
     // 输出量
     float output_value_ = 0.0f;
 
@@ -172,6 +179,7 @@ extern uint8_t can2_0x2fe_tx_data[];
 inline void MotorDji::set_target_current(float target_current)
 {
     target_current_ = target_current;
+    cmd_flag_++;
 }
 
 /**
@@ -182,6 +190,7 @@ inline void MotorDji::set_target_current(float target_current)
 inline void MotorDji::set_target_angle(float target_angle)
 {
     target_angle_ = target_angle;
+    cmd_flag_++;
 }
 
 /**
@@ -192,6 +201,7 @@ inline void MotorDji::set_target_angle(float target_angle)
 inline void MotorDji::set_target_omega(float target_omega)
 {
     target_omega_ = target_omega;
+    cmd_flag_++;
 }
 
 /**
@@ -202,6 +212,7 @@ inline void MotorDji::set_target_omega(float target_omega)
 inline void MotorDji::set_feedforward_omega(float feedforward_omega)
 {
     feedforward_omega_ = feedforward_omega;
+    cmd_flag_++;
 }
 
 /**

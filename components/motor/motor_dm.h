@@ -60,6 +60,16 @@ enum MotorDmControlMethod
 };
 
 /**
+ * @brief 达妙电机使能状态
+ *
+ */
+enum MotorDmEnableStatus
+{
+    MOTOR_DM_ENABLE_STATUS_DISABLE = 0,
+    MOTOR_DM_ENABLE_STATUS_ENABLE,
+};
+
+/**
  * @brief 达妙电机反馈的数据
  *
  */
@@ -88,7 +98,7 @@ public:
     void init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
               MotorDmControlMethod control_method = MOTOR_DM_CONTROL_METHOD_MIT,
               float p_max = 12.5f, float v_max = 30.0f, float t_max = 10.0f, float kp = 0.0f,
-              float kd = 0.0f, uint8_t reverse = false);
+              float kd = 0.0f, uint8_t reverse = false, MotorDmEnableStatus enable_status = MOTOR_DM_ENABLE_STATUS_DISABLE);
 
     inline void set_target_angle(float target_angle);
 
@@ -97,6 +107,8 @@ public:
     inline void set_target_torque(float target_torque);
 
     inline void set_pid_params(float kp, float kd);
+
+    inline void set_enable_status(MotorDmEnableStatus enable_status);
 
     void can_rx_callback(const uint8_t *rx_data);
 
@@ -141,6 +153,12 @@ protected:
     uint32_t rx_flag_ = 0;
     // 前一时刻的电机接收flag
     uint32_t last_rx_flag_ = 0;
+    // 当前时刻的电机控制flag
+    uint32_t cmd_flag_ = 0;
+    // 前一时刻的电机控制flag
+    uint32_t last_cmd_flag_ = 0;
+    // 控制指令是否在线
+    uint8_t cmd_online_ = false;
 
     // 输出量
     float cmd_angle_ = 0.0f;
@@ -153,6 +171,8 @@ protected:
 
     // 电机状态
     MotorDmStatus status_ = MOTOR_DM_STATUS_DISCONNECTED;
+
+    MotorDmEnableStatus enable_status_ = MOTOR_DM_ENABLE_STATUS_DISABLE;
 
     // 写变量
 
@@ -196,6 +216,7 @@ protected:
 inline void MotorDm::set_target_angle(float target_angle)
 {
     target_angle_ = target_angle;
+    cmd_flag_++;
 }
 
 /**
@@ -206,6 +227,7 @@ inline void MotorDm::set_target_angle(float target_angle)
 inline void MotorDm::set_target_omega(float target_omega)
 {
     target_omega_ = target_omega;
+    cmd_flag_++;
 }
 
 /**
@@ -216,6 +238,7 @@ inline void MotorDm::set_target_omega(float target_omega)
 inline void MotorDm::set_target_torque(float target_torque)
 {
     target_torque_ = target_torque;
+    cmd_flag_++;
 }
 
 /**
@@ -228,6 +251,11 @@ inline void MotorDm::set_pid_params(float kp, float kd)
 {
     kp_ = kp;
     kd_ = kd;
+}
+
+inline void MotorDm::set_enable_status(MotorDmEnableStatus enable_status)
+{
+    enable_status_ = enable_status;
 }
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

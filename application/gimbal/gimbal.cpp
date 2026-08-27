@@ -30,10 +30,10 @@
 void Gimbal::init()
 {
     // 云台电机PID初始化
-    yaw_angle_pid_.init(6.0f, 0.0f, 0.6f, 0.0f, 0.0f, 0.0f, 0.005f);
-    yaw_omega_pid_.init(2000.0f, 40000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
-    pitch_angle_pid_.init(10.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.005f);
-    pitch_omega_pid_.init(2000.0f, 40000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    yaw_angle_pid_.init(15.0f, 0.0f, 3.0f, 0.0f, 0.0f, 0.0f, 0.005f);
+    yaw_omega_pid_.init(2000.0f, 100000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
+    pitch_angle_pid_.init(30.0f, 0.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.005f);
+    pitch_omega_pid_.init(2000.0f, 100000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     // 电机初始化
     motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
     motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
@@ -149,7 +149,8 @@ void Gimbal::control()
 
         // 输出限幅
         control_output_.target_pitch_angle =
-            std::clamp(control_output_.target_pitch_angle, -0.55f, 0.5f);
+            std::clamp(control_output_.target_pitch_angle, config_.pitch_min_imu_angle,
+                       config_.pitch_max_imu_angle);
         break;
 
     case GIMBAL_SWITCH_TO_MIDDLE:

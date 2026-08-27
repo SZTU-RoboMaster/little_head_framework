@@ -52,7 +52,7 @@ uint8_t dm_motor_save_zero_msg[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0
  */
 void MotorDm::init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
                    MotorDmControlMethod control_method, float p_max, float v_max, float t_max,
-                   float kp, float kd, uint8_t reverse)
+                   float kp, float kd, uint8_t reverse, MotorDmEnableStatus enable_status)
 {
     if (hcan->Instance == CAN1)
     {
@@ -89,6 +89,7 @@ void MotorDm::init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
     kp_ = kp;
     kd_ = kd;
     reverse_ = reverse;
+    enable_status_ = enable_status;
 }
 
 /**
@@ -99,7 +100,7 @@ void MotorDm::init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
 void MotorDm::can_rx_callback(const uint8_t *rx_data)
 {
     // 滑动窗口, 判断电机是否在线
-    rx_flag_ += 1;
+    rx_flag_++;
 
     process_data(rx_data);
 }
@@ -115,17 +116,24 @@ void MotorDm::check_alive_100ms()
     {
         // 电机断开连接
         status_ = MOTOR_DM_STATUS_DISCONNECTED;
-
-        // 发送使能帧尝试重新连接
-        send_enable_cmd();
     }
     else
     {
         // 电机保持连接
         status_ = MOTOR_DM_STATUS_CONNECTED;
     }
-
     last_rx_flag_ = rx_flag_;
+
+    if (cmd_flag_ == last_cmd_flag_)
+    {
+        // 电机未接收到新的控制指令, 失能电机
+        cmd_online_ = false;
+    }
+    else
+    {
+        cmd_online_ = true;
+    }
+    last_cmd_flag_ = cmd_flag_;
 }
 
 /**
@@ -134,7 +142,8 @@ void MotorDm::check_alive_100ms()
  */
 void MotorDm::send_control()
 {
-    if (status_ == MOTOR_DM_STATUS_CONNECTED)
+    if (status_ == MOTOR_DM_STATUS_CONNECTED && cmd_online_ &&
+        enable_status_ == MOTOR_DM_ENABLE_STATUS_ENABLE)
     {
         if (rx_data_.error_status == MOTOR_DM_ERR_STATUS_ENABLE)
         {
@@ -160,7 +169,7 @@ void MotorDm::send_control()
     }
     else
     {
-        return;
+        send_disable_cmd();
     }
 }
 
