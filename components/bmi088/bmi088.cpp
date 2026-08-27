@@ -1,5 +1,5 @@
 /**
- * @file template.cpp
+ * @file bmi088.cpp
  * @author anchengc
  * @brief
  * @version 0.1
@@ -10,13 +10,15 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bmi088.h"
-#include "main.h"
+
 #include "math_tools.h"
 
-/* Private macros ------------------------------------------------------------*/
+#include "bmi088_interface.h"
+#include "bmi08x.h"
+#include "main.h"
 
+/* Private macros ------------------------------------------------------------*/
 #define GRAVITY_EARTH (9.80665f)
 
 /* Private types -------------------------------------------------------------*/

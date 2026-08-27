@@ -1,7 +1,7 @@
 
   /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
-  * @file       IST8310driver_middleware.c/h
+  * @file       ist8310driver_middleware.cpp
   * @brief      the file provide I2C write/read function, as the middleware of IST8310.
   *             本文件主要提供I2C 读写函数，作为IST8310驱动的中间件
   * @note       IST8310 only support I2C. IST8310只支持I2C。

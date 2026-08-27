@@ -12,10 +12,9 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "arm_math.h"
-#include "stm32f4xx_hal.h"
-#include <algorithm>
-#include <cstring>
+#include "arm_math.h" // IWYU pragma: export
+#include <algorithm> // IWYU pragma: export
+#include <cstdlib> // IWYU pragma: export
 
 /* Exported macros -----------------------------------------------------------*/
 

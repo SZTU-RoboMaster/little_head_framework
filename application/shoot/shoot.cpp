@@ -1,18 +1,18 @@
 /**
- * @file template.cpp
+ * @file shoot.cpp
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-07-11 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
  */
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "shoot.h"
-#include "motor_dji.h"
+
+#include "math_tools.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -120,7 +120,7 @@ void Shoot::set_mode()
             control_output_.target_trigger_angle = feedback_.trigger_angle;
             return;
         }
-        if (abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
+        if (std::abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
         {
             shoot_mode_ = SHOOT_IDLE;
         }
@@ -223,14 +223,16 @@ void Shoot::update_friction_state()
     switch (friction_state_)
     {
     case FRCTION_RELAX:
-        if (abs(feedback_.left_fric_omega) > 690.0f && abs(feedback_.right_fric_omega) > 690.0f)
+        if (std::abs(feedback_.left_fric_omega) > 690.0f &&
+            std::abs(feedback_.right_fric_omega) > 690.0f)
         {
             friction_state_ = FRCTION_IDLE;
             cnt = 0;
         }
         break;
     case FRCTION_IDLE:
-        if (abs(feedback_.left_fric_current) > 700.0f && abs(feedback_.right_fric_current) > 700.0f)
+        if (std::abs(feedback_.left_fric_current) > 700.0f &&
+            std::abs(feedback_.right_fric_current) > 700.0f)
         {
             friction_state_ = FRCTION_SUSPECT;
             cnt = 0;
@@ -243,7 +245,8 @@ void Shoot::update_friction_state()
             cnt = 0;
             templost = 0;
         }
-        if (abs(feedback_.left_fric_current) < 500.0f || abs(feedback_.right_fric_current) < 500.0f)
+        if (std::abs(feedback_.left_fric_current) < 500.0f ||
+            std::abs(feedback_.right_fric_current) < 500.0f)
         {
             if (templost++ >= 5)
             {
@@ -347,7 +350,7 @@ void Shoot::update_block_state()
     switch (block_state_)
     {
     case BLOCK_NORMAL:
-        if (abs(feedback_.trigger_current) > block_current_threshold_)
+        if (std::abs(feedback_.trigger_current) > block_current_threshold_)
         {
             block_state_ = BLOCK_SUSPECT;
             cnt = 0;
@@ -355,7 +358,7 @@ void Shoot::update_block_state()
 
         break;
     case BLOCK_SUSPECT:
-        if (abs(feedback_.trigger_current) < block_current_threshold_)
+        if (std::abs(feedback_.trigger_current) < block_current_threshold_)
         {
             block_state_ = BLOCK_NORMAL;
         }

@@ -1,9 +1,9 @@
 /**
- * @file template.cpp
+ * @file command.cpp
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-08-14 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -11,6 +11,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "command.h"
+
+#include "math_tools.h"
 
 /* Private macros ------------------------------------------------------------*/
 

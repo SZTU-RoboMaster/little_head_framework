@@ -1,7 +1,7 @@
 
   /**
   ****************************(C) COPYRIGHT 2019 DJI****************************
-  * @file       IST8310driver.c/h
+  * @file       ist8310driver.cpp
   * @brief      ist8310 is a 3-axis digital magnetometer, the file includes initialization function,
   *             read magnetic field strength data function.
   *             IST8310是一款三轴数字磁力计，本文件包括初始化函数，读取磁场数据函数。

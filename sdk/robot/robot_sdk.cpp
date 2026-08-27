@@ -1,9 +1,9 @@
 /**
- * @file template.cpp
+ * @file robot_sdk.cpp
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-06-05 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -11,8 +11,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "robot_sdk.h"
-
-#include "usb_device.h"
 
 #include "bsp_buzzer.h"
 #include "bsp_can.h"

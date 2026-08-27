@@ -16,6 +16,7 @@
 
 #include "message_center.h"
 #include "message_def.h"
+
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/

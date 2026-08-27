@@ -1,9 +1,9 @@
 /**
- * @file template.cpp
+ * @file initial_task.cpp
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-08-27 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -11,14 +11,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "initial_task.h"
-#include "cmsis_os.h"
+
+#include "robot_sdk.h"
+
+#include "cmsis_os2.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
-
 extern osThreadId_t defaultTaskHandle;
 
 /* Private function declarations ---------------------------------------------*/

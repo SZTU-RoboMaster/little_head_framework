@@ -1,9 +1,9 @@
 /**
- * @file template.h
+ * @file command.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-08-14 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -14,10 +14,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include <cstdint>
 
-#include "math_tools.h"
-
 #include "message_center.h"
 #include "message_def.h"
+
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/

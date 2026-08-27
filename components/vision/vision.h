@@ -1,9 +1,9 @@
 /**
- * @file template.h
+ * @file vision.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-06-10 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -12,10 +12,9 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "bsp_usb.h"
-
 #include "message_center.h"
 #include "message_def.h"
+
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/

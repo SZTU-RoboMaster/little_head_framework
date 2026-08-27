@@ -1,5 +1,5 @@
 /**
- * @file template.cpp
+ * @file bsp_buzzer.cpp
  * @author anchengc
  * @brief
  * @version 0.1

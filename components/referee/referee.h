@@ -12,11 +12,12 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#include "bsp_uart.h"
 #include "referee_protocol.h"
-#include <bsp_uart.h>
 
 #include "message_center.h"
 #include "message_def.h"
+
 /* Exported macros -----------------------------------------------------------*/
 
 static constexpr uint8_t REF_PROTOCOL_HEADER = 0xA5;

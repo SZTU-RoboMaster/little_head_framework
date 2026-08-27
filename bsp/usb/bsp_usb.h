@@ -3,7 +3,7 @@
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-10 0.1 初版
+ * @date 2026-07-10 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -12,7 +12,6 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
 #include "usbd_cdc_if.h"
 
 /* Exported macros -----------------------------------------------------------*/

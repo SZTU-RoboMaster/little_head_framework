@@ -12,10 +12,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bsp_can.h"
-#include "math_tools.h"
-#include <cstdint>
 
 /* Exported macros -----------------------------------------------------------*/
 

@@ -12,9 +12,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
-#include "bmi088_interface.h"
-#include "bmi08x.h"
+#include "bmi08_defs.h"
 
 /* Exported macros -----------------------------------------------------------*/
 

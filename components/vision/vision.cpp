@@ -3,7 +3,7 @@
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-06-10 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -11,8 +11,12 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "vision.h"
+
 #include "CRC8_CRC16.h"
-#include <algorithm>
+#include "bsp_usb.h"
+#include "math_tools.h"
+
+
 #include <cstring>
 
 /* Private macros ------------------------------------------------------------*/

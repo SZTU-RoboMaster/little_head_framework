@@ -12,10 +12,8 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bsp_can.h"
 #include "pid.h"
-#include <cstdint>
 
 /* Exported macros -----------------------------------------------------------*/
 

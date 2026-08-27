@@ -1,9 +1,9 @@
 /**
- * @file template.h
+ * @file power_controller.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-08-26 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -12,10 +12,9 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "math_tools.h"
-
 #include "message_center.h"
 #include "message_def.h"
+
 /* Exported macros -----------------------------------------------------------*/
 // 电机建模系数
 static constexpr float k1_ = 3.24956187e-4f;
@@ -34,7 +33,7 @@ enum PowerControlMode
 };
 
 /**
- * @brief Specialized
+ * @brief Specialized PowerController
  *
  */
 class PowerController

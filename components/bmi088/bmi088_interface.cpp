@@ -1,5 +1,5 @@
 /**
- * @file template.cpp
+ * @file bmi088_interface.cpp
  * @author anchengc
  * @brief
  * @version 0.1
@@ -10,14 +10,14 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-
 #include "bmi088_interface.h"
+
 #include "bsp_dwt.h"
+
+#include "cmsis_os2.h"
 #include "main.h"
-#include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
-
 #define BMI088_SPI SPI1
 #define BMI088_SPI_ACCEL 0
 #define BMI088_SPI_GYRO 1
@@ -206,7 +206,8 @@ int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, enum bmi08_va
         /* Configure delay in microseconds */
         bmi08->delay_us = bmi08_delay_us;
 
-        /* Configure max read/write length (in bytes) ( Supported length depends on target machine) */
+        /* Configure max read/write length (in bytes) ( Supported length depends on target machine)
+         */
         bmi08->read_write_len = BMI08_READ_WRITE_LEN;
 
         osDelay(10);

@@ -1,9 +1,9 @@
 /**
- * @file template.hpp
+ * @file INS_task.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-07-13 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -13,11 +13,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "bmi088.h"
-#include "bsp_imu_pwm.h"
 #include "pid.h"
 #include "quaternion_ekf.h"
 
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 
 #include "message_center.h"
 #include "message_def.h"

@@ -1,5 +1,5 @@
 /**
- * @file template.cpp
+ * @file bsp_imu_pwm.cpp
  * @author anchengc
  * @brief
  * @version 0.1

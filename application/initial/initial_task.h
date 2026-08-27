@@ -1,9 +1,9 @@
 /**
- * @file template.h
+ * @file initial_task.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-05-30 0.1 初版
+ * @date 2026-08-27 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -12,7 +12,6 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "robot_sdk.h"
 
 /* Exported macros -----------------------------------------------------------*/
 #define TASK_READY_INS (1U << 0)
