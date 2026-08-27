@@ -37,7 +37,7 @@ struct TimManageObject
 };
 
 /* Exported variables ---------------------------------------------------------*/
-extern uint8_t init_finished;
+extern uint8_t initialized;
 
 extern TimManageObject tim1_manage_obj;
 extern TimManageObject tim2_manage_obj;

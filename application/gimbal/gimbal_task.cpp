@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "gimbal_task.h"
+#include "initial_task.h"
 #include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -20,6 +21,8 @@
 /* Private variables ---------------------------------------------------------*/
 Gimbal gimbal;
 Command command;
+
+extern osThreadId_t defaultTaskHandle;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -36,6 +39,7 @@ extern "C" void gimbal_task(void *argument)
     gimbal.init();
     command.init();
 
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_GIMBAL);
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)

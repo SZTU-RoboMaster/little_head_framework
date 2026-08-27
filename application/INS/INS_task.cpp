@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "INS_task.h"
+#include "initial_task.h"
 #include <cstring>
 
 /* Private macros ------------------------------------------------------------*/
@@ -20,6 +21,8 @@
 /* Private variables ---------------------------------------------------------*/
 INS ins;
 
+extern osThreadId_t defaultTaskHandle;
+
 /* Private function declarations ---------------------------------------------*/
 
 /* function prototypes -------------------------------------------------------*/
@@ -27,6 +30,7 @@ INS ins;
 extern "C" void INS_task(void *argument)
 {
     ins.init();
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_INS);
 
     while (1)
     {

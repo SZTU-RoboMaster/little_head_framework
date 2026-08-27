@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "vision_task.h"
+#include "initial_task.h"
 #include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -21,6 +22,7 @@
 Vision vision;
 
 /* Private function declarations ---------------------------------------------*/
+extern osThreadId_t defaultTaskHandle;
 
 /* function prototypes -------------------------------------------------------*/
 
@@ -34,6 +36,7 @@ extern "C" void vision_task(void *argument)
 {
     vision.init();
 
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_VISION);
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)

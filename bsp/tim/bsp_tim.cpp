@@ -146,7 +146,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
 
     // 判断程序初始化完成
-    if (!init_finished)
+    if (!initialized)
     {
         return;
     }

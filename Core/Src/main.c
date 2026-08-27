@@ -31,7 +31,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "initial_task.h"
+#include "robot_sdk.h"
 
 /* USER CODE END Includes */
 
@@ -110,7 +110,8 @@ int main(void)
   MX_TIM10_Init();
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
-  task_init();
+  MX_USB_DEVICE_Init();
+  robot_sdk_init();
 
   /* USER CODE END 2 */
 

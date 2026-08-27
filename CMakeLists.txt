@@ -89,6 +89,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     sdk/message/message_center.cpp
     application/command/command.cpp
     application/chassis/power_control/power_controller.cpp
+    sdk/robot/robot_sdk.cpp
 )
 
 # Add include paths
@@ -123,6 +124,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     sdk/message
     application/command
     application/chassis/power_control
+    sdk/robot
 )
 
 # Add project symbols (macros)

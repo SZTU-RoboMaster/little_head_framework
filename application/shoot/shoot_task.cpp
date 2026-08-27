@@ -11,13 +11,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "shoot_task.h"
+#include "initial_task.h"
 #include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
 
 /* Private types -------------------------------------------------------------*/
+Shoot shoot;
 
 /* Private variables ---------------------------------------------------------*/
+extern osThreadId_t defaultTaskHandle;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -32,6 +35,7 @@ extern "C" void shoot_task(void *argument)
 {
     shoot.init();
 
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_SHOOT);
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)

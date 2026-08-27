@@ -11,6 +11,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "chassis_task.h"
+#include "initial_task.h"
 #include "cmsis_os.h"
 
 /* Private macros ------------------------------------------------------------*/
@@ -20,6 +21,8 @@
 /* Private variables ---------------------------------------------------------*/
 Chassis chassis;
 PowerController power_controller;
+
+extern osThreadId_t defaultTaskHandle;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -35,6 +38,7 @@ extern "C" void chassis_task(void *argument)
     chassis.init();
     power_controller.init(POWER_CONTROL_ENABLE);
 
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_CHASSIS);
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)

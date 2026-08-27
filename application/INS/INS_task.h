@@ -25,8 +25,6 @@
 /* Exported macros -----------------------------------------------------------*/
 #define INS_DATA_READY_FLAG (1U << 0)
 
-extern osThreadId_t insTaskHandle;
-
 /* Exported types ------------------------------------------------------------*/
 
 /**
@@ -73,6 +71,8 @@ protected:
 
 /* Exported variables ---------------------------------------------------------*/
 extern INS ins;
+
+extern osThreadId_t insTaskHandle;
 
 /* Exported function declarations ---------------------------------------------*/
 

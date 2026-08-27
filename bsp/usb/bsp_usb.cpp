@@ -12,7 +12,6 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "bsp_usb.h"
-#include "initial_task.h"
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -43,7 +42,7 @@ void usb_init(usb_callback_t callback)
  */
 void USB_Rx_Callback(uint8_t *buf, uint32_t len)
 {
-    if (!init_finished)
+    if (!initialized)
     {
         return;
     }
