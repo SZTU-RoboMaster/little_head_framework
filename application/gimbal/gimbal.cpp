@@ -39,6 +39,9 @@ void Gimbal::init()
     // 电机初始化
     motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
     motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
+    // 滤波器初始化
+    yaw_filter_.init(3.0f, 10.0f, 1.0f);
+    pitch_filter_.init(3.0f, 10.0f, 1.0f);
 
     // 初始化云台状态
     status_.mode = GIMBAL_RELAX;
@@ -55,9 +58,10 @@ void Gimbal::init()
  */
 void Gimbal::update_input()
 {
-    vision_subscriber_.update(vision_msg_);
-    vision_online_flag_ = vision_subscriber_.is_fresh(100);
     cmd_subscriber_.update(cmd_msg_);
+    vision_subscriber_.update(vision_msg_);
+    auto_aim_ =
+        vision_subscriber_.is_fresh(100) && vision_msg_.target_lock == 49 && cmd_msg_.auto_aim;
 }
 
 void Gimbal::update_feedback()
@@ -125,17 +129,20 @@ void Gimbal::control()
 
         case GIMBAL_ACTIVE:
             // 云台使能，电机输出
-            if (vision_online_flag_ && vision_msg_.target_lock == 49)
+            if (auto_aim_)
             {
-                control_output_.target_yaw_angle = vision_msg_.yaw;
-                control_output_.target_pitch_angle = vision_msg_.pitch;
-                control_output_.target_yaw_feedforward_omega = vision_msg_.yaw_vel;
-                control_output_.target_pitch_feedforward_omega = vision_msg_.pitch_vel;
+                control_output_.target_yaw_angle = yaw_filter_.update(vision_msg_.yaw, 0.001f);
+                control_output_.target_pitch_angle =
+                    pitch_filter_.update(vision_msg_.pitch, 0.001f);
+                control_output_.target_yaw_feedforward_omega = vision_msg_.yaw_vel * 1.0f;
+                control_output_.target_pitch_feedforward_omega = vision_msg_.pitch_vel * 1.0f;
                 control_output_.target_yaw_feedforward_acc = 0.0f;
                 control_output_.target_pitch_feedforward_acc = 0.0f;
             }
             else
             {
+                yaw_filter_.reset();
+                pitch_filter_.reset();
                 control_output_.target_yaw_angle += cmd_msg_.yaw_rate * 0.001f;
                 control_output_.target_pitch_angle += cmd_msg_.pitch_rate * 0.001f;
                 control_output_.target_yaw_feedforward_omega = 0.0f;

@@ -146,6 +146,8 @@ protected:
     uint8_t single_shot_pending_ = false;
     // 单发序号
     uint32_t last_single_shot_seq_ = 0;
+    // 视觉flag
+    uint8_t auto_aim_ = false;
 
     // 停火热量阈值
     float heat_ceasefire_threshold_ = 20.0f;
@@ -157,6 +159,8 @@ protected:
     ShootCmdMessage cmd_msg_;
     Subscriber<RefereeMessage> referee_subscriber_;
     RefereeMessage referee_msg_;
+    Subscriber<VisionMessage> vision_subscriber_;
+    VisionMessage vision_msg_;
 
     // 发射机构反馈
     ShootFeedback feedback_;

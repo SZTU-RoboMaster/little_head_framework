@@ -21,7 +21,7 @@
 /* Exported macros -----------------------------------------------------------*/
 
 static constexpr uint8_t REF_PROTOCOL_HEADER = 0xA5;
-static constexpr uint16_t REF_PROTOCOL_HEADER_SIZE = sizeof(FrameHeader);
+static constexpr uint16_t REF_PROTOCOL_HEADER_SIZE = sizeof(RefFrameHeader);
 static constexpr uint16_t REF_PROTOCOL_CMD_SIZE = 2;
 static constexpr uint16_t REF_PROTOCOL_CRC16_SIZE = 2;
 static constexpr uint16_t REF_HEADER_CRC_LEN = REF_PROTOCOL_HEADER_SIZE + REF_PROTOCOL_CRC16_SIZE;

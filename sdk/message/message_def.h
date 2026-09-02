@@ -70,8 +70,8 @@ struct VisionMessage
     float pitch = 0.0f;
     float pitch_vel = 0.0f;
     float pitch_acc = 0.0f;
-    uint8_t target_lock = 50; // 49: lock, 50: unlock
-    uint8_t fire_command = 0;
+    int8_t target_lock = 50; // 49: lock, 50: unlock
+    int8_t fire_command = 0;
 };
 
 /**
@@ -110,6 +110,7 @@ struct GimbalCmdMessage
     GimbalCmdMode gimbal_mode = GIMBAL_CMD_RELAX;
     float yaw_rate = 0.0f;
     float pitch_rate = 0.0f;
+    uint8_t auto_aim = 0;
 };
 
 /**
@@ -123,6 +124,7 @@ struct ShootCmdMessage
     uint8_t fric_enabled = 0;
     uint8_t continue_shoot = 0;
     uint32_t single_shot_seq = 0;
+    uint8_t auto_aim = 0;
 };
 
 /**

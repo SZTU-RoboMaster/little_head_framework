@@ -23,7 +23,7 @@
  * @brief 裁判系统数据帧头结构体
  *
  */
-struct __attribute__((packed)) FrameHeader
+struct __attribute__((packed)) RefFrameHeader
 {
     uint8_t sof;
     uint16_t data_length;

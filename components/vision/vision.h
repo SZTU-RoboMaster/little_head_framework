@@ -12,42 +12,14 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#include "protocol.h"
+
 #include "message_center.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
-
-struct __attribute__((packed)) RobotData
-{
-    uint8_t head[2] = {'H', 'J'};
-    uint8_t mode = 33; // 33: auto aim, 34: small buff, 35: big buff
-    float yaw = 0.0f;
-    float yaw_vel = 0.0f;
-    float pitch = 0.0f;
-    float pitch_vel = 0.0f;
-    float quaternion[4] = {1.0f, 0.0f, 0.0f, 0.0f}; // w, x, y, z
-    float shoot_speed = 0.0f;
-    uint16_t bullet_count = 0;
-    uint16_t crc16 = 0;
-};
-
-struct __attribute__((packed)) VisionData
-{
-    uint8_t head[2] = {'H', 'J'};
-    float yaw = 0.0f;
-    float yaw_vel = 0.0f;
-    float yaw_acc = 0.0f;
-    float pitch = 0.0f;
-    float pitch_vel = 0.0f;
-    float pitch_acc = 0.0f;
-    uint8_t target_lock = 50; // 49: lock, 50: unlock
-    uint8_t fire_command = 0;
-    // uint8_t target = 0; // 0: empty, 1: hero, 2: engineer, 3: infantry3, 4: infantry4, 5:infantry5,
-                           // 6: empty, 7: sentry, 8: outpost, 9: base
-    uint16_t crc16 = 0;
-};
 
 /**
  * @brief Specialized
@@ -79,14 +51,16 @@ protected:
     uint32_t rx_flag_ = 0;
     // 前一时刻的接收flag
     uint32_t last_rx_flag_ = 0;
+    // 发送序列号
+    uint8_t seq_ = 0;
 
     // 读变量
-    RobotData tx_data_;
+    VisionData tx_data_;
     Subscriber<InsMessage> ins_subscriber_;
     InsMessage ins_message_;
 
     // 写变量
-    VisionData rx_data_;
+    RobotCtrlData rx_data_;
     Publisher<VisionMessage> vision_publisher_;
 
     // 读写变量

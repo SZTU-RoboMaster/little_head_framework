@@ -13,6 +13,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "motor_dji.h"
+#include "low_pass_filter.h"
 
 #include "message_center.h"
 #include "message_def.h"
@@ -99,13 +100,9 @@ class Gimbal
 public:
     // yaw轴电机
     MotorDji motor_yaw_;
-    Pid yaw_angle_pid_;
-    Pid yaw_omega_pid_;
 
     // pitch轴电机
     MotorDji motor_pitch_;
-    Pid pitch_angle_pid_;
-    Pid pitch_omega_pid_;
 
     void init();
 
@@ -132,7 +129,16 @@ protected:
     GimbalConfig config_;
 
     // 内部变量
-    uint8_t vision_online_flag_ = 0;
+    Pid yaw_angle_pid_;
+    Pid yaw_omega_pid_;
+    Pid pitch_angle_pid_;
+    Pid pitch_omega_pid_;
+    OneEuroFilter yaw_filter_;
+    OneEuroFilter pitch_filter_;
+
+    uint8_t vision_update_ = 0;
+    // 视觉自瞄flag
+    uint8_t auto_aim_ = 0;
 
     // 读变量
     Subscriber<InsMessage> ins_subscriber_;

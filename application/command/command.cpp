@@ -124,6 +124,15 @@ void Command::update()
             first_in_ = true;
             break;
         }
+        if (dr16_msg_.wheel < -300)
+        {
+            auto_aim_ = true;
+        }
+        else
+        {
+            auto_aim_ = false;
+        }
+        gimbal_cmd.auto_aim = auto_aim_;
         gimbal_cmd.yaw_rate = cubic_map(-dr16_msg_.ch_2 / 660.0f, 0.5f) * 4.0f;
         gimbal_cmd.pitch_rate = cubic_map(dr16_msg_.ch_3 / 660.0f, 0.5f) * 5.0f;
 
@@ -134,6 +143,7 @@ void Command::update()
         shoot_cmd.fric_enabled = fric_enabled_;
         shoot_cmd.continue_shoot = fric_enabled_ && (dr16_msg_.sw_1 == 2);
         shoot_cmd.single_shot_seq = single_shot_seq_;
+        shoot_cmd.auto_aim = auto_aim_;
     }
     else if (vt13_online)
     {

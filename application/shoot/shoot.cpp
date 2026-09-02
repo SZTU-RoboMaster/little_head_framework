@@ -44,6 +44,7 @@ void Shoot::init()
 
     cmd_subscriber_ = MessageCenter::instance().subscribe<ShootCmdMessage>(kCmdShootTopicName);
     referee_subscriber_ = MessageCenter::instance().subscribe<RefereeMessage>(kRefereeTopicName);
+    vision_subscriber_ = MessageCenter::instance().subscribe<VisionMessage>(kVisionTopicName);
 }
 
 void Shoot::update_input()
@@ -57,6 +58,9 @@ void Shoot::update_input()
     }
 
     referee_subscriber_.update(referee_msg_);
+    vision_subscriber_.update(vision_msg_);
+    auto_aim_ =
+        vision_subscriber_.is_fresh(100) && vision_msg_.target_lock == 49 && cmd_msg_.auto_aim;
 }
 
 void Shoot::update_feedback()
@@ -87,50 +91,94 @@ void Shoot::handle_safety()
 
 void Shoot::set_mode()
 {
-
     if (!fric_enabled_)
     {
         shoot_mode_ = SHOOT_RELAX;
         return;
     }
 
-    switch (shoot_mode_)
+    if (auto_aim_)
     {
-    case SHOOT_RELAX:
-        shoot_mode_ = SHOOT_IDLE;
-        break;
-    case SHOOT_IDLE:
-        if (cmd_msg_.continue_shoot)
+        switch (shoot_mode_)
         {
-            shoot_mode_ = SHOOT_CONTINUE;
-            return;
-        }
-        if (single_shot_request_)
-        {
-            shoot_mode_ = SHOOT_SINGLE;
-            single_shot_pending_ = true;
-        }
-        break;
-    case SHOOT_SINGLE:
-    case SHOOT_DOUBLE:
-    case SHOOT_TRIPLE:
-        if (trigger_state_ == TRIGGER_BLOCK)
-        {
+        case SHOOT_RELAX:
             shoot_mode_ = SHOOT_IDLE;
-            control_output_.target_trigger_angle = feedback_.trigger_angle;
-            return;
+            break;
+        case SHOOT_IDLE:
+            if (vision_msg_.fire_command == 4)
+            {
+                shoot_mode_ = SHOOT_CONTINUE;
+                return;
+            }
+            if (vision_msg_.fire_command == 1)
+            {
+                shoot_mode_ = SHOOT_SINGLE;
+                single_shot_pending_ = true;
+                vision_msg_.fire_command = 0;
+            }
+            break;
+        case SHOOT_SINGLE:
+        case SHOOT_DOUBLE:
+        case SHOOT_TRIPLE:
+            if (trigger_state_ == TRIGGER_BLOCK)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+                control_output_.target_trigger_angle = feedback_.trigger_angle;
+                return;
+            }
+            if (std::abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+            }
+            break;
+        case SHOOT_CONTINUE:
+            if (vision_msg_.fire_command != 4)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+            }
+            break;
         }
-        if (std::abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
+    }
+    else
+    {
+        switch (shoot_mode_)
         {
+        case SHOOT_RELAX:
             shoot_mode_ = SHOOT_IDLE;
+            break;
+        case SHOOT_IDLE:
+            if (cmd_msg_.continue_shoot)
+            {
+                shoot_mode_ = SHOOT_CONTINUE;
+                return;
+            }
+            if (single_shot_request_)
+            {
+                shoot_mode_ = SHOOT_SINGLE;
+                single_shot_pending_ = true;
+            }
+            break;
+        case SHOOT_SINGLE:
+        case SHOOT_DOUBLE:
+        case SHOOT_TRIPLE:
+            if (trigger_state_ == TRIGGER_BLOCK)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+                control_output_.target_trigger_angle = feedback_.trigger_angle;
+                return;
+            }
+            if (std::abs(feedback_.trigger_angle - control_output_.target_trigger_angle) < 0.002f)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+            }
+            break;
+        case SHOOT_CONTINUE:
+            if (!cmd_msg_.continue_shoot)
+            {
+                shoot_mode_ = SHOOT_IDLE;
+            }
+            break;
         }
-        break;
-    case SHOOT_CONTINUE:
-        if (!cmd_msg_.continue_shoot)
-        {
-            shoot_mode_ = SHOOT_IDLE;
-        }
-        break;
     }
 }
 

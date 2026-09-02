@@ -66,7 +66,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/bmi088/bmi088.cpp
     components/bmi088/quaternion_ekf.cpp
     components/algorithm/math_tools/math_tools.cpp
-    components/algorithm/kf/kalman_filter.c
+    components/algorithm/filter/kalman_filter.c
     components/algorithm/pid/pid.cpp
     # components/ist8310/ist8310driver.cpp
     # components/ist8310/ist8310driver_middleware.cpp
@@ -90,6 +90,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/command/command.cpp
     application/chassis/power_control/power_controller.cpp
     sdk/robot/robot_sdk.cpp
+    components/algorithm/filter/low_pass_filter.cpp
 )
 
 # Add include paths
@@ -111,7 +112,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     components/bmi088
     components/bmi088/third_party
     components/algorithm/math_tools
-    components/algorithm/kf
+    components/algorithm/filter
     components/algorithm/pid
     components/ist8310
     components/vision
