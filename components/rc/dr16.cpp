@@ -39,9 +39,9 @@ void Dr16::init(UART_HandleTypeDef *huart)
     {
         uart_manage_obj_ = &uart3_manage_obj;
     }
-    else if (huart->Instance == USART6)
+    else if (huart->Instance == UART5)
     {
-        uart_manage_obj_ = &uart6_manage_obj;
+        uart_manage_obj_ = &uart5_manage_obj;
     }
 
     publisher_ = MessageCenter::instance().advertise<Dr16Message>(kDr16TopicName);

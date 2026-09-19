@@ -70,7 +70,7 @@ public:
     // 电机对外接口信息
     MotorDjiRxData rx_data_;
 
-    void init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id,
+    void init(FDCAN_HandleTypeDef *hfdcan, uint16_t can_tx_id, uint16_t can_rx_id,
               MotorDjiControlMethod control_method = MOTOR_DJI_CONTROL_METHOD_OMEGA,
               float gearbox_rate = 1.0f, uint8_t reverse = false);
 
@@ -166,6 +166,10 @@ extern uint8_t can2_0x200_tx_data[];
 extern uint8_t can2_0x1ff_tx_data[];
 extern uint8_t can2_0x1fe_tx_data[];
 extern uint8_t can2_0x2fe_tx_data[];
+extern uint8_t can3_0x200_tx_data[];
+extern uint8_t can3_0x1ff_tx_data[];
+extern uint8_t can3_0x1fe_tx_data[];
+extern uint8_t can3_0x2fe_tx_data[];
 
 /* Exported function declarations ---------------------------------------------*/
 

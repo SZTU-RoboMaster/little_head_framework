@@ -26,12 +26,10 @@ TimManageObject tim5_manage_obj;
 TimManageObject tim6_manage_obj;
 TimManageObject tim7_manage_obj;
 TimManageObject tim8_manage_obj;
-TimManageObject tim9_manage_obj;
-TimManageObject tim10_manage_obj;
-TimManageObject tim11_manage_obj;
-TimManageObject tim12_manage_obj;
-TimManageObject tim13_manage_obj;
-TimManageObject tim14_manage_obj;
+TimManageObject tim15_manage_obj;
+TimManageObject tim16_manage_obj;
+TimManageObject tim17_manage_obj;
+TimManageObject tim20_manage_obj;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -93,40 +91,29 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
         tim8_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
-    else if (htim->Instance == TIM9)
+
+    else if (htim->Instance == TIM15)
     {
-        tim9_manage_obj.tim_handle = htim;
-        tim9_manage_obj.callback_func = callback_func;
+        tim15_manage_obj.tim_handle = htim;
+        tim15_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
-    else if (htim->Instance == TIM10)
+    else if (htim->Instance == TIM16)
     {
-        tim10_manage_obj.tim_handle = htim;
-        tim10_manage_obj.callback_func = callback_func;
+        tim16_manage_obj.tim_handle = htim;
+        tim16_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
-    else if (htim->Instance == TIM11)
+    else if (htim->Instance == TIM17)
     {
-        tim11_manage_obj.tim_handle = htim;
-        tim11_manage_obj.callback_func = callback_func;
+        tim17_manage_obj.tim_handle = htim;
+        tim17_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
-    else if (htim->Instance == TIM12)
+    else if (htim->Instance == TIM20)
     {
-        tim12_manage_obj.tim_handle = htim;
-        tim12_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
-    else if (htim->Instance == TIM13)
-    {
-        tim13_manage_obj.tim_handle = htim;
-        tim13_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
-    else if (htim->Instance == TIM14)
-    {
-        tim14_manage_obj.tim_handle = htim;
-        tim14_manage_obj.callback_func = callback_func;
+        tim20_manage_obj.tim_handle = htim;
+        tim20_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
 }
@@ -138,7 +125,6 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-
     if (htim->Instance == TIM6)
     {
         HAL_IncTick();
@@ -200,46 +186,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             tim8_manage_obj.callback_func();
         }
     }
-    else if (htim->Instance == TIM9)
+    else if (htim->Instance == TIM15)
     {
-        if (tim9_manage_obj.callback_func != nullptr)
+        if (tim15_manage_obj.callback_func != nullptr)
         {
-            tim9_manage_obj.callback_func();
+            tim15_manage_obj.callback_func();
         }
     }
-    else if (htim->Instance == TIM10)
+    else if (htim->Instance == TIM16)
     {
-        if (tim10_manage_obj.callback_func != nullptr)
+        if (tim16_manage_obj.callback_func != nullptr)
         {
-            tim10_manage_obj.callback_func();
+            tim16_manage_obj.callback_func();
         }
     }
-    else if (htim->Instance == TIM11)
+    else if (htim->Instance == TIM17)
     {
-        if (tim11_manage_obj.callback_func != nullptr)
+        if (tim17_manage_obj.callback_func != nullptr)
         {
-            tim11_manage_obj.callback_func();
+            tim17_manage_obj.callback_func();
         }
     }
-    else if (htim->Instance == TIM12)
+    else if (htim->Instance == TIM20)
     {
-        if (tim12_manage_obj.callback_func != nullptr)
+        if (tim20_manage_obj.callback_func != nullptr)
         {
-            tim12_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM13)
-    {
-        if (tim13_manage_obj.callback_func != nullptr)
-        {
-            tim13_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM14)
-    {
-        if (tim14_manage_obj.callback_func != nullptr)
-        {
-            tim14_manage_obj.callback_func();
+            tim20_manage_obj.callback_func();
         }
     }
 }

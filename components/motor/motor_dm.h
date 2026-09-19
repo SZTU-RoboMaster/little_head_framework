@@ -92,7 +92,7 @@ struct MotorDmRxData
 class MotorDm
 {
 public:
-    void init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
+    void init(FDCAN_HandleTypeDef *hfdcan, uint16_t can_id, uint16_t master_id,
               MotorDmControlMethod control_method = MOTOR_DM_CONTROL_METHOD_MIT,
               float p_max = 12.5f, float v_max = 30.0f, float t_max = 10.0f, float kp = 0.0f,
               float kd = 0.0f, uint8_t reverse = false, MotorDmEnableStatus enable_status = MOTOR_DM_ENABLE_STATUS_DISABLE);

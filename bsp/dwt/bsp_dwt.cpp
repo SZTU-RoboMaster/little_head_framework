@@ -38,11 +38,12 @@ void dwt_init()
 void delay_us(uint32_t us)
 {
     const uint32_t start = DWT->CYCCNT;
-    const uint32_t ticks = us * 168;
+    const uint32_t ticks = us * 170;
 
     while ((DWT->CYCCNT - start) < ticks)
     {
         __NOP();
     }
 }
+
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

@@ -55,7 +55,7 @@ extern "C" void INS_task(void *argument)
  */
 void INS::init()
 {
-    bmi088_.init();
+    bmi270_.init();
     imu_temp_pid_.init(1600.0f, 0.2f, 0.0f, 0.0f, 4400.0f, 4500.0f);
 
     gravity_kf_.init(1, 2000);
@@ -66,12 +66,12 @@ void INS::init()
 
 void INS::update()
 {
-    gravity_kf_.update(bmi088_.rx_data_.gyro[0], bmi088_.rx_data_.gyro[1], bmi088_.rx_data_.gyro[2],
-                       bmi088_.rx_data_.accel[0], bmi088_.rx_data_.accel[1],
-                       bmi088_.rx_data_.accel[2], 0.001f);
-    quaternion_ekf_.update(bmi088_.rx_data_.gyro[0], bmi088_.rx_data_.gyro[1],
-                           bmi088_.rx_data_.gyro[2], gravity_kf_.gravity_vec_[0],
-                           gravity_kf_.gravity_vec_[1], gravity_kf_.gravity_vec_[2], 0.001f);
+    gravity_kf_.update(bmi270_.rx_data_.gyro[0], bmi270_.rx_data_.gyro[1], bmi270_.rx_data_.gyro[2],
+                       bmi270_.rx_data_.accel[0], bmi270_.rx_data_.accel[1],
+                       bmi270_.rx_data_.accel[2], 0.00125f);
+    quaternion_ekf_.update(bmi270_.rx_data_.gyro[0], bmi270_.rx_data_.gyro[1],
+                           bmi270_.rx_data_.gyro[2], gravity_kf_.gravity_vec_[0],
+                           gravity_kf_.gravity_vec_[1], gravity_kf_.gravity_vec_[2], 0.00125f);
 }
 
 void INS::publish()
@@ -79,8 +79,8 @@ void INS::publish()
     InsMessage msg;
 
     std::memcpy(msg.angle, quaternion_ekf_.ins_.angle, sizeof(msg.angle));
-    std::memcpy(msg.gyro, bmi088_.rx_data_.gyro, sizeof(msg.gyro));
-    std::memcpy(msg.acc, bmi088_.rx_data_.accel, sizeof(msg.acc));
+    std::memcpy(msg.gyro, bmi270_.rx_data_.gyro, sizeof(msg.gyro));
+    std::memcpy(msg.acc, bmi270_.rx_data_.accel, sizeof(msg.acc));
     std::memcpy(msg.quaternion, quaternion_ekf_.ins_.q, sizeof(msg.quaternion));
 
     publisher_.publish(msg);
@@ -91,7 +91,7 @@ void INS::temp_control()
     static uint8_t first_in = 1;
     if (first_in)
     {
-        if (bmi088_.rx_data_.temp > 43.0f)
+        if (bmi270_.rx_data_.temp > 43.0f)
         {
             first_in = 0;
         }
@@ -100,7 +100,7 @@ void INS::temp_control()
     else
     {
         imu_temp_pid_.set_target(45.0f);
-        imu_temp_pid_.set_feedback(bmi088_.rx_data_.temp);
+        imu_temp_pid_.set_feedback(bmi270_.rx_data_.temp);
         imu_temp_pid_.calculate();
         int16_t out = static_cast<int16_t>(std::clamp(imu_temp_pid_.get_output(), 0.0f, 4999.0f));
         imu_pwm_set(out);

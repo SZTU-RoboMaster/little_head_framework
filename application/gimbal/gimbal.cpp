@@ -37,8 +37,8 @@ void Gimbal::init()
     pitch_angle_pid_.init(30.0f, 0.0f, 2.0f, 0.0f, 0.0f, 0.0f, 0.005f);
     pitch_omega_pid_.init(2000.0f, 100000.0f, 0.0f, 0.0f, 8000.0f, 16384.0f);
     // 电机初始化
-    motor_yaw_.init(&hcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
-    motor_pitch_.init(&hcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
+    motor_yaw_.init(&hfdcan1, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
+    motor_pitch_.init(&hfdcan2, 0x1fe, 0x205, MOTOR_DJI_CONTROL_METHOD_CURRENT, 1.0f);
     // 滤波器初始化
     yaw_filter_.init(3.0f, 10.0f, 1.0f);
     pitch_filter_.init(3.0f, 10.0f, 1.0f);
@@ -71,9 +71,9 @@ void Gimbal::update_feedback()
     feedback_.yaw_angle = motor_yaw_.rx_data_.total_angle;
 
     feedback_.imu_yaw_angle = ins_msg_.angle[2];
-    feedback_.imu_pitch_angle = ins_msg_.angle[1];
+    feedback_.imu_pitch_angle = ins_msg_.angle[0];
     feedback_.imu_yaw_omega = ins_msg_.gyro[2];
-    feedback_.imu_pitch_omega = ins_msg_.gyro[1];
+    feedback_.imu_pitch_omega = ins_msg_.gyro[0];
 }
 
 void Gimbal::handle_safety()

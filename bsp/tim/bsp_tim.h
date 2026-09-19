@@ -45,12 +45,10 @@ extern TimManageObject tim5_manage_obj;
 extern TimManageObject tim6_manage_obj;
 extern TimManageObject tim7_manage_obj;
 extern TimManageObject tim8_manage_obj;
-extern TimManageObject tim9_manage_obj;
-extern TimManageObject tim10_manage_obj;
-extern TimManageObject tim11_manage_obj;
-extern TimManageObject tim12_manage_obj;
-extern TimManageObject tim13_manage_obj;
-extern TimManageObject tim14_manage_obj;
+extern TimManageObject tim15_manage_obj;
+extern TimManageObject tim16_manage_obj;
+extern TimManageObject tim17_manage_obj;
+extern TimManageObject tim20_manage_obj;
 
 /* Exported function declarations ---------------------------------------------*/
 

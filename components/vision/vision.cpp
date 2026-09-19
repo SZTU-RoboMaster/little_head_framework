@@ -81,9 +81,9 @@ void Vision::update_tx()
     tx_data_.mode = 33; // auto aim
     tx_data_.yaw = ins_message_.angle[2];
     tx_data_.yaw_vel = ins_message_.gyro[2];
-    tx_data_.pitch = ins_message_.angle[1];
-    tx_data_.pitch_vel = ins_message_.gyro[1];
-    tx_data_.roll = ins_message_.angle[0];
+    tx_data_.pitch = ins_message_.angle[0];
+    tx_data_.pitch_vel = ins_message_.gyro[0];
+    tx_data_.roll = ins_message_.angle[1];
     std::memcpy(tx_data_.quaternion, ins_message_.quaternion, sizeof(ins_message_.quaternion));
     tx_data_.shoot_speed = 23.0f;
     tx_data_.bullet_count = 100;

@@ -55,7 +55,7 @@ Referee referee;
  */
 void device_can1_callback(CanRxBuffer *rx_buffer)
 {
-    switch (rx_buffer->header.StdId)
+    switch (rx_buffer->header.Identifier)
     {
     case (0x201):
     {
@@ -97,7 +97,7 @@ void device_can1_callback(CanRxBuffer *rx_buffer)
  */
 void device_can2_callback(CanRxBuffer *rx_buffer)
 {
-    switch (rx_buffer->header.StdId)
+    switch (rx_buffer->header.Identifier)
     {
     case (0x201):
     {
@@ -149,12 +149,12 @@ void dr16_uart3_callback(uint8_t *buffer, uint16_t length)
 }
 
 /**
- * @brief UART6裁判系统回调函数
+ * @brief UART5裁判系统回调函数
  *
- * @param buffer UART6收到的消息
+ * @param buffer UART5收到的消息
  * @param length 长度
  */
-void referee_uart6_callback(uint8_t *buffer, uint16_t length)
+void referee_uart5_callback(uint8_t *buffer, uint16_t length)
 {
     referee.uart_rx_callback(buffer, length);
 }
@@ -166,11 +166,11 @@ void referee_uart6_callback(uint8_t *buffer, uint16_t length)
  */
 void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
 {
-    if (gpio_pin == INT1_ACCEL_Pin || gpio_pin == INT1_GYRO_Pin)
+    if (gpio_pin == IMU_INT1_Pin)
     {
-        ins.bmi088_.exti_read_callback(gpio_pin);
+        ins.bmi270_.exti_read_callback(gpio_pin);
 
-        if (gpio_pin == INT1_GYRO_Pin && insTaskHandle != NULL)
+        if (insTaskHandle != nullptr)
         {
             osThreadFlagsSet(insTaskHandle, INS_DATA_READY_FLAG);
         }
@@ -247,8 +247,8 @@ void robot_sdk_init()
     buzzer_init();
 
     dr16.init(&huart3);
-    vt13.init(&huart1);
-    referee.init(&huart6);
+    vt13.init(&huart5);
+    referee.init(&huart1);
 
     aRGB_led_show(0xFFFF0000);
 }
@@ -260,9 +260,9 @@ void robot_sdk_start()
     usb_init(vision_usb_callback);
     uart_init(&huart1, vt13_uart1_callback, 21);
     uart_init(&huart3, dr16_uart3_callback, 18);
-    uart_init(&huart6, referee_uart6_callback, 255);
-    can_init(&hcan1, device_can1_callback);
-    can_init(&hcan2, device_can2_callback);
+    uart_init(&huart5, referee_uart5_callback, 255);
+    can_init(&hfdcan1, device_can1_callback);
+    can_init(&hfdcan2, device_can2_callback);
     tim_init(&htim7, task1ms_tim7_callback);
 
     aRGB_led_show(0xFFFFFFFF);

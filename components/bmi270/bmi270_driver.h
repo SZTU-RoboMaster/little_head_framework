@@ -1,9 +1,9 @@
 /**
- * @file INS_task.h
+ * @file bmi270_driver.h
  * @author anchengc
  * @brief
  * @version 0.1
- * @date 2026-07-13 0.1 初版
+ * @date 2026-05-30 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
  *
@@ -12,37 +12,36 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "bmi270_driver.h"
-#include "pid.h"
-#include "quaternion_ekf.h"
-
-#include "cmsis_os2.h"
-
-#include "message_center.h"
-#include "message_def.h"
+#include "bmi2_defs.h"
 
 /* Exported macros -----------------------------------------------------------*/
-#define INS_DATA_READY_FLAG (1U << 0)
 
 /* Exported types ------------------------------------------------------------*/
+
+/**
+ * @brief BMI088数据结构体
+ *
+ */
+struct Bmi270RxData
+{
+    float accel[3]; // 加速度计数据
+    float gyro[3];  // 陀螺仪数据
+    float temp;     // 温度数据
+};
 
 /**
  * @brief Specialized
  *
  */
-class INS
+class Bmi270
 {
 public:
-    // imu
-    Bmi270 bmi270_;
+    // BMI270处理后的数据
+    Bmi270RxData rx_data_;
 
-    void init();
+    int8_t init();
 
-    void update();
-
-    void publish();
-
-    void temp_control();
+    void exti_read_callback(uint16_t gpio_pin);
 
 protected:
     // 初始化相关常量
@@ -51,27 +50,28 @@ protected:
 
     // 内部变量
 
-    // imu温控pid
-    Pid imu_temp_pid_;
-    // 加速度kf
-    GravityKf gravity_kf_;
-    // 四元数ekf
-    QuaternionEkf quaternion_ekf_;
+
+    // bmi270设备结构体
+    bmi2_dev bmi270dev_;
+
+    // 陀螺仪源数据
+    bmi2_sens_data sensor_data_ = {{0}};
+    // z轴陀螺仪零飘值
+    float gyro_bias_z_;
 
     // 读变量
 
     // 写变量
-    Publisher<InsMessage> publisher_;
 
     // 读写变量
 
     // 内部函数
+    int8_t enable_bmi2_interrupt();
+
+    void calibrate_gyro_bias_z(volatile float gyro_z);
 };
 
 /* Exported variables ---------------------------------------------------------*/
-extern INS ins;
-
-extern osThreadId_t insTaskHandle;
 
 /* Exported function declarations ---------------------------------------------*/
 

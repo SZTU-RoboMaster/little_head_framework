@@ -12,7 +12,14 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include "arm_math.h" // IWYU pragma: export
+#ifdef __cplusplus
+}
+#endif
 #include <algorithm> // IWYU pragma: export
 #include <cstdlib> // IWYU pragma: export
 

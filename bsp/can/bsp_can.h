@@ -12,7 +12,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "can.h"
+#include "fdcan.h"
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -24,8 +24,8 @@
  */
 struct CanRxBuffer
 {
-    CAN_RxHeaderTypeDef header;
-    uint8_t data[8];
+    FDCAN_RxHeaderTypeDef header;
+    uint8_t data[64];
 };
 
 /**
@@ -40,7 +40,7 @@ typedef void (*can_callback_t)(CanRxBuffer *);
  */
 struct CanManageObject
 {
-    CAN_HandleTypeDef *can_handle;
+    FDCAN_HandleTypeDef *can_handle;
     CanRxBuffer rx_buffer;
     can_callback_t callback_func;
 };
@@ -49,15 +49,17 @@ struct CanManageObject
 
 extern uint8_t initialized;
 
-extern CAN_HandleTypeDef hcan1;
-extern CAN_HandleTypeDef hcan2;
+extern FDCAN_HandleTypeDef hfdcan1;
+extern FDCAN_HandleTypeDef hfdcan2;
+extern FDCAN_HandleTypeDef hfdcan3;
 
 extern CanManageObject can1_manage_obj;
 extern CanManageObject can2_manage_obj;
+extern CanManageObject can3_manage_obj;
 
 /* Exported function declarations ---------------------------------------------*/
-void can_init(CAN_HandleTypeDef *hcan, can_callback_t callback_func);
+void can_init(FDCAN_HandleTypeDef *hfdcan, can_callback_t callback_func);
 
-uint8_t can_data_send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint16_t length);
+uint8_t can_data_send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint16_t length);
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

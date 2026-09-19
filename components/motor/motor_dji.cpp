@@ -30,6 +30,10 @@ uint8_t can2_0x200_tx_data[8];
 uint8_t can2_0x1ff_tx_data[8];
 uint8_t can2_0x1fe_tx_data[8];
 uint8_t can2_0x2fe_tx_data[8];
+uint8_t can3_0x200_tx_data[8];
+uint8_t can3_0x1ff_tx_data[8];
+uint8_t can3_0x1fe_tx_data[8];
+uint8_t can3_0x2fe_tx_data[8];
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -38,13 +42,13 @@ uint8_t can2_0x2fe_tx_data[8];
 /**
  * @brief 分配CAN发送缓冲区
  *
- * @param hcan CAN编号
+ * @param hfdcan CAN编号
  * @param can_id CAN id
  * @return uint8_t* 缓冲区指针
  */
-uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id)
+uint8_t *allocate_tx_data(FDCAN_HandleTypeDef *hfdcan, uint16_t can_tx_id, uint16_t can_rx_id)
 {
-    if (hcan == &hcan1)
+    if (hfdcan == &hfdcan1)
     {
         switch (can_tx_id)
         {
@@ -66,7 +70,7 @@ uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t 
         }
         }
     }
-    else if (hcan == &hcan2)
+    else if (hfdcan == &hfdcan2)
     {
         switch (can_tx_id)
         {
@@ -88,34 +92,60 @@ uint8_t *allocate_tx_data(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t 
         }
         }
     }
+    else if (hfdcan == &hfdcan3)
+    {
+        switch (can_tx_id)
+        {
+        case (0x200):
+        {
+            return &(can3_0x200_tx_data[(can_rx_id - 0x201) * 2]);
+        }
+        case (0x1ff):
+        {
+            return &(can3_0x1ff_tx_data[(can_rx_id - 0x205) * 2]);
+        }
+        case (0x1fe):
+        {
+            return &(can3_0x1fe_tx_data[(can_rx_id - 0x205) * 2]);
+        }
+        case (0x2fe):
+        {
+            return &(can3_0x2fe_tx_data[(can_rx_id - 0x209) * 2]);
+        }
+        }
+    }
     return nullptr;
 }
 
 /**
  * @brief 电机初始化
  *
- * @param hcan 绑定的CAN总线
+ * @param hfdcan 绑定的CAN总线
  * @param can_rx_id 绑定的CAN id
  * @param control_method 控制方法
  * @param gearbox_rate 减速比
  */
-void MotorDji::init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id,
+void MotorDji::init(FDCAN_HandleTypeDef *hfdcan, uint16_t can_tx_id, uint16_t can_rx_id,
                     MotorDjiControlMethod control_method, float gearbox_rate, uint8_t reverse)
 {
-    if (hcan->Instance == CAN1)
+    if (hfdcan->Instance == FDCAN1)
     {
         can_manage_obj_ = &can1_manage_obj;
     }
-    else if (hcan->Instance == CAN2)
+    else if (hfdcan->Instance == FDCAN2)
     {
         can_manage_obj_ = &can2_manage_obj;
+    }
+    else if (hfdcan->Instance == FDCAN3)
+    {
+        can_manage_obj_ = &can3_manage_obj;
     }
     can_tx_id_ = can_tx_id;
     can_rx_id_ = can_rx_id;
     control_method_ = control_method;
     gearbox_rate_ = gearbox_rate;
     reverse_ = reverse;
-    tx_data_ = allocate_tx_data(hcan, can_tx_id, can_rx_id);
+    tx_data_ = allocate_tx_data(hfdcan, can_tx_id, can_rx_id);
 }
 
 /**
@@ -230,7 +260,7 @@ void MotorDji::process_data(const uint8_t *rx_data)
 
     // 计算角度
     rx_data_.total_angle =
-        (rx_data_.round_count + (float)rx_data_.encoder / 8192.0f) * 2.0f * PI / gearbox_rate_;
+        (rx_data_.round_count + (float)rx_data_.encoder / 8192.0f) * 2.0f * (PI / gearbox_rate_);
     rx_data_.angle = wrap_center(rx_data_.total_angle, 2.0f * PI);
 
     // 存储预备信息

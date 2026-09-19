@@ -59,14 +59,18 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/rc/vt13.cpp
     components/support/CRC8_CRC16.c
     components/referee/referee.cpp
-    components/bmi088/third_party/bmi08a.c
-    components/bmi088/third_party/bmi08g.c
-    components/bmi088/third_party/bmi08xa.c
-    components/bmi088/bmi088_interface.cpp
-    components/bmi088/bmi088.cpp
-    components/bmi088/quaternion_ekf.cpp
+    # components/bmi088/third_party/bmi08a.c
+    # components/bmi088/third_party/bmi08g.c
+    # components/bmi088/third_party/bmi08xa.c
+    # components/bmi088/bmi088_interface.cpp
+    # components/bmi088/bmi088.cpp
+    components/bmi270/third_party/bmi2.c
+    components/bmi270/third_party/bmi270.c
+    components/bmi270/bmi270_interface.cpp
+    components/bmi270/bmi270_driver.cpp
     components/algorithm/math_tools/math_tools.cpp
     components/algorithm/filter/kalman_filter.c
+    components/algorithm/filter/quaternion_ekf.cpp
     components/algorithm/pid/pid.cpp
     # components/ist8310/ist8310driver.cpp
     # components/ist8310/ist8310driver_middleware.cpp
@@ -109,8 +113,10 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     components/rc
     components/support
     components/referee
-    components/bmi088
-    components/bmi088/third_party
+    # components/bmi088
+    # components/bmi088/third_party
+    components/bmi270
+    components/bmi270/third_party
     components/algorithm/math_tools
     components/algorithm/filter
     components/algorithm/pid
