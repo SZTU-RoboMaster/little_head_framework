@@ -27,7 +27,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
+#include "stm32g4xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,32 +57,30 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define RSTN_IST8310_Pin GPIO_PIN_6
-#define RSTN_IST8310_GPIO_Port GPIOG
-#define LED_R_Pin GPIO_PIN_12
-#define LED_R_GPIO_Port GPIOH
-#define DRDY_IST8310_Pin GPIO_PIN_3
-#define DRDY_IST8310_GPIO_Port GPIOG
-#define DRDY_IST8310_EXTI_IRQn EXTI3_IRQn
-#define LED_G_Pin GPIO_PIN_11
-#define LED_G_GPIO_Port GPIOH
-#define LED_B_Pin GPIO_PIN_10
-#define LED_B_GPIO_Port GPIOH
-#define BUZZER_Pin GPIO_PIN_14
-#define BUZZER_GPIO_Port GPIOD
-#define KEY_Pin GPIO_PIN_0
-#define KEY_GPIO_Port GPIOA
-#define KEY_EXTI_IRQn EXTI0_IRQn
-#define CS1_ACCEL_Pin GPIO_PIN_4
-#define CS1_ACCEL_GPIO_Port GPIOA
-#define INT1_ACCEL_Pin GPIO_PIN_4
-#define INT1_ACCEL_GPIO_Port GPIOC
-#define INT1_ACCEL_EXTI_IRQn EXTI4_IRQn
-#define INT1_GYRO_Pin GPIO_PIN_5
-#define INT1_GYRO_GPIO_Port GPIOC
-#define INT1_GYRO_EXTI_IRQn EXTI9_5_IRQn
-#define CS1_GYRO_Pin GPIO_PIN_0
-#define CS1_GYRO_GPIO_Port GPIOB
+#define POWER_EN_2_Pin GPIO_PIN_13
+#define POWER_EN_2_GPIO_Port GPIOC
+#define LED_G_Pin GPIO_PIN_1
+#define LED_G_GPIO_Port GPIOC
+#define LED_R_Pin GPIO_PIN_2
+#define LED_R_GPIO_Port GPIOC
+#define LED_B_Pin GPIO_PIN_3
+#define LED_B_GPIO_Port GPIOC
+#define IMU_INT1_Pin GPIO_PIN_1
+#define IMU_INT1_GPIO_Port GPIOA
+#define IMU_INT1_EXTI_IRQn EXTI1_IRQn
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
+#define IMU_HEAT_Pin GPIO_PIN_8
+#define IMU_HEAT_GPIO_Port GPIOE
+#define BUZZER_Pin GPIO_PIN_9
+#define BUZZER_GPIO_Port GPIOE
+#define SPI2_CS_Pin GPIO_PIN_12
+#define SPI2_CS_GPIO_Port GPIOB
+#define KEY_Pin GPIO_PIN_10
+#define KEY_GPIO_Port GPIOD
+#define KEY_EXTI_IRQn EXTI15_10_IRQn
+#define POWER_EN_1_Pin GPIO_PIN_7
+#define POWER_EN_1_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
