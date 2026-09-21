@@ -155,9 +155,14 @@ int8_t Bmi270::init(void)
  *
  * @param[in] gpio_pin
  */
-void Bmi270::exti_read_callback(uint16_t gpio_pin)
+uint8_t Bmi270::exti_read_callback(uint16_t gpio_pin)
 {
     int8_t rslt;
+    int16_t temperature_data;
+
+    rslt = bmi2_get_temperature_data(&temperature_data, &bmi270dev_);
+
+    rx_data_.temp = lsb_temp(temperature_data);
 
     rslt = bmi2_get_sensor_data(&sensor_data_, &bmi270dev_);
 
@@ -176,15 +181,12 @@ void Bmi270::exti_read_callback(uint16_t gpio_pin)
             lsb_to_dps(sensor_data_.gyr.y, (float)2000, bmi270dev_.resolution) * DEG_TO_RAD;
         rx_data_.gyro[2] =
             lsb_to_dps(sensor_data_.gyr.z, (float)2000, bmi270dev_.resolution) * DEG_TO_RAD;
+
+        calibrate_gyro_bias_z(rx_data_.gyro[2]);
+
+        return true;
     }
-
-    int16_t temperature_data;
-
-    rslt = bmi2_get_temperature_data(&temperature_data, &bmi270dev_);
-
-    rx_data_.temp = lsb_temp(temperature_data);
-
-    calibrate_gyro_bias_z(rx_data_.gyro[2]);
+    return false;
 }
 
 /*!

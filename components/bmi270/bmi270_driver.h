@@ -41,7 +41,7 @@ public:
 
     int8_t init();
 
-    void exti_read_callback(uint16_t gpio_pin);
+    uint8_t exti_read_callback(uint16_t gpio_pin);
 
 protected:
     // 初始化相关常量

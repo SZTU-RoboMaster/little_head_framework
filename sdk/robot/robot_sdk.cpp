@@ -166,11 +166,13 @@ void referee_uart5_callback(uint8_t *buffer, uint16_t length)
  */
 void HAL_GPIO_EXTI_Callback(uint16_t gpio_pin)
 {
+    if (!initialized)
+    {
+        return;
+    }
     if (gpio_pin == IMU_INT1_Pin)
     {
-        ins.bmi270_.exti_read_callback(gpio_pin);
-
-        if (insTaskHandle != nullptr)
+        if (ins.bmi270_.exti_read_callback(gpio_pin) && insTaskHandle != nullptr)
         {
             osThreadFlagsSet(insTaskHandle, INS_DATA_READY_FLAG);
         }
