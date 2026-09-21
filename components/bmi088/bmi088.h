@@ -72,10 +72,6 @@ protected:
     // 内部函数
     int8_t enable_bmi08_interrupt();
 
-    float lsb_to_mps2(int16_t val, int8_t g_range, uint8_t bit_width);
-
-    float lsb_to_dps(int16_t val, float dps, uint8_t bit_width);
-
     void calibrate_gyro_bias_z(volatile float gyro_z);
 };
 

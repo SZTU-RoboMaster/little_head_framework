@@ -26,6 +26,47 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* Private function declarations ---------------------------------------------*/
+/*!
+ *  @brief This internal function converts lsb to meter per second squared for 16 bit accelerometer
+ * for range 2G, 4G, 8G or 16G.
+ *
+ *  @param[in] val       : LSB from each axis.
+ *  @param[in] g_range   : Gravity range.
+ *  @param[in] bit_width : Resolution for accel.
+ *
+ *  @return Accel values in meter per second square.
+ */
+/**
+ * @brief 这个内部函数将lsb转换为米每二次方秒,适用于16位加速度计,范围为2G,4G,8G或16G
+ *
+ * @param[in] val       : 每个轴的LSB
+ * @param[in] g_range   : 重力范围
+ * @param[in] bit_width : 加速度计的分辨率
+ *
+ * @return m/s2
+ */
+static float lsb_to_mps2(int16_t val, int8_t g_range, uint8_t bit_width);
+
+/*!
+ *  @brief This function converts lsb to degree per second for 16 bit gyro at
+ *  range 125, 250, 500, 1000 or 2000dps.
+ *
+ *  @param[in] val       : LSB from each axis.
+ *  @param[in] dps       : Degree per second.
+ *  @param[in] bit_width : Resolution for gyro.
+ *
+ *  @return deg/s
+ */
+/**
+ * @brief 这个函数将lsb转换为度每秒,适用于16位陀螺仪,范围为125,250,500,1000或2000dps
+ *
+ * @param[in] val       : 每个轴的LSB
+ * @param[in] dps       : 度每秒
+ * @param[in] bit_width : 陀螺仪的分辨率
+ *
+ * @return deg/s
+ */
+static float lsb_to_dps(int16_t val, float dps, uint8_t bit_width);
 
 /* function prototypes -------------------------------------------------------*/
 
@@ -145,62 +186,6 @@ int8_t Bmi088::enable_bmi08_interrupt()
     return rslt;
 }
 
-/*!
- *  @brief This internal function converts lsb to meter per second squared for 16 bit accelerometer
- * for range 2G, 4G, 8G or 16G.
- *
- *  @param[in] val       : LSB from each axis.
- *  @param[in] g_range   : Gravity range.
- *  @param[in] bit_width : Resolution for accel.
- *
- *  @return Accel values in meter per second square.
- */
-/**
- * @brief 这个内部函数将lsb转换为米每二次方秒,适用于16位加速度计,范围为2G,4G,8G或16G
- *
- * @param[in] val       : 每个轴的LSB
- * @param[in] g_range   : 重力范围
- * @param[in] bit_width : 加速度计的分辨率
- *
- * @return m/s2
- */
-float Bmi088::lsb_to_mps2(int16_t val, int8_t g_range, uint8_t bit_width)
-{
-    double power = 2;
-
-    float half_scale = (float)((pow((double)power, (double)bit_width) / 2.0f));
-
-    return (GRAVITY_EARTH * val * g_range) / half_scale;
-}
-
-/*!
- *  @brief This function converts lsb to degree per second for 16 bit gyro at
- *  range 125, 250, 500, 1000 or 2000dps.
- *
- *  @param[in] val       : LSB from each axis.
- *  @param[in] dps       : Degree per second.
- *  @param[in] bit_width : Resolution for gyro.
- *
- *  @return deg/s
- */
-/**
- * @brief 这个函数将lsb转换为度每秒,适用于16位陀螺仪,范围为125,250,500,1000或2000dps
- *
- * @param[in] val       : 每个轴的LSB
- * @param[in] dps       : 度每秒
- * @param[in] bit_width : 陀螺仪的分辨率
- *
- * @return deg/s
- */
-float Bmi088::lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
-{
-    double power = 2;
-
-    float half_scale = (float)((pow((double)power, (double)bit_width) / 2.0f));
-
-    return (dps / (half_scale)) * (val);
-}
-
 /**
  * @brief 外部调用的中断回调函数
  *
@@ -268,4 +253,23 @@ void Bmi088::calibrate_gyro_bias_z(volatile float gyro_z)
     {
     }
 }
+
+static float lsb_to_mps2(int16_t val, int8_t g_range, uint8_t bit_width)
+{
+    double power = 2;
+
+    float half_scale = (float)((pow((double)power, (double)bit_width) / 2.0f));
+
+    return (GRAVITY_EARTH * val * g_range) / half_scale;
+}
+
+static float lsb_to_dps(int16_t val, float dps, uint8_t bit_width)
+{
+    double power = 2;
+
+    float half_scale = (float)((pow((double)power, (double)bit_width) / 2.0f));
+
+    return (dps / (half_scale)) * (val);
+}
+
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

@@ -137,6 +137,13 @@ void QuaternionEkf::init(float process_noise1, float process_noise2, float measu
  */
 void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, float az, float dt)
 {
+    const float norm2 = ax * ax + ay * ay + az * az;
+    if (!std::isfinite(norm2) || norm2 <= 1e-12f || !std::isfinite(gx) || !std::isfinite(gy) ||
+        !std::isfinite(gz) || !std::isfinite(dt) || dt <= 0.0f)
+    {
+        return;
+    }
+
     // 0.5(Ohm-Ohm^bias)*delta_t,用于更新工作点处的状态转移F矩阵
     static float halfgxdt, halfgydt, halfgzdt;
     static float accel_inv_norm;
