@@ -181,4 +181,23 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
     }
 }
 
+/**
+ * @brief HAL库CAN错误中断
+ * @note  进入BUS-off后硬件会自动让CCCR.INIT置1, 需要手动清除
+ * @note  ref:
+ * https://community.st.com/stm32-mcus-products-25/stm32g431-fdcan-get-into-bus-off-status-126363
+ *
+ * @brief HAL库CAN错误中断回调函数
+ * @param hfdcan CAN编号
+ */
+void HAL_FDCAN_ErrorCallback(FDCAN_HandleTypeDef *hfdcan)
+{
+    // 判断是否进入BUS-off状态
+    if ((hfdcan->Instance->PSR & FDCAN_PSR_BO) != 0U)
+    {
+        // 手动清除CCCR.INIT位
+        CLEAR_BIT(hfdcan->Instance->CCCR, FDCAN_CCCR_INIT);
+    }
+}
+
 /************************ COPYRIGHT(C) SZTU-HJ **************************/
