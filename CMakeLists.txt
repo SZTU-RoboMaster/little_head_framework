@@ -64,7 +64,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/bmi088/third_party/bmi08xa.c
     components/bmi088/bmi088_interface.cpp
     components/bmi088/bmi088.cpp
-    components/bmi088/quaternion_ekf.cpp
+    components/algorithm/filter/quaternion_ekf.cpp
     components/algorithm/math_tools/math_tools.cpp
     components/algorithm/filter/kalman_filter.c
     components/algorithm/pid/pid.cpp
