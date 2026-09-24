@@ -77,6 +77,11 @@ void can_init(FDCAN_HandleTypeDef *hfdcan, can_callback_t callback_func)
         can2_manage_obj.can_handle = hfdcan;
         can2_manage_obj.callback_func = callback_func;
     }
+    else if (hfdcan->Instance == FDCAN3)
+    {
+        can3_manage_obj.can_handle = hfdcan;
+        can3_manage_obj.callback_func = callback_func;
+    }
     can_filter_mask_config(hfdcan);
 
     HAL_FDCAN_Start(hfdcan);
