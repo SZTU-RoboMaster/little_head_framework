@@ -26,12 +26,13 @@ TimManageObject tim5_manage_obj;
 TimManageObject tim6_manage_obj;
 TimManageObject tim7_manage_obj;
 TimManageObject tim8_manage_obj;
-TimManageObject tim9_manage_obj;
-TimManageObject tim10_manage_obj;
-TimManageObject tim11_manage_obj;
-TimManageObject tim12_manage_obj;
 TimManageObject tim13_manage_obj;
 TimManageObject tim14_manage_obj;
+TimManageObject tim15_manage_obj;
+TimManageObject tim16_manage_obj;
+TimManageObject tim17_manage_obj;
+TimManageObject tim23_manage_obj;
+TimManageObject tim24_manage_obj;
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -93,30 +94,6 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
         tim8_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
-    else if (htim->Instance == TIM9)
-    {
-        tim9_manage_obj.tim_handle = htim;
-        tim9_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
-    else if (htim->Instance == TIM10)
-    {
-        tim10_manage_obj.tim_handle = htim;
-        tim10_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
-    else if (htim->Instance == TIM11)
-    {
-        tim11_manage_obj.tim_handle = htim;
-        tim11_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
-    else if (htim->Instance == TIM12)
-    {
-        tim12_manage_obj.tim_handle = htim;
-        tim12_manage_obj.callback_func = callback_func;
-        HAL_TIM_Base_Start_IT(htim);
-    }
     else if (htim->Instance == TIM13)
     {
         tim13_manage_obj.tim_handle = htim;
@@ -129,6 +106,36 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
         tim14_manage_obj.callback_func = callback_func;
         HAL_TIM_Base_Start_IT(htim);
     }
+    else if (htim->Instance == TIM15)
+    {
+        tim15_manage_obj.tim_handle = htim;
+        tim15_manage_obj.callback_func = callback_func;
+        HAL_TIM_Base_Start_IT(htim);
+    }
+    else if (htim->Instance == TIM16)
+    {
+        tim16_manage_obj.tim_handle = htim;
+        tim16_manage_obj.callback_func = callback_func;
+        HAL_TIM_Base_Start_IT(htim);
+    }
+    else if (htim->Instance == TIM17)
+    {
+        tim17_manage_obj.tim_handle = htim;
+        tim17_manage_obj.callback_func = callback_func;
+        HAL_TIM_Base_Start_IT(htim);
+    }
+    else if (htim->Instance == TIM23)
+    {
+        tim23_manage_obj.tim_handle = htim;
+        tim23_manage_obj.callback_func = callback_func;
+        HAL_TIM_Base_Start_IT(htim);
+    }
+    else if (htim->Instance == TIM24)
+    {
+        tim24_manage_obj.tim_handle = htim;
+        tim24_manage_obj.callback_func = callback_func;
+        HAL_TIM_Base_Start_IT(htim);
+    }
 }
 
 /**
@@ -138,7 +145,6 @@ void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func)
  */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-
     if (htim->Instance == TIM6)
     {
         HAL_IncTick();
@@ -200,34 +206,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             tim8_manage_obj.callback_func();
         }
     }
-    else if (htim->Instance == TIM9)
-    {
-        if (tim9_manage_obj.callback_func != nullptr)
-        {
-            tim9_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM10)
-    {
-        if (tim10_manage_obj.callback_func != nullptr)
-        {
-            tim10_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM11)
-    {
-        if (tim11_manage_obj.callback_func != nullptr)
-        {
-            tim11_manage_obj.callback_func();
-        }
-    }
-    else if (htim->Instance == TIM12)
-    {
-        if (tim12_manage_obj.callback_func != nullptr)
-        {
-            tim12_manage_obj.callback_func();
-        }
-    }
     else if (htim->Instance == TIM13)
     {
         if (tim13_manage_obj.callback_func != nullptr)
@@ -240,6 +218,41 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         if (tim14_manage_obj.callback_func != nullptr)
         {
             tim14_manage_obj.callback_func();
+        }
+    }
+    else if (htim->Instance == TIM15)
+    {
+        if (tim15_manage_obj.callback_func != nullptr)
+        {
+            tim15_manage_obj.callback_func();
+        }
+    }
+    else if (htim->Instance == TIM16)
+    {
+        if (tim16_manage_obj.callback_func != nullptr)
+        {
+            tim16_manage_obj.callback_func();
+        }
+    }
+    else if (htim->Instance == TIM17)
+    {
+        if (tim17_manage_obj.callback_func != nullptr)
+        {
+            tim17_manage_obj.callback_func();
+        }
+    }
+    else if (htim->Instance == TIM23)
+    {
+        if (tim23_manage_obj.callback_func != nullptr)
+        {
+            tim23_manage_obj.callback_func();
+        }
+    }
+    else if (htim->Instance == TIM24)
+    {
+        if (tim24_manage_obj.callback_func != nullptr)
+        {
+            tim24_manage_obj.callback_func();
         }
     }
 }

@@ -16,15 +16,17 @@
 
 #include "cmsis_os2.h"
 #include "main.h"
+#include "stm32h723xx.h"
+#include "stm32h7xx.h"
 
 /* Private macros ------------------------------------------------------------*/
-#define BMI088_SPI SPI1
+#define BMI088_SPI SPI2
 #define BMI088_SPI_ACCEL 0
 #define BMI088_SPI_GYRO 1
 
 #define BMI08_READ_WRITE_LEN UINT8_C(64)
 
-#define BMI08_TIMEOUT_CNT 1680000
+#define BMI08_TIMEOUT_CNT 5500000
 
 /* Private types -------------------------------------------------------------*/
 
@@ -40,22 +42,22 @@ uint8_t gyro_dev_add;
 
 static inline void bmi088_accel_select(void)
 {
-    HAL_GPIO_WritePin(CS1_ACCEL_GPIO_Port, CS1_ACCEL_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BMI088_CS_ACCEL_GPIO_Port, BMI088_CS_ACCEL_Pin, GPIO_PIN_RESET);
 }
 
 static inline void bmi088_accel_unselect(void)
 {
-    HAL_GPIO_WritePin(CS1_ACCEL_GPIO_Port, CS1_ACCEL_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BMI088_CS_ACCEL_GPIO_Port, BMI088_CS_ACCEL_Pin, GPIO_PIN_SET);
 }
 
 static inline void bmi088_gyro_select(void)
 {
-    HAL_GPIO_WritePin(CS1_GYRO_GPIO_Port, CS1_GYRO_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(BMI088_CS_GYRO_GPIO_Port, BMI088_CS_GYRO_Pin, GPIO_PIN_RESET);
 }
 
 static inline void bmi088_gyro_unselect(void)
 {
-    HAL_GPIO_WritePin(CS1_GYRO_GPIO_Port, CS1_GYRO_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(BMI088_CS_GYRO_GPIO_Port, BMI088_CS_GYRO_Pin, GPIO_PIN_SET);
 }
 
 /* function prototypes -------------------------------------------------------*/
@@ -63,32 +65,23 @@ static inline void bmi088_gyro_unselect(void)
 uint8_t spi_rw_byte(uint8_t byte)
 {
     uint32_t timeout_cnt = 0;
-    SET_BIT(BMI088_SPI->CR1, SPI_CR1_SPE);
-    while ((BMI088_SPI->SR & SPI_SR_TXE) == RESET)
+    while ((BMI088_SPI->SR & SPI_SR_TXP) == RESET)
     {
-        if (timeout_cnt < BMI08_TIMEOUT_CNT)
-        {
-            timeout_cnt++;
-        }
-        else
+        if (++timeout_cnt >= BMI08_TIMEOUT_CNT)
         {
             return 0;
         }
     }
-    BMI088_SPI->DR = byte;
+    *(__IO uint8_t *)&BMI088_SPI->TXDR = byte;
     timeout_cnt = 0;
-    while ((BMI088_SPI->SR & SPI_SR_RXNE) == RESET)
+    while ((BMI088_SPI->SR & SPI_SR_RXP) == RESET)
     {
-        if (timeout_cnt < BMI08_TIMEOUT_CNT)
-        {
-            timeout_cnt++;
-        }
-        else
+        if (++timeout_cnt >= BMI08_TIMEOUT_CNT)
         {
             return 0;
         }
     }
-    return BMI088_SPI->DR;
+    return *(__IO uint8_t *)&BMI088_SPI->RXDR;
 }
 
 /*!
@@ -185,7 +178,6 @@ int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, enum bmi08_va
         /* Bus configuration : SPI */
         else if (intf == BMI08_SPI_INTF)
         {
-
             /* To initialize the user SPI function */
             bmi08->intf = BMI08_SPI_INTF;
             bmi08->read = bmi08_spi_read;
@@ -216,6 +208,10 @@ int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, enum bmi08_va
     {
         rslt = BMI08_E_NULL_PTR;
     }
+
+    CLEAR_BIT(BMI088_SPI->CR2, SPI_CR2_TSIZE);
+    SET_BIT(BMI088_SPI->CR1, SPI_CR1_SPE);
+    SET_BIT(BMI088_SPI->CR1, SPI_CR1_CSTART);
 
     return rslt;
 }

@@ -14,27 +14,13 @@
 
 /* Private macros ------------------------------------------------------------*/
 
-// 滤波器编号
-#define CAN_FILTER(x) ((x) << 3)
-
-// 接收队列
-#define CAN_FIFO_0 (0 << 2)
-#define CAN_FIFO_1 (1 << 2)
-
-// 标准帧或扩展帧
-#define CAN_STDID (0 << 1)
-#define CAN_EXTID (1 << 1)
-
-// 数据帧或遥控帧
-#define CAN_DATA_TYPE (0 << 0)
-#define CAN_REMOTE_TYPE (1 << 0)
-
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 
 CanManageObject can1_manage_obj = {0};
 CanManageObject can2_manage_obj = {0};
+CanManageObject can3_manage_obj = {0};
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -43,180 +29,178 @@ CanManageObject can2_manage_obj = {0};
 /**
  * @brief 配置CAN的过滤器
  *
- * @param hcan CAN编号
+ * @param hfdcan CAN编号
  * @param object_param 编号 | FIFOx | ID类型 | 帧类型
  * @param id id
  * @param mask_id 屏蔽位(0x3ff, 0x1fffffff)
  */
-void can_filter_mask_config(CAN_HandleTypeDef *hcan, uint8_t object_param, uint32_t id,
-                            uint32_t mask_id)
+void can_filter_mask_config(FDCAN_HandleTypeDef *hfdcan)
 {
-    CAN_FilterTypeDef can_filter_init_structure;
+    FDCAN_FilterTypeDef can_filter_init_structure;
 
-    // 检测传参是否正确
-    assert_param(hcan != NULL);
+    // 配置fifo0全通滤波器
+    can_filter_init_structure.IdType = FDCAN_STANDARD_ID;
+    can_filter_init_structure.FilterIndex = 0;
+    can_filter_init_structure.FilterType = FDCAN_FILTER_MASK;
+    can_filter_init_structure.FilterConfig = FDCAN_FILTER_TO_RXFIFO0;
+    can_filter_init_structure.FilterID1 = 0x00000000;
+    can_filter_init_structure.FilterID2 = 0x00000000;
+    HAL_FDCAN_ConfigFilter(hfdcan, &can_filter_init_structure);
 
-    if ((object_param & 0x02))
-    {
-        // 标准帧
-        // 掩码后ID的高16bit
-        can_filter_init_structure.FilterIdHigh = id << 3 >> 16;
-        // 掩码后ID的低16bit
-        can_filter_init_structure.FilterIdLow = id << 3 | ((object_param & 0x03) << 1);
-        // ID掩码值高16bit
-        can_filter_init_structure.FilterMaskIdHigh = mask_id << 3 << 16;
-        // ID掩码值低16bit
-        can_filter_init_structure.FilterMaskIdLow = mask_id << 3 | ((object_param & 0x03) << 1);
-    }
-    else
-    {
-        // 扩展帧
-        // 掩码后ID的高16bit
-        can_filter_init_structure.FilterIdHigh = id << 5;
-        // 掩码后ID的低16bit
-        can_filter_init_structure.FilterIdLow = ((object_param & 0x03) << 1);
-        // ID掩码值高16bit
-        can_filter_init_structure.FilterMaskIdHigh = mask_id << 5;
-        // ID掩码值低16bit
-        can_filter_init_structure.FilterMaskIdLow = ((object_param & 0x03) << 1);
-    }
-    // 滤波器序号, 0-27, 共28个滤波器, 前14个在CAN1, 后14个在CAN2
-    can_filter_init_structure.FilterBank = object_param >> 3;
-    // 滤波器绑定FIFO0
-    can_filter_init_structure.FilterFIFOAssignment = (object_param >> 2) & 0x01;
-    // 使能滤波器
-    can_filter_init_structure.FilterActivation = ENABLE;
-    // 滤波器模式，设置ID掩码模式
-    can_filter_init_structure.FilterMode = CAN_FILTERMODE_IDMASK;
-    // 32位滤波
-    can_filter_init_structure.FilterScale = CAN_FILTERSCALE_32BIT;
-    // 从机模式选择开始单元
-    can_filter_init_structure.SlaveStartFilterBank = 14;
+    // 全局滤波器, 直接拒绝不符合规则的标准数据帧, 扩展数据帧, 标准遥控帧, 扩展遥控帧
+    HAL_FDCAN_ConfigGlobalFilter(hfdcan, FDCAN_REJECT, FDCAN_REJECT, FDCAN_FILTER_REMOTE,
+                                 FDCAN_FILTER_REMOTE);
 
-    HAL_CAN_ConfigFilter(hcan, &can_filter_init_structure);
+    // 启动CAN中断与总线
+    HAL_FDCAN_ActivateNotification(hfdcan,
+                                   FDCAN_IT_RX_FIFO0_NEW_MESSAGE | FDCAN_IT_BUS_OFF |
+                                       FDCAN_IT_ERROR_PASSIVE | FDCAN_IT_ARB_PROTOCOL_ERROR |
+                                       FDCAN_IT_DATA_PROTOCOL_ERROR,
+                                   0);
 }
 
 /**
  * @brief 初始化CAN总线
  *
- * @param hcan CAN编号
+ * @param hfdcan CAN编号
  * @param callback_func 处理回调函数
  */
-void can_init(CAN_HandleTypeDef *hcan, can_callback_t callback_func)
+void can_init(FDCAN_HandleTypeDef *hfdcan, can_callback_t callback_func)
 {
-    HAL_CAN_Start(hcan);
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
-    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_RX_FIFO1_MSG_PENDING);
-
-    if (hcan->Instance == CAN1)
+    if (hfdcan->Instance == FDCAN1)
     {
-        can1_manage_obj.can_handle = hcan;
+        can1_manage_obj.can_handle = hfdcan;
         can1_manage_obj.callback_func = callback_func;
-
-        can_filter_mask_config(hcan, CAN_FILTER(0) | CAN_FIFO_0 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
-        can_filter_mask_config(hcan, CAN_FILTER(1) | CAN_FIFO_1 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
     }
-    else if (hcan->Instance == CAN2)
+    else if (hfdcan->Instance == FDCAN2)
     {
-        can2_manage_obj.can_handle = hcan;
+        can2_manage_obj.can_handle = hfdcan;
         can2_manage_obj.callback_func = callback_func;
-
-        can_filter_mask_config(hcan, CAN_FILTER(14) | CAN_FIFO_0 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
-        can_filter_mask_config(hcan, CAN_FILTER(15) | CAN_FIFO_1 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
     }
+    else if (hfdcan->Instance == FDCAN3)
+    {
+        can3_manage_obj.can_handle = hfdcan;
+        can3_manage_obj.callback_func = callback_func;
+    }
+    can_filter_mask_config(hfdcan);
+
+    HAL_FDCAN_Start(hfdcan);
 }
 
 /**
  * @brief 发送CAN数据
  *
- * @param hcan CAN编号
+ * @param hfdcan CAN编号
  * @param id id
  * @param data 被发送的数据指针
  * @param length 数据长度
  * @return uint8_t 发送状态
  */
-uint8_t can_data_send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint16_t length)
+uint8_t can_data_send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint16_t length)
 {
-    CAN_TxHeaderTypeDef tx_header;
-    uint32_t used_mailbox;
+    FDCAN_TxHeaderTypeDef tx_header;
 
-    // 检测传参是否正确
-    assert_param(hcan != NULL);
+    tx_header.Identifier = id;
+    tx_header.IdType = FDCAN_STANDARD_ID;
+    tx_header.TxFrameType = FDCAN_DATA_FRAME;
+    tx_header.DataLength = length;
+    tx_header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+    tx_header.BitRateSwitch = FDCAN_BRS_OFF;
+    tx_header.FDFormat = FDCAN_CLASSIC_CAN;
+    tx_header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+    tx_header.MessageMarker = 0;
 
-    tx_header.StdId = id;
-    tx_header.ExtId = 0;
-    tx_header.IDE = 0;
-    tx_header.RTR = 0;
-    tx_header.DLC = length;
-
-    return (HAL_CAN_AddTxMessage(hcan, &tx_header, data, &used_mailbox));
+    return (HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &tx_header, data));
 }
 
 /**
  * @brief HAL库CAN接收FIFO0中断
  *
- * @param hcan CAN编号
+ * @param hfdcan CAN编号
+ * @param RxFifo0ITs FIFO0中断状态
  */
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
     // 判断程序初始化完成
     if (!initialized)
     {
+        // 也得接收, 防止FIFO满
+        if (hfdcan->Instance == FDCAN1)
+        {
+            while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can1_manage_obj.rx_buffer.header,
+                                          can1_manage_obj.rx_buffer.data) == HAL_OK)
+            {
+            }
+        }
+        else if (hfdcan->Instance == FDCAN2)
+        {
+            while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can2_manage_obj.rx_buffer.header,
+                                          can2_manage_obj.rx_buffer.data) == HAL_OK)
+            {
+            }
+        }
+        else if (hfdcan->Instance == FDCAN3)
+        {
+            while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can3_manage_obj.rx_buffer.header,
+                                          can3_manage_obj.rx_buffer.data) == HAL_OK)
+            {
+            }
+        }
         return;
     }
 
     // 选择回调函数
-    if (hcan->Instance == CAN1)
+    if (hfdcan->Instance == FDCAN1)
     {
-        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO0, &can1_manage_obj.rx_buffer.header,
-                             can1_manage_obj.rx_buffer.data);
-        if (can1_manage_obj.callback_func != nullptr)
+        while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can1_manage_obj.rx_buffer.header,
+                                      can1_manage_obj.rx_buffer.data) == HAL_OK)
         {
-            can1_manage_obj.callback_func(&can1_manage_obj.rx_buffer);
+            if (can1_manage_obj.callback_func != nullptr)
+            {
+                can1_manage_obj.callback_func(&can1_manage_obj.rx_buffer);
+            }
         }
     }
-    else if (hcan->Instance == CAN2)
+    else if (hfdcan->Instance == FDCAN2)
     {
-        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO0, &can2_manage_obj.rx_buffer.header,
-                             can2_manage_obj.rx_buffer.data);
-        if (can2_manage_obj.callback_func != nullptr)
+        while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can2_manage_obj.rx_buffer.header,
+                                      can2_manage_obj.rx_buffer.data) == HAL_OK)
         {
-            can2_manage_obj.callback_func(&can2_manage_obj.rx_buffer);
+            if (can2_manage_obj.callback_func != nullptr)
+            {
+                can2_manage_obj.callback_func(&can2_manage_obj.rx_buffer);
+            }
+        }
+    }
+    else if (hfdcan->Instance == FDCAN3)
+    {
+        while (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &can3_manage_obj.rx_buffer.header,
+                                      can3_manage_obj.rx_buffer.data) == HAL_OK)
+        {
+            if (can3_manage_obj.callback_func != nullptr)
+            {
+                can3_manage_obj.callback_func(&can3_manage_obj.rx_buffer);
+            }
         }
     }
 }
 
 /**
- * @brief HAL库CAN接收FIFO1中断
+ * @brief HAL库CAN错误中断
+ * @note  进入BUS-off后硬件会自动让CCCR.INIT置1, 需要手动清除
+ * @note  ref:
+ * https://community.st.com/stm32-mcus-products-25/stm32g431-fdcan-get-into-bus-off-status-126363
  *
- * @param hcan CAN编号
+ * @brief HAL库CAN错误中断回调函数
+ * @param hfdcan CAN编号
  */
-void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
+void HAL_FDCAN_ErrorCallback(FDCAN_HandleTypeDef *hfdcan)
 {
-    // 判断程序初始化完成
-    if (!initialized)
+    // 判断是否进入BUS-off状态
+    if ((hfdcan->Instance->PSR & FDCAN_PSR_BO) != 0U)
     {
-        return;
-    }
-
-    // 选择回调函数
-    if (hcan->Instance == CAN1)
-    {
-        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO1, &can1_manage_obj.rx_buffer.header,
-                             can1_manage_obj.rx_buffer.data);
-        if (can1_manage_obj.callback_func != nullptr)
-        {
-            can1_manage_obj.callback_func(&can1_manage_obj.rx_buffer);
-        }
-    }
-    else if (hcan->Instance == CAN2)
-    {
-        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO1, &can2_manage_obj.rx_buffer.header,
-                             can2_manage_obj.rx_buffer.data);
-        if (can2_manage_obj.callback_func != nullptr)
-        {
-            can2_manage_obj.callback_func(&can2_manage_obj.rx_buffer);
-        }
+        // 手动清除CCCR.INIT位
+        CLEAR_BIT(hfdcan->Instance->CCCR, FDCAN_CCCR_INIT);
     }
 }
 

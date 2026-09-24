@@ -251,4 +251,12 @@ SECTIONS
     libgcc.a:* ( * )
   }
 
+  .AXI_SRAM (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.AXI_SRAM)
+    *(.AXI_SRAM.*)
+    . = ALIGN(32);
+  } >RAM_D1
+
 }

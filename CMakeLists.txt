@@ -50,7 +50,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     bsp/uart/bsp_uart.cpp
     bsp/usb/bsp_usb.cpp
     bsp/dwt/bsp_dwt.cpp
-    bsp/led/bsp_led.cpp
+    # bsp/led/bsp_led.cpp
     bsp/buzzer/bsp_buzzer.cpp
     bsp/imu_pwm/bsp_imu_pwm.cpp
     components/motor/motor_dji.cpp
@@ -67,6 +67,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     components/algorithm/filter/quaternion_ekf.cpp
     components/algorithm/math_tools/math_tools.cpp
     components/algorithm/filter/kalman_filter.c
+    components/algorithm/filter/quaternion_ekf.cpp
     components/algorithm/pid/pid.cpp
     # components/ist8310/ist8310driver.cpp
     # components/ist8310/ist8310driver_middleware.cpp
@@ -102,7 +103,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     bsp/uart
     bsp/usb
     bsp/dwt
-    bsp/led
+    # bsp/led
     bsp/buzzer
     bsp/imu_pwm
     components/motor
@@ -133,6 +134,8 @@ target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
     ARM_MATH_CM7
     ARM_MATH_MATRIX_CHECK
+    ARM_MATH_ROUNDING
+    ARM_MATH_DSP
 )
 
 # Remove wrong libob.a library dependency when using cpp files

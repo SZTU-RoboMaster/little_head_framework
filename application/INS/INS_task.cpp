@@ -43,7 +43,7 @@ extern "C" void INS_task(void *argument)
         ins.update();
         ins.publish();
 
-        ins.temp_control();
+        // ins.temp_control();
     }
 }
 
@@ -56,7 +56,7 @@ extern "C" void INS_task(void *argument)
 void INS::init()
 {
     bmi088_.init();
-    imu_temp_pid_.init(1600.0f, 0.2f, 0.0f, 0.0f, 4400.0f, 4500.0f);
+    imu_temp_pid_.init(800.0f, 0.2f, 0.0f, 0.0f, 4400.0f, 4500.0f);
 
     gravity_kf_.init(1, 2000);
     quaternion_ekf_.init(10, 0.001, 1000000, 0.9996);
@@ -91,7 +91,7 @@ void INS::temp_control()
     static uint8_t first_in = 1;
     if (first_in)
     {
-        if (bmi088_.rx_data_.temp > 43.0f)
+        if (bmi088_.rx_data_.temp > 40.0f)
         {
             first_in = 0;
         }

@@ -30,9 +30,9 @@
  */
 void led_init()
 {
-    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim5, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
 }
 
 void aRGB_led_show(uint32_t aRGB)
@@ -45,9 +45,9 @@ void aRGB_led_show(uint32_t aRGB)
     green = ((aRGB & 0x0000FF00) >> 8) * alpha;
     blue = ((aRGB & 0x000000FF) >> 0) * alpha;
 
-    __HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_1, blue);
-    __HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_2, green);
-    __HAL_TIM_SetCompare(&htim5, TIM_CHANNEL_3, red);
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_4, blue * 42499U / 65025U);
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, green * 42499U / 65025U);
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_3, red * 42499U / 65025U);
 }
 
 /*************************** COPYRIGHT(C) SZTU-HJ *****************************/

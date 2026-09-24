@@ -42,14 +42,14 @@ void Chassis::init()
         wheel_omega_pid_[i].init(360.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
     }
 
-    wheel_motor_[0].init(&hcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
-                         true);
-    wheel_motor_[1].init(&hcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
-                         false);
-    wheel_motor_[2].init(&hcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
-                         false);
-    wheel_motor_[3].init(&hcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_CURRENT, (3591.0f / 187.0f),
-                         true);
+    wheel_motor_[0].init(&hfdcan1, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_CURRENT,
+                         (3591.0f / 187.0f), true);
+    wheel_motor_[1].init(&hfdcan1, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_CURRENT,
+                         (3591.0f / 187.0f), false);
+    wheel_motor_[2].init(&hfdcan1, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_CURRENT,
+                         (3591.0f / 187.0f), false);
+    wheel_motor_[3].init(&hfdcan1, 0x200, 0x204, MOTOR_DJI_CONTROL_METHOD_CURRENT,
+                         (3591.0f / 187.0f), true);
 
     publisher_ = MessageCenter::instance().advertise<ChassisMessage>(kChassisTopicName);
     gimbal_subscriber_ = MessageCenter::instance().subscribe<GimbalMessage>(kGimbalTopicName);
@@ -148,8 +148,8 @@ void Chassis::control()
         yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         // 计算旋转速度补偿
         yaw_error -= std::atan(config_.spin_phase_delay * feedback_.omega);
-        float sin_yaw = arm_sin_f32(yaw_error);
-        float cos_yaw = arm_cos_f32(yaw_error);
+        float sin_yaw = std::sin(yaw_error);
+        float cos_yaw = std::cos(yaw_error);
         float vx_temp = cmd_msg_.rc_vx;
         float vy_temp = cmd_msg_.rc_vy;
         control_output_.target_velocity_x = vx_temp * cos_yaw + vy_temp * (-sin_yaw);

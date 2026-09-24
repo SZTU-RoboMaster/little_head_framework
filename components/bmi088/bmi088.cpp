@@ -194,7 +194,7 @@ int8_t Bmi088::enable_bmi08_interrupt()
 void Bmi088::exti_read_callback(uint16_t gpio_pin)
 {
     static int32_t sensor_temp = 0;
-    if (gpio_pin == INT1_ACCEL_Pin)
+    if (gpio_pin == BMI088_INT_ACCEL_Pin)
     {
         bmi08a_get_data(&raw_accel_, &bmi08dev_);
 
@@ -217,7 +217,7 @@ void Bmi088::exti_read_callback(uint16_t gpio_pin)
         rx_data_.temp = (float)sensor_temp / 1000.0f;
 
     }
-    else if (gpio_pin == INT1_GYRO_Pin)
+    else if (gpio_pin == BMI088_INT_GYRO_Pin)
     {
         bmi08g_get_data(&raw_gyro_, &bmi08dev_);
 

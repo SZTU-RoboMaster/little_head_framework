@@ -34,13 +34,13 @@ void Shoot::init()
     // 拨弹盘电机初始化
     trigger_.angle_pid_.init(15.0f, 0.0f, 0.0f, 0.0f, 0.0f, 48.0f, 0.005f);
     trigger_.omega_pid_.init(1200.0f, 60000.0f, 0.0f, 0.0f, 5000.0f, 10000.0f);
-    trigger_.init(&hcan2, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
+    trigger_.init(&hfdcan2, 0x200, 0x201, MOTOR_DJI_CONTROL_METHOD_ANGLE, 36.0f);
 
     // 摩擦轮电机初始化
     friction_left_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
-    friction_left_.init(&hcan2, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    friction_left_.init(&hfdcan2, 0x200, 0x202, MOTOR_DJI_CONTROL_METHOD_OMEGA);
     friction_right_.omega_pid_.init(40.0f, 0.0f, 0.0f, 0.0f, 0.0f, 16384.0f);
-    friction_right_.init(&hcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
+    friction_right_.init(&hfdcan2, 0x200, 0x203, MOTOR_DJI_CONTROL_METHOD_OMEGA);
 
     cmd_subscriber_ = MessageCenter::instance().subscribe<ShootCmdMessage>(kCmdShootTopicName);
     referee_subscriber_ = MessageCenter::instance().subscribe<RefereeMessage>(kRefereeTopicName);
@@ -225,7 +225,7 @@ void Shoot::control()
 
         if (single_shot_pending_)
         {
-            control_output_.target_trigger_angle -= 2.0f * PI / 8.0f;
+            control_output_.target_trigger_angle -= 2.0f * (PI) / 8.0f;
             single_shot_pending_ = false;
         }
         break;

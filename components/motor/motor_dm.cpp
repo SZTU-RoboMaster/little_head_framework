@@ -39,7 +39,7 @@ uint8_t dm_motor_save_zero_msg[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0
 /**
  * @brief 电机初始化
  *
- * @param hcan 绑定的CAN总线
+ * @param hfdcan 绑定的CAN总线
  * @param can_id 发数据绑定的CAN id, 是上位机驱动参数CAN_ID
  * @param master_id 收数据绑定的CAN id, 与上位机驱动参数Master_ID保持一致
  * @param control_method 电机控制方式
@@ -50,17 +50,21 @@ uint8_t dm_motor_save_zero_msg[8] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0
  * @param kd MIT控制的K_D
  * @param __I_Max 最大电流, 与上位机串口中上电打印Imax保持一致
  */
-void MotorDm::init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
+void MotorDm::init(FDCAN_HandleTypeDef *hfdcan, uint16_t can_id, uint16_t master_id,
                    MotorDmControlMethod control_method, float p_max, float v_max, float t_max,
                    float kp, float kd, uint8_t reverse, MotorDmEnableStatus enable_status)
 {
-    if (hcan->Instance == CAN1)
+    if (hfdcan->Instance == FDCAN1)
     {
         can_manage_obj_ = &can1_manage_obj;
     }
-    else if (hcan->Instance == CAN2)
+    else if (hfdcan->Instance == FDCAN2)
     {
         can_manage_obj_ = &can2_manage_obj;
+    }
+    else if (hfdcan->Instance == FDCAN3)
+    {
+        can_manage_obj_ = &can3_manage_obj;
     }
 
     can_rx_id_ = master_id;

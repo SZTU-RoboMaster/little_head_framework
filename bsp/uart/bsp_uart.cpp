@@ -13,14 +13,16 @@
 #include "bsp_uart.h"
 
 /* Private macros ------------------------------------------------------------*/
+#define DATA_IN_D2_SRAM
 
 /* Private types -------------------------------------------------------------*/
 
 /* Private variables ---------------------------------------------------------*/
 
-UartManageObject uart1_manage_obj = {0};
-UartManageObject uart3_manage_obj = {0};
-UartManageObject uart6_manage_obj = {0};
+__attribute__((section(".AXI_SRAM"), aligned(32))) UartManageObject uart1_manage_obj = {};
+__attribute__((section(".AXI_SRAM"), aligned(32))) UartManageObject uart5_manage_obj = {};
+__attribute__((section(".AXI_SRAM"), aligned(32))) UartManageObject uart7_manage_obj = {};
+__attribute__((section(".AXI_SRAM"), aligned(32))) UartManageObject uart10_manage_obj = {};
 
 /* Private function declarations ---------------------------------------------*/
 
@@ -54,7 +56,7 @@ HAL_StatusTypeDef UARTEx_MultiBuffer_ReceiveToIdle_DMA(UART_HandleTypeDef *huart
         huart->ErrorCode = HAL_UART_ERROR_NONE;
         huart->RxState = HAL_UART_STATE_BUSY_RX;
 
-        status = HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->DR,
+        status = HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
                                             (uint32_t)DstAddress, (uint32_t)SecondMemAddress,
                                             DataLength);
         if (status != HAL_OK)
@@ -63,11 +65,21 @@ HAL_StatusTypeDef UARTEx_MultiBuffer_ReceiveToIdle_DMA(UART_HandleTypeDef *huart
             return status;
         }
 
-        ATOMIC_SET_BIT(huart->Instance->CR3, USART_CR3_DMAR);
+        // 清除错误标志，因为在DMA启动前可能会有错误标志残留(我发现是ORE)，导致不断进入错误中断，无法接收数据
+        __HAL_UART_CLEAR_FLAG(huart,
+                              UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
+        // 丢掉RQR寄存器中的脏数据
+        __HAL_UART_SEND_REQ(huart, UART_RXDATA_FLUSH_REQUEST);
+
+        if (huart->Init.Parity != UART_PARITY_NONE)
+        {
+            ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_PEIE);
+        }
+        ATOMIC_SET_BIT(huart->Instance->CR3, USART_CR3_EIE | USART_CR3_DMAR);
 
         if (huart->ReceptionType == HAL_UART_RECEPTION_TOIDLE)
         {
-            __HAL_UART_CLEAR_IDLEFLAG(huart);
+            __HAL_UART_CLEAR_FLAG(huart, UART_CLEAR_IDLEF);
             ATOMIC_SET_BIT(huart->Instance->CR1, USART_CR1_IDLEIE);
         }
         else
@@ -97,24 +109,32 @@ void uart_init(UART_HandleTypeDef *huart, uart_callback_t callback_func, uint16_
         uart1_manage_obj.uart_handle = huart;
         uart1_manage_obj.callback_func = callback_func;
         uart1_manage_obj.rx_buffer_length = rx_buffer_length;
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart1_manage_obj.rx_buffer[0],
-                                             uart1_manage_obj.rx_buffer[1], rx_buffer_length);
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart1_manage_obj.rx_buffer_0,
+                                             uart1_manage_obj.rx_buffer_1, rx_buffer_length);
     }
-    else if (huart->Instance == USART3)
+    else if (huart->Instance == UART5)
     {
-        uart3_manage_obj.uart_handle = huart;
-        uart3_manage_obj.callback_func = callback_func;
-        uart3_manage_obj.rx_buffer_length = rx_buffer_length;
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart3_manage_obj.rx_buffer[0],
-                                             uart3_manage_obj.rx_buffer[1], rx_buffer_length);
+        uart5_manage_obj.uart_handle = huart;
+        uart5_manage_obj.callback_func = callback_func;
+        uart5_manage_obj.rx_buffer_length = rx_buffer_length;
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart5_manage_obj.rx_buffer_0,
+                                             uart5_manage_obj.rx_buffer_1, rx_buffer_length);
     }
-    else if (huart->Instance == USART6)
+    else if (huart->Instance == UART7)
     {
-        uart6_manage_obj.uart_handle = huart;
-        uart6_manage_obj.callback_func = callback_func;
-        uart6_manage_obj.rx_buffer_length = rx_buffer_length;
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart6_manage_obj.rx_buffer[0],
-                                             uart6_manage_obj.rx_buffer[1], rx_buffer_length);
+        uart7_manage_obj.uart_handle = huart;
+        uart7_manage_obj.callback_func = callback_func;
+        uart7_manage_obj.rx_buffer_length = rx_buffer_length;
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart7_manage_obj.rx_buffer_0,
+                                             uart7_manage_obj.rx_buffer_1, rx_buffer_length);
+    }
+    else if (huart->Instance == USART10)
+    {
+        uart10_manage_obj.uart_handle = huart;
+        uart10_manage_obj.callback_func = callback_func;
+        uart10_manage_obj.rx_buffer_length = rx_buffer_length;
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart10_manage_obj.rx_buffer_0,
+                                             uart10_manage_obj.rx_buffer_1, rx_buffer_length);
     }
 }
 
@@ -138,26 +158,33 @@ void uart_reinit(UART_HandleTypeDef *huart)
     }
 
     // 清除错误标志及错误码, 避免一直进错误中断
-    __HAL_UART_CLEAR_PEFLAG(huart);
+    __HAL_UART_CLEAR_FLAG(huart,
+                          UART_CLEAR_OREF | UART_CLEAR_NEF | UART_CLEAR_FEF | UART_CLEAR_PEF);
     huart->ErrorCode = HAL_UART_ERROR_NONE;
 
     if (huart->Instance == USART1)
     {
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart1_manage_obj.rx_buffer[0],
-                                             uart1_manage_obj.rx_buffer[1],
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart1_manage_obj.rx_buffer_0,
+                                             uart1_manage_obj.rx_buffer_1,
                                              uart1_manage_obj.rx_buffer_length);
     }
-    else if (huart->Instance == USART3)
+    else if (huart->Instance == UART5)
     {
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart3_manage_obj.rx_buffer[0],
-                                             uart3_manage_obj.rx_buffer[1],
-                                             uart3_manage_obj.rx_buffer_length);
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart5_manage_obj.rx_buffer_0,
+                                             uart5_manage_obj.rx_buffer_1,
+                                             uart5_manage_obj.rx_buffer_length);
     }
-    else if (huart->Instance == USART6)
+    else if (huart->Instance == UART7)
     {
-        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart6_manage_obj.rx_buffer[0],
-                                             uart6_manage_obj.rx_buffer[1],
-                                             uart6_manage_obj.rx_buffer_length);
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart7_manage_obj.rx_buffer_0,
+                                             uart7_manage_obj.rx_buffer_1,
+                                             uart7_manage_obj.rx_buffer_length);
+    }
+    else if (huart->Instance == USART10)
+    {
+        UARTEx_MultiBuffer_ReceiveToIdle_DMA(huart, uart10_manage_obj.rx_buffer_0,
+                                             uart10_manage_obj.rx_buffer_1,
+                                             uart10_manage_obj.rx_buffer_length);
     }
 }
 /**
@@ -181,43 +208,59 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t size)
 
         if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) == RESET)
         {
-            uart1_manage_obj.callback_func(uart1_manage_obj.rx_buffer[1], size);
+            uart1_manage_obj.callback_func(uart1_manage_obj.rx_buffer_1, size);
         }
         else
         {
-            uart1_manage_obj.callback_func(uart1_manage_obj.rx_buffer[0], size);
+            uart1_manage_obj.callback_func(uart1_manage_obj.rx_buffer_0, size);
         }
     }
-    else if (huart->Instance == USART3)
+    else if (huart->Instance == UART5)
     {
-        if (uart3_manage_obj.callback_func == nullptr)
+        if (uart5_manage_obj.callback_func == nullptr)
         {
             return;
         }
 
         if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) == RESET)
         {
-            uart3_manage_obj.callback_func(uart3_manage_obj.rx_buffer[1], size);
+            uart5_manage_obj.callback_func(uart5_manage_obj.rx_buffer_1, size);
         }
         else
         {
-            uart3_manage_obj.callback_func(uart3_manage_obj.rx_buffer[0], size);
+            uart5_manage_obj.callback_func(uart5_manage_obj.rx_buffer_0, size);
         }
     }
-    else if (huart->Instance == USART6)
+    else if (huart->Instance == UART7)
     {
-        if (uart6_manage_obj.callback_func == nullptr)
+        if (uart7_manage_obj.callback_func == nullptr)
         {
             return;
         }
 
         if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) == RESET)
         {
-            uart6_manage_obj.callback_func(uart6_manage_obj.rx_buffer[1], size);
+            uart7_manage_obj.callback_func(uart7_manage_obj.rx_buffer_1, size);
         }
         else
         {
-            uart6_manage_obj.callback_func(uart6_manage_obj.rx_buffer[0], size);
+            uart7_manage_obj.callback_func(uart7_manage_obj.rx_buffer_0, size);
+        }
+    }
+    else if (huart->Instance == USART10)
+    {
+        if (uart10_manage_obj.callback_func == nullptr)
+        {
+            return;
+        }
+
+        if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) == RESET)
+        {
+            uart10_manage_obj.callback_func(uart10_manage_obj.rx_buffer_1, size);
+        }
+        else
+        {
+            uart10_manage_obj.callback_func(uart10_manage_obj.rx_buffer_0, size);
         }
     }
 }
