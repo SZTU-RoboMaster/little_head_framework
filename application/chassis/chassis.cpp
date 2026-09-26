@@ -148,8 +148,8 @@ void Chassis::control()
         yaw_error = wrap_center((feedback_.gimbal_yaw - config_.gimbal_yaw_offset), (2.0f * PI));
         // 计算旋转速度补偿
         yaw_error -= std::atan(config_.spin_phase_delay * feedback_.omega);
-        float sin_yaw = std::sin(yaw_error);
-        float cos_yaw = std::cos(yaw_error);
+        float sin_yaw = arm_sin_f32(yaw_error);
+        float cos_yaw = arm_cos_f32(yaw_error);
         float vx_temp = cmd_msg_.rc_vx;
         float vy_temp = cmd_msg_.rc_vy;
         control_output_.target_velocity_x = vx_temp * cos_yaw + vy_temp * (-sin_yaw);

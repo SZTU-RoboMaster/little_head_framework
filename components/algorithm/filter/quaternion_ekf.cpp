@@ -31,7 +31,7 @@
  */
 void GravityKf::init(float process_noise, float measure_noise)
 {
-    for (uint8_t i = 0; i < 9; i += 4)
+    for (int i = 0; i < 9; i += 4)
     {
         // 初始化过程噪声与量测噪声
         q_matrix_[i] = process_noise;
@@ -82,7 +82,7 @@ void GravityKf::update(float gx, float gy, float gz, float ax, float ay, float a
     Kalman_Filter_Update(&filter_);
 
     // 提取估计值
-    for (uint8_t i = 0; i < 3; i++)
+    for (int i = 0; i < 3; i++)
     {
         gravity_vec_[i] = filter_.FilteredValue[i];
     }
@@ -98,11 +98,10 @@ void GravityKf::update(float gx, float gy, float gz, float ax, float ay, float a
 void QuaternionEkf::init(float process_noise1, float process_noise2, float measure_noise,
                          float lambda)
 {
-
     ins_.Q1 = process_noise1;
     ins_.Q2 = process_noise2;
     ins_.R = measure_noise;
-    ins_.chi_square_threshold = 0.01f;
+    ins_.chi_square_threshold = 1e-8f;
     ins_.converged = 0;
     if (lambda > 1)
     {
@@ -137,15 +136,16 @@ void QuaternionEkf::init(float process_noise1, float process_noise2, float measu
  */
 void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, float az, float dt)
 {
-    const float norm2 = ax * ax + ay * ay + az * az;
-    if (!std::isfinite(norm2) || norm2 <= 1e-12f || !std::isfinite(gx) || !std::isfinite(gy) ||
-        !std::isfinite(gz) || !std::isfinite(dt) || dt <= 0.0f)
+    const float acc_norm2 = ax * ax + ay * ay + az * az;
+    if (!std::isfinite(acc_norm2) || acc_norm2 <= 1e-12f || !std::isfinite(gx) ||
+        !std::isfinite(gy) || !std::isfinite(gz) || !std::isfinite(dt) || dt <= 0.0f)
     {
         return;
     }
 
     // 0.5(Ohm-Ohm^bias)*delta_t,用于更新工作点处的状态转移F矩阵
     static float halfgxdt, halfgydt, halfgzdt;
+    static float gyro[3];
     static float accel_inv_norm;
     /*
      0     1     2     3     4     5
@@ -157,14 +157,17 @@ void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, flo
     */
     ins_.dt = dt;
 
-    halfgxdt = 0.5f * (gx - ins_.gyro_bias[0]) * dt;
-    halfgydt = 0.5f * (gy - ins_.gyro_bias[1]) * dt;
-    halfgzdt = 0.5f * (gz - ins_.gyro_bias[2]) * dt;
+    gyro[0] = gx - ins_.gyro_bias[0];
+    gyro[1] = gy - ins_.gyro_bias[1];
+    gyro[2] = gz - ins_.gyro_bias[2];
+
+    halfgxdt = 0.5f * (gyro[0]) * dt;
+    halfgydt = 0.5f * (gyro[1]) * dt;
+    halfgzdt = 0.5f * (gyro[2]) * dt;
 
     // 初始化F矩阵为单位阵
     memcpy(ins_.filter.F_data, f_matrix_, sizeof(f_matrix_));
-    // 此部分设定状态转移矩阵F的左上角部分
-    // 4x4子矩阵,即0.5(Ohm-Ohm^bias)*delta_t,右下角有一个2x2单位阵已经初始化好了
+    // 此部分设定状态转移矩阵F的左上角部分4x4子矩阵,即0.5(Ohm-Ohm^bias)*delta_t,右下角有一个2x2单位阵已经初始化好了
     // 注意在predict步F的右上角是4x2的零矩阵,因此每次predict的时候都会调用memcpy用单位阵覆盖前一轮线性化后的矩阵
     ins_.filter.F_data[1] = -halfgxdt;
     ins_.filter.F_data[2] = -halfgydt;
@@ -183,10 +186,23 @@ void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, flo
     ins_.filter.F_data[20] = -halfgxdt;
 
     // 归一化加速度向量作为量测向量
-    accel_inv_norm = 1.0f / sqrtf(ax * ax + ay * ay + az * az);
+    const float acc_norm = std::sqrt(acc_norm2);
+    accel_inv_norm = 1.0f / acc_norm;
     ins_.filter.MeasuredVector[0] = ax * accel_inv_norm;
     ins_.filter.MeasuredVector[1] = ay * accel_inv_norm;
     ins_.filter.MeasuredVector[2] = az * accel_inv_norm;
+
+    // 如果角速度小于阈值且加速度处于设定范围内,认为运动稳定,加速度可以用于修正角速度
+    // 稍后在最后的姿态更新部分会利用stable的flag来确定
+    const float gyro_norm = std::sqrt(gyro[0] * gyro[0] + gyro[1] * gyro[1] + gyro[2] * gyro[2]);
+    if (gyro_norm < 0.3f && std::abs(acc_norm - 9.8f) < 0.5f)
+    {
+        ins_.stable = 1;
+    }
+    else
+    {
+        ins_.stable = 0;
+    }
 
     // 设置Q,R矩阵
     ins_.filter.Q_data[0] = ins_.Q1 * ins_.dt;
@@ -212,13 +228,18 @@ void QuaternionEkf::update(float gx, float gy, float gz, float ax, float ay, flo
     ins_.gyro_bias[2] = 0.00285f;
 
     // 四元数反解欧拉角
-    ins_.angle[0] = atan2f(2.0f * (ins_.q[0] * ins_.q[1] + ins_.q[2] * ins_.q[3]),
-                           2.0f * (ins_.q[0] * ins_.q[0] + ins_.q[3] * ins_.q[3]) - 1.0f);
-    ins_.angle[1] = asinf(-2.0f * (ins_.q[1] * ins_.q[3] - ins_.q[0] * ins_.q[2]));
-    ins_.angle[2] = atan2f(2.0f * (ins_.q[0] * ins_.q[3] + ins_.q[1] * ins_.q[2]),
-                           2.0f * (ins_.q[0] * ins_.q[0] + ins_.q[1] * ins_.q[1]) - 1.0f);
+    arm_atan2_f32(2.0f * (ins_.q[0] * ins_.q[1] + ins_.q[2] * ins_.q[3]),
+                  2.0f * (ins_.q[0] * ins_.q[0] + ins_.q[3] * ins_.q[3]) - 1.0f, &ins_.angle[0]);
+    ins_.angle[1] = std::asin(-2.0f * (ins_.q[1] * ins_.q[3] - ins_.q[0] * ins_.q[2]));
+    arm_atan2_f32(2.0f * (ins_.q[0] * ins_.q[3] + ins_.q[1] * ins_.q[2]),
+                  2.0f * (ins_.q[0] * ins_.q[0] + ins_.q[1] * ins_.q[1]) - 1.0f, &ins_.angle[2]);
 }
 
+/**
+ * @brief EKF观测环节,其实就是把数据复制一下
+ *
+ * @param kf
+ */
 void QuaternionEkf::observe(KalmanFilter_t *kf)
 {
     memcpy(p_matrix_, kf->P_data, sizeof(p_matrix_));
@@ -226,6 +247,12 @@ void QuaternionEkf::observe(KalmanFilter_t *kf)
     memcpy(h_matrix_, kf->H_data, sizeof(h_matrix_));
 }
 
+/**
+ * @brief 用于更新线性化后的状态转移矩阵F右上角的一个4x2分块矩阵,稍后用于协方差矩阵P的更新;
+ *        并对零漂的方差进行限制,防止过度收敛并限幅防止发散
+ *
+ * @param kf
+ */
 void QuaternionEkf::linearize_f_and_fade_p(KalmanFilter_t *kf)
 {
     static float q0, q1, q2, q3;
@@ -237,8 +264,8 @@ void QuaternionEkf::linearize_f_and_fade_p(KalmanFilter_t *kf)
     q3 = kf->xhatminus_data[3];
 
     // 四元数归一化
-    q_inv_norm = 1.0f / sqrtf(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
-    for (uint8_t i = 0; i < 4; i++)
+    q_inv_norm = 1.0f / std::sqrt(q0 * q0 + q1 * q1 + q2 * q2 + q3 * q3);
+    for (int i = 0; i < 4; i++)
     {
         kf->xhatminus_data[i] *= q_inv_norm;
     }
@@ -262,8 +289,27 @@ void QuaternionEkf::linearize_f_and_fade_p(KalmanFilter_t *kf)
 
     kf->F_data[22] = q2 * ins_.dt / 2;
     kf->F_data[23] = -q1 * ins_.dt / 2;
+
+    // fading filter,防止零飘参数过度收敛
+    kf->P_data[28] /= ins_.lambda;
+    kf->P_data[35] /= ins_.lambda;
+
+    // 限幅,防止发散
+    if (kf->P_data[28] > 10000)
+    {
+        kf->P_data[28] = 10000;
+    }
+    if (kf->P_data[35] > 10000)
+    {
+        kf->P_data[35] = 10000;
+    }
 }
 
+/**
+ * @brief 在工作点处计算观测函数h(x)的Jacobi矩阵H
+ *
+ * @param kf
+ */
 void QuaternionEkf::set_h_matrix(KalmanFilter_t *kf)
 {
     static float doubleq0, doubleq1, doubleq2, doubleq3;
@@ -272,7 +318,6 @@ void QuaternionEkf::set_h_matrix(KalmanFilter_t *kf)
      6     7     8     9    10    11
     12    13    14    15    16    17
     */
-
     doubleq0 = 2 * kf->xhatminus_data[0];
     doubleq1 = 2 * kf->xhatminus_data[1];
     doubleq2 = 2 * kf->xhatminus_data[2];
@@ -297,6 +342,13 @@ void QuaternionEkf::set_h_matrix(KalmanFilter_t *kf)
     kf->H_data[15] = doubleq3;
 }
 
+/**
+ * @brief 利用观测值和先验估计得到最优的后验估计
+ *        加入了卡方检验以判断融合加速度的条件是否满足
+ *        同时引入发散保护保证恶劣工况下的必要量测更新
+ *
+ * @param kf
+ */
 void QuaternionEkf::update_xhat(KalmanFilter_t *kf)
 {
     static float q0, q1, q2, q3;
@@ -322,9 +374,16 @@ void QuaternionEkf::update_xhat(KalmanFilter_t *kf)
     q3 = kf->xhatminus_data[3];
     kf->temp_vector.numRows = kf->H.numRows;
     kf->temp_vector.numCols = 1;
+    // 计算预测得到的重力加速度方向(通过姿态获取的)
     kf->temp_vector_data[0] = 2 * (q1 * q3 - q0 * q2);
     kf->temp_vector_data[1] = 2 * (q0 * q1 + q2 * q3);
     kf->temp_vector_data[2] = q0 * q0 - q1 * q1 - q2 * q2 + q3 * q3; // temp_vector = h(xhat'(k))
+
+    // 计算预测值和各个轴的方向余弦
+    for (int i = 0; i < 3; i++)
+    {
+        ins_.orientation_arccosine[i] = std::acos(std::abs(kf->temp_vector_data[i]));
+    }
 
     // 计算残差z(k) - h(xhat'(k))
     kf->temp_vector1.numRows = kf->z.numRows;
@@ -342,31 +401,56 @@ void QuaternionEkf::update_xhat(KalmanFilter_t *kf)
     kf->temp_vector.numCols = kf->temp_vector1.numRows;
     kf->MatStatus =
         Matrix_Transpose(&kf->temp_vector1, &kf->temp_vector); // temp_vector = z(k) - h(xhat'(k))'
-    kf->temp_matrix.numRows = 1;
-    kf->temp_matrix.numCols = 1;
-    kf->MatStatus = Matrix_Multiply(&kf->temp_vector, &kf->temp_vector1, &kf->temp_matrix);
+    const float *r = kf->temp_vector1.pData;
+    const float *sir = kf->temp_matrix.pData;
+    ins_.chi_square = r[0] * sir[0] + r[1] * sir[1] + r[2] * sir[2];
 
     // 检测函数
-    ins_.chi_square = kf->temp_matrix.pData[0];
-    if (ins_.chi_square < 0.1f * ins_.chi_square_threshold)
+    if (ins_.chi_square < 0.5f * ins_.chi_square_threshold)
     {
         ins_.converged = 1;
     }
     if (ins_.chi_square > ins_.chi_square_threshold && ins_.converged)
     {
-        // 未通过卡方检验 仅预测
-        // xhat(k) = xhat'(k)
-        // P(k) = P'(k)
-        memcpy(kf->xhat_data, kf->xhatminus_data, sizeof_float * kf->xhatSize);
-        memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
-        kf->SkipEq5 = true;
-        return;
+        if (ins_.stable)
+        {
+            ins_.error_cnt++;
+        }
+        else
+        {
+            ins_.error_cnt = 0;
+        }
+
+        if (ins_.error_cnt > 50)
+        {
+            ins_.converged = 0;
+            ins_.adaptive_gain_scale = 1.0f;
+            kf->SkipEq5 = false;
+        }
+        else
+        {
+            // 未通过卡方检验 仅预测
+            // xhat(k) = xhat'(k)
+            // P(k) = P'(k)
+            memcpy(kf->xhat_data, kf->xhatminus_data, sizeof_float * kf->xhatSize);
+            memcpy(kf->P_data, kf->Pminus_data, sizeof_float * kf->xhatSize * kf->xhatSize);
+            kf->SkipEq5 = true;
+            return;
+        }
     }
-    else
+    else // if divergent or rk is not that big/acceptable,use adaptive gain
     {
-        // 应用渐消因子
-        kf->P_data[28] /= ins_.lambda;
-        kf->P_data[35] /= ins_.lambda;
+        // scale adaptive,rk越小则增益越大,否则更相信预测值
+        if (ins_.chi_square > 0.1f * ins_.chi_square_threshold && ins_.converged)
+        {
+            ins_.adaptive_gain_scale =
+                (ins_.chi_square_threshold - ins_.chi_square) / (0.9f * ins_.chi_square_threshold);
+        }
+        else
+        {
+            ins_.adaptive_gain_scale = 1;
+        }
+        ins_.error_cnt = 0;
         kf->SkipEq5 = false;
     }
 
@@ -377,11 +461,41 @@ void QuaternionEkf::update_xhat(KalmanFilter_t *kf)
         Matrix_Multiply(&kf->Pminus, &kf->HT, &kf->temp_matrix); // temp_matrix = P'(k)·HT
     kf->MatStatus = Matrix_Multiply(&kf->temp_matrix, &kf->temp_matrix1, &kf->K);
 
+    // implement adaptive
+    for (int i = 0; i < kf->K.numRows * kf->K.numCols; i++)
+    {
+        kf->K_data[i] *= ins_.adaptive_gain_scale;
+    }
+    for (int i = 4; i < 6; i++)
+    {
+        for (int j = 0; j < 3; j++)
+        {
+            kf->K_data[i * 3 + j] *= ins_.orientation_arccosine[i - 4] / (PI / 2);
+        }
+    }
+
     kf->temp_vector.numRows = kf->K.numRows;
     kf->temp_vector.numCols = 1;
     kf->MatStatus = Matrix_Multiply(&kf->K, &kf->temp_vector1,
                                     &kf->temp_vector); // temp_vector = K(k)·(z(k) - H·xhat'(k))
-    kf->temp_vector.pData[3] = 0;                      // 应用M矩阵
+
+    // 零漂修正限幅,一般不会有过大的漂移
+    if (ins_.converged)
+    {
+        for (int i = 4; i < 6; i++)
+        {
+            if (kf->temp_vector.pData[i] > 1e-2f * ins_.dt)
+            {
+                kf->temp_vector.pData[i] = 1e-2f * ins_.dt;
+            }
+            if (kf->temp_vector.pData[i] < -1e-2f * ins_.dt)
+            {
+                kf->temp_vector.pData[i] = -1e-2f * ins_.dt;
+            }
+        }
+    }
+
+    kf->temp_vector.pData[3] = 0; // 不修正yaw轴数据
     kf->MatStatus = Matrix_Add(&kf->xhatminus, &kf->temp_vector,
                                &kf->xhat); // xhat = xhat'(k) + M·K(k)·(z(k) - h(xhat'(k)))
 }
