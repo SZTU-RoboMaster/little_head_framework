@@ -17,27 +17,16 @@
 extern "C" {
 #endif
 
-// cortex-m4 DSP lib
-/*
-#define __CC_ARM    // Keil
-#define ARM_MATH_CM4
-#define ARM_MATH_MATRIX_CHECK
-#define ARM_MATH_ROUNDING
-#define ARM_MATH_DSP    // define in arm_math.h
-*/
-
-#include "stm32f407xx.h"
 #include "arm_math.h"
 //#include "dsp/matrix_functions.h"
 #include "stdint.h"
-#include "stdlib.h"
 
-#ifndef user_malloc
-#ifdef _CMSIS_OS_H
-#define user_malloc pvPortMalloc
+#if __has_include("FreeRTOS.h")
+    #include "FreeRTOS.h"
+    #define user_malloc pvPortMalloc
 #else
-#define user_malloc malloc
-#endif
+    #include <stdlib.h>
+    #define user_malloc malloc
 #endif
 
 #define mat arm_matrix_instance_f32
