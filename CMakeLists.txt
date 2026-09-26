@@ -45,6 +45,16 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_init_f32.c
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_add_f32.c
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_sub_f32.c
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_mult_f32.c
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_trans_f32.c
+    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_inverse_f32.c
+    Drivers/CMSIS/DSP/Source/CommonTables/arm_common_tables.c
+    Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_sin_f32.c
+    Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_cos_f32.c
+    Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_atan2_f32.c
     bsp/can/bsp_can.cpp
     bsp/tim/bsp_tim.cpp
     bsp/uart/bsp_uart.cpp
@@ -72,12 +82,6 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # components/ist8310/ist8310driver.cpp
     # components/ist8310/ist8310driver_middleware.cpp
     components/vision/vision.cpp
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_init_f32.c
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_add_f32.c
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_sub_f32.c
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_mult_f32.c
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_trans_f32.c
-    Drivers/CMSIS/DSP/Source/MatrixFunctions/arm_mat_inverse_f32.c
     application/gimbal/gimbal.cpp
     application/shoot/shoot.cpp
     application/chassis/chassis.cpp
@@ -132,10 +136,9 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add project symbols (macros)
 target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined symbols
-    ARM_MATH_CM7
+    ARM_MATH_LOOPUNROLL
     ARM_MATH_MATRIX_CHECK
     ARM_MATH_ROUNDING
-    ARM_MATH_DSP
 )
 
 # Remove wrong libob.a library dependency when using cpp files

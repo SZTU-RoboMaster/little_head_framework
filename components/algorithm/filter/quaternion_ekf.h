@@ -21,7 +21,7 @@
 struct QuaternionEkfState
 {
     KalmanFilter_t filter; // 卡尔曼滤波器结构体
-    uint8_t converged;
+
     float q[4];         // 四元数估计值
     float gyro_bias[3]; // 陀螺仪零偏估计值
     float angle[3];     // 欧拉角估计值
@@ -30,10 +30,17 @@ struct QuaternionEkfState
     float Q2; // 陀螺仪零偏过程噪声
     float R;  // 加速度计量测噪声
 
+    uint8_t converged;  // 发散flag
+    uint8_t stable;     // 稳定flag
+    uint32_t error_cnt; // 卡方校验出错次数
+
     float dt;                   // 姿态更新周期
     float chi_square;           // 卡方检验检测函数值
     float chi_square_threshold; // 卡方检验阈值
     float lambda;               // 渐消因子
+
+    float adaptive_gain_scale;      // 自适应增益缩放系数
+    float orientation_arccosine[3]; // 方向余弦角
 };
 
 /**
@@ -113,12 +120,12 @@ protected:
                            0, 0, 0, 0, 1, 0,
                            0, 0, 0, 0, 0, 1};
     // 后验估计协方差初始值
-    float p_matrix_[36] = {100000, 0.1, 0.1, 0.1, 0.1, 0.1,
-                           0.1, 100000, 0.1, 0.1, 0.1, 0.1,
-                           0.1, 0.1, 100000, 0.1, 0.1, 0.1,
-                           0.1, 0.1, 0.1, 100000, 0.1, 0.1,
-                           0.1, 0.1, 0.1, 0.1, 10000, 0.1,
-                           0.1, 0.1, 0.1, 0.1, 0.1, 10000};
+    float p_matrix_[36] = {100000, 0.1,    0.1,    0.1,    0.1, 0.1,
+                           0.1,    100000, 0.1,    0.1,    0.1, 0.1,
+                           0.1,    0.1,    100000, 0.1,    0.1, 0.1,
+                           0.1,    0.1,    0.1,    100000, 0.1, 0.1,
+                           0.1,    0.1,    0.1,    0.1,    100, 0.1,
+                           0.1,    0.1,    0.1,    0.1,    0.1, 100};
 
     // 卡尔曼增益初始值
     float k_matrix_[18] = {};
