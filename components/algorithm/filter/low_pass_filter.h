@@ -9,84 +9,43 @@
  *
  */
 
-#pragma once
+#ifndef LOW_PASS_FILTER_H
+#define LOW_PASS_FILTER_H
 
-/* Includes ------------------------------------------------------------------*/
-#include <cstdint>
+#include <stdint.h>
 
-/* Exported macros -----------------------------------------------------------*/
-
-/* Exported types ------------------------------------------------------------*/
-
-/**
- * @brief Specialized
- *
- */
-class LowPassFilter
+typedef struct
 {
-public:
-    LowPassFilter() = default;
+    float fc;
+    float alpha;
+    float output;
+    uint8_t first_in;
+} LowPassFilter_t;
 
-    void init(float cutoff_freq);
-
-    float update(float input, float dt);
-
-    void reset();
-
-protected:
-    // 初始化相关常量
-    float fc_ = 0.0f;
-
-    // 常量
-
-    // 内部变量
-    uint8_t first_in_ = 1;
-    float alpha_ = 0.0f;
-    float output_ = 0.0f;
-
-    // 读变量
-
-    // 写变量
-
-    // 读写变量
-
-    // 内部函数
-};
-
-class OneEuroFilter
+typedef struct
 {
-public:
-    void init(float min_cutoff, float beta, float d_cutoff);
+    LowPassFilter_t x_filter;
+    LowPassFilter_t dx_filter;
+    float min_cutoff;
+    float beta;
+    float last_input;
+    uint8_t first_in;
+} OneEuroFilter_t;
 
-    float update(float input, float dt);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    void reset();
+void LowPassFilter_Init(LowPassFilter_t *filter, float cutoff_freq);
+float LowPassFilter_Update(LowPassFilter_t *filter, float input, float dt);
+void LowPassFilter_Reset(LowPassFilter_t *filter);
 
-protected:
-    // 初始化相关常量
-    float fc_ = 0.0f;
+void OneEuroFilter_Init(OneEuroFilter_t *filter, float min_cutoff, float beta, float d_cutoff);
+float OneEuroFilter_Update(OneEuroFilter_t *filter, float input, float dt);
+void OneEuroFilter_Reset(OneEuroFilter_t *filter);
 
-    // 常量
-    float beta_ = 0.0f;
-    float min_cutoff_ = 0.0f;
+#ifdef __cplusplus
+}
+#endif
 
-    // 内部变量
-    LowPassFilter x_filter_;
-    LowPassFilter dx_filter_;
-
-    uint8_t first_in_ = 1;
-    float last_input_ = 0.0f;
-
-    // 读变量
-
-    // 写变量
-
-    // 读写变量
-
-    // 内部函数
-};
-/* Exported variables ---------------------------------------------------------*/
-
-/* Exported function declarations ---------------------------------------------*/
-
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+#endif

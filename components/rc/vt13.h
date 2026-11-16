@@ -25,11 +25,11 @@
  * @brief 遥控器VT13状态
  *
  */
-enum Vt13Status
+typedef enum
 {
     VT13_STATUS_DISABLE = 0,
     VT13_STATUS_ENABLE,
-};
+} Vt13Status_e;
 
 
 
@@ -37,48 +37,51 @@ enum Vt13Status
  * @brief Specialized, 遥控器VT13
  *
  */
-class Vt13
+typedef struct
 {
-public:
-    void init(UART_HandleTypeDef *huart);
-
-    void uart_rx_callback(uint8_t *rx_data, uint16_t length);
-
-    void check_alive_100ms();
-
-protected:
     // 初始化相关常量
 
     // 绑定的UART
-    UartManageObject *uart_manage_obj_;
+    BspUart_Manage_t *uart_manage_obj;
 
     // 常量
 
     // 内部变量
 
     // 当前时刻的遥控器VT13接收flag
-    uint32_t rx_flag_ = 0;
+    uint32_t rx_flag;
     // 前一时刻的遥控器VT13接收flag
-    uint32_t last_rx_flag_ = 0;
+    uint32_t last_rx_flag;
 
     // 读变量
 
     // 遥控器VT13状态
-    Vt13Status vt13_status_ = VT13_STATUS_DISABLE;
+    Vt13Status_e status;
     // 遥控器VT13对外接口信息
-    Vt13Message data_;
+    Vt13_Message_t data;
 
     // 写变量
-    Publisher<Vt13Message> publisher_;
+    Publisher_t publisher;
 
     // 读写变量
 
     // 内部函数
 
-    void process_data(uint8_t *rx_data, uint16_t length);
-};
+} Vt13_t;
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern Vt13_t vt13;
 
 /* Exported function declarations ---------------------------------------------*/
+void Vt13_Init(Vt13_t *self, UART_HandleTypeDef *huart);
+void Vt13_UartRxCallback(Vt13_t *self, uint8_t *rx_data, uint16_t length);
+void Vt13_CheckAlive100ms(Vt13_t *self);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

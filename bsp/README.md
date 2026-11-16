@@ -19,8 +19,8 @@ BSP 层对 STM32 HAL 和 CubeMX 生成的外设句柄做薄封装，负责启动
 
 1. 先在 CubeMX 中开启模块需要的外设、GPIO、DMA 和中断。
 2. 生成 HAL 初始化代码和句柄。
-3. 将对应 BSP 的 `.cpp` 和 include 路径加入 CMake。
+3. 将对应 BSP 的 `.c` 和 include 路径加入 CMake。
 4. 在上层初始化时注册回调，再允许中断进入业务处理。
 
-CAN、UART、USB 和 TIM 模块使用全局 `initialized` 作为启动门控。当前变量由 `sdk/robot/robot_sdk.cpp` 定义；单独移植 BSP 时，需要由工程提供该变量或改成自己的启动状态。
+CAN、UART、USB 和 TIM 模块使用全局 `initialized` 作为启动门控。当前变量由 `sdk/robot/robot_sdk.c` 定义；单独移植 BSP 时，需要由工程提供该变量或改成自己的启动状态。BSP 实现均为 C，公共头文件也可供当前未改写的 C++ 组件使用。
 

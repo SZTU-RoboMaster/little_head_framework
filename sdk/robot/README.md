@@ -2,7 +2,7 @@
 
 当前机器人的整机交互层。它统一完成 BSP 和输入设备初始化，把硬件中断回调路由到应用层唯一实例，并在 TIM7 的 1 ms 中断中完成电机计算、CAN 发送和离线检测。
 
-该模块与当前硬件连接、CAN ID 和应用对象强绑定，移植到其他机器人时必须检查并修改 `robot_sdk.cpp`。
+该模块与当前硬件连接、CAN ID 和应用对象强绑定，移植到其他机器人时必须检查并修改 `robot_sdk.c`。DR16、VT13、裁判系统和 BMI088 均使用 C 接口直接连接。
 
 ## 安装
 
@@ -10,7 +10,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    sdk/robot/robot_sdk.cpp
+    sdk/robot/robot_sdk.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -27,7 +27,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## 启动接入
 
-在 HAL 外设初始化完成、RTOS 内核启动之前调用 `robot_sdk_init()`：
+在 HAL 外设初始化完成、RTOS 内核启动之前调用 `RobotSdk_Init()`：
 
 ```c
 #include "robot_sdk.h"
@@ -42,7 +42,7 @@ int main(void)
     // 其余 CubeMX 外设初始化
 
     MX_USB_DEVICE_Init();
-    robot_sdk_init();
+    RobotSdk_Init();
 
     osKernelInitialize();
     MX_FREERTOS_Init();
@@ -50,15 +50,15 @@ int main(void)
 }
 ```
 
-`robot_sdk_init()` 初始化 DWT、IMU 加热 PWM、RGB LED、蜂鸣器，以及 DR16、VT13 和裁判系统对象。此时只建立对象与外设的绑定，不启动 CAN/UART/TIM 回调。
+`RobotSdk_Init()` 先初始化并注册消息中心的 11 个主题，再初始化 DWT、IMU 加热 PWM、RGB LED、蜂鸣器，以及 DR16、VT13 和裁判系统对象。此时只建立对象与外设的绑定，不启动 CAN/UART/TIM 回调。
 
-所有应用任务初始化完成后调用 `robot_sdk_start()`：
+所有应用任务初始化完成后调用 `RobotSdk_Start()`：
 
-```cpp
-extern "C" void StartDefaultTask(void *argument)
+```c
+void StartDefaultTask(void *argument)
 {
     osThreadFlagsWait(TASK_READY_ALL, osFlagsWaitAll, osWaitForever);
-    robot_sdk_start();
+    RobotSdk_Start();
     osThreadExit();
 }
 ```
@@ -69,16 +69,16 @@ extern "C" void StartDefaultTask(void *argument)
 
 | 外设 | 设备/用途 | 回调目标 |
 | --- | --- | --- |
-| CAN1 `0x201`-`0x204` | 四个底盘电机 | `chassis.wheel_motor_[0..3]` |
-| CAN1 `0x205` | Yaw 电机 | `gimbal.motor_yaw_` |
-| CAN2 `0x201` | 拨盘电机 | `shoot.trigger_` |
-| CAN2 `0x202`、`0x203` | 左右摩擦轮 | `shoot.friction_left/right_` |
-| CAN2 `0x205` | Pitch 电机 | `gimbal.motor_pitch_` |
+| CAN1 `0x201`-`0x204` | 四个底盘电机 | `chassis.wheel_motor[0..3]` |
+| CAN1 `0x205` | Yaw 电机 | `gimbal.motor_yaw` |
+| CAN2 `0x201` | 拨盘电机 | `shoot.trigger` |
+| CAN2 `0x202`、`0x203` | 左右摩擦轮 | `shoot.friction_left/right` |
+| CAN2 `0x205` | Pitch 电机 | `gimbal.motor_pitch` |
 | USART1，21 字节 | VT13 | `vt13` |
 | USART3，18 字节 | DR16 | `dr16` |
 | USART6，255 字节 | 裁判系统 | `referee` |
 | USB CDC | 视觉通信 | `vision` |
-| BMI088 EXTI | IMU 采样 | `ins.bmi088_` 和 INS 线程标志 |
+| BMI088 EXTI | IMU 采样 | `ins.bmi088` 和 INS 线程标志 |
 | TIM7，1 kHz | 电机调度与离线检测 | `task1ms_tim7_callback()` |
 
 ## 1 ms 调度
@@ -94,18 +94,18 @@ TIM7 每次更新中断执行：
 
 ## `initialized` 启动门控
 
-`robot_sdk.cpp` 定义全局变量：
+`robot_sdk.c` 定义全局变量：
 
-```cpp
+```c
 uint8_t initialized = 0;
 ```
 
-`robot_sdk_start()` 将其置为 `1`。CAN、UART、USB 和 TIM BSP 的 HAL 回调会先检查该标志，防止系统尚未就绪时访问回调对象。单独移植这些 BSP 时，需要由自己的启动模块提供同名变量或改为项目自己的门控方式。
+`RobotSdk_Start()` 将其置为 `1`。CAN、UART、USB 和 TIM BSP 的 HAL 回调会先检查该标志。启动函数当前先打开门控，再逐个启动外设，期间收到的帧可能因回调尚未注册而丢失。单独移植这些 BSP 时，需要由自己的启动模块提供同名变量或改为项目自己的门控方式。
 
 ## 修改检查表
 
 - 电机数量、CAN 总线、反馈 ID 或聚合发送 ID 改变时，修改 CAN 回调和 TIM7 发送列表。
-- 遥控器或裁判系统串口改变时，同时修改对象 `init()`、`uart_init()` 和 CubeMX DMA 配置。
+- 遥控器或裁判系统串口改变时，同时修改 `robot_sdk.c` 中的对象初始化、`BspUart_Init()` 和 CubeMX DMA 配置。
 - 新增任务时，将任务就绪标志纳入启动屏障，再决定它是否需要由 SDK 路由中断。
 - TIM7 回调运行在中断上下文，不要加入阻塞调用、动态内存或耗时业务逻辑。
 

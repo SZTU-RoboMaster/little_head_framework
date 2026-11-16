@@ -13,7 +13,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include <cstdint>
+#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -23,19 +23,19 @@
  * @brief 裁判系统数据帧头结构体
  *
  */
-struct __attribute__((packed)) RefFrameHeader
+typedef struct __attribute__((packed)) RefFrameHeader
 {
     uint8_t sof;
     uint16_t data_length;
     uint8_t seq;
     uint8_t crc8;
-};
+} RefFrameHeader;
 
 /**
  * @brief 裁判系统命令码类型
  *
  */
-enum RefereeCmdId
+typedef enum RefereeCmdId
 {
     // clang-format off
     REFEREE_CMD_ID_GAME_STATUS                           = 0x0001, // len: 11, 比赛状态数据, 1Hz, 服务器->全体机器人, 常规链路
@@ -68,9 +68,9 @@ enum RefereeCmdId
     REFEREE_CMD_ID_CUSTOM_CLIENT_RECEIVE_ROBOT_DATA      = 0x0310, // len: 300, 机器人发送给自定义客户端的数据, 上限50Hz, 己方机器人->图传链路->对应操作手选手端连接的自定义客户端, 图传链路
     REFEREE_CMD_ID_ROBOT_RECEIVE_CUSTOM_CLIENT_DATA      = 0x0311, // len: 30, 自定义客户端发送给机器人的自定义指令, 上限75Hz, 自定义客户端->图传链路->己方机器人, 图传链路
     // clang-format on
-};
+} RefereeCmdId;
 // 0x0001 比赛状态数据
-struct __attribute__((packed)) RefereeRxDataGameStatus
+typedef struct __attribute__((packed)) RefereeRxDataGameStatus
 {
     // bit 0-3: 比赛类型
     //       1: RoboMaster机甲大师超级对抗赛
@@ -93,17 +93,17 @@ struct __attribute__((packed)) RefereeRxDataGameStatus
     uint16_t stage_remain_time;
     // UNIX时间，当机器人正确连接到裁判系统的NTP服务器后生效
     uint64_t sync_time_stamp;
-};
+} RefereeRxDataGameStatus;
 
 // 0x0002 比赛结果数据
-struct __attribute__((packed)) RefereeRxDataGameResult
+typedef struct __attribute__((packed)) RefereeRxDataGameResult
 {
     // 0: 平局, 1: 红方胜利, 2: 蓝方胜利
     uint8_t winner;
-};
+} RefereeRxDataGameResult;
 
 // 0x0003 比赛机器人血量数据
-struct __attribute__((packed)) RefereeRxDataGameRobotHp
+typedef struct __attribute__((packed)) RefereeRxDataGameRobotHp
 {
     // 己方 1 英雄机器人血量
     uint16_t ally_1_robot_hp;
@@ -125,10 +125,10 @@ struct __attribute__((packed)) RefereeRxDataGameRobotHp
     uint16_t opponent_outpost_HP;
     // 对方基地血量
     uint16_t opponent_base_HP;
-};
+} RefereeRxDataGameRobotHp;
 
 // 0x0101 机器人事件数据
-struct __attribute__((packed)) RefereeRxDataEventData
+typedef struct __attribute__((packed)) RefereeRxDataEventData
 {
     // 0:未占领/未激活
     // 1:已占领/已激活
@@ -171,10 +171,10 @@ struct __attribute__((packed)) RefereeRxDataEventData
 
     // bit 30-31：保留位
     uint32_t reserved : 2;
-};
+} RefereeRxDataEventData;
 
 // 0x0104 裁判警告数据
-struct __attribute__((packed)) RefereeRxDataRefereeWarning
+typedef struct __attribute__((packed)) RefereeRxDataRefereeWarning
 {
     // 己方最后一次受到判罚的等级
     uint8_t level;
@@ -182,10 +182,10 @@ struct __attribute__((packed)) RefereeRxDataRefereeWarning
     uint8_t offending_robot_id;
     // 己方最后一次受到判罚的违规次数
     uint8_t count;
-};
+} RefereeRxDataRefereeWarning;
 
 // 0x0105 飞镖发射相关数据
-struct __attribute__((packed)) RefereeRxDataDartInfo
+typedef struct __attribute__((packed)) RefereeRxDataDartInfo
 {
     // 己方飞镖发射站剩余发射时间，单位：s
     uint8_t dart_remaining_time;
@@ -211,10 +211,10 @@ struct __attribute__((packed)) RefereeRxDataDartInfo
 
     // bit 9-15：保留
     uint16_t reserved : 7;
-};
+} RefereeRxDataDartInfo;
 
 // 0x0201 机器人性能体系数据
-struct __attribute__((packed)) RefereeRxDataRobotState
+typedef struct __attribute__((packed)) RefereeRxDataRobotState
 {
     // 机器人ID
     uint8_t robot_id;
@@ -239,10 +239,10 @@ struct __attribute__((packed)) RefereeRxDataRobotState
     uint8_t power_management_chassis_output : 1;
     // shooter口输出: 0为无输出, 1为24V输出
     uint8_t power_management_shooter_output : 1;
-};
+} RefereeRxDataRobotState;
 
 // 0x0202 实时底盘缓冲能量和射击热量数据
-struct __attribute__((packed)) RefereeRxDataPowerHeatData
+typedef struct __attribute__((packed)) RefereeRxDataPowerHeatData
 {
     uint16_t reserved_1;
     uint16_t reserved_2;
@@ -254,10 +254,10 @@ struct __attribute__((packed)) RefereeRxDataPowerHeatData
     uint16_t shooter_17mm_barrel_heat;
     // 42mm 发射机构的射击热量
     uint16_t shooter_42mm_barrel_heat;
-};
+} RefereeRxDataPowerHeatData;
 
 // 0x0203 机器人位置数据
-struct __attribute__((packed)) RefereeRxDataRobotPos
+typedef struct __attribute__((packed)) RefereeRxDataRobotPos
 {
     // 本机器人位置 x 坐标，单位：m
     float x;
@@ -265,10 +265,10 @@ struct __attribute__((packed)) RefereeRxDataRobotPos
     float y;
     // 本机器人测速模块朝向，单位：度，正北为 0 度
     float angle;
-};
+} RefereeRxDataRobotPos;
 
 // 0x0204 机器人增益数据
-struct __attribute__((packed)) RefereeRxDataBuff
+typedef struct __attribute__((packed)) RefereeRxDataBuff
 {
     // 机器人回血增益（百分比，值为 10 表示每秒恢复血量上限的 10%）
     uint8_t recovery_buff;
@@ -290,10 +290,10 @@ struct __attribute__((packed)) RefereeRxDataBuff
     // bit 5：在剩余能量≥5%时为 1，其余情况为 0
     // bit 6：在剩余能量≥1%时为 1，其余情况为 0
     uint8_t remaining_energy;
-};
+} RefereeRxDataBuff;
 
 // 0x0206 伤害状态数据
-struct __attribute__((packed)) RefereeRxDataHurtData
+typedef struct __attribute__((packed)) RefereeRxDataHurtData
 {
     // bit 0-3：当扣血原因为装甲模块被弹丸攻击、受撞击、离线或测速模块离线时，
     // 该 4 bit 组成的数值为装甲模块或测速模块的 id 编号；
@@ -309,10 +309,10 @@ struct __attribute__((packed)) RefereeRxDataHurtData
     //       5：装甲模块受到撞击导致扣血
     //       6：测速模块离线导致扣血
     uint8_t hp_deduction_reason : 4;
-};
+} RefereeRxDataHurtData;
 
 // 0x0207 实时射击数据
-struct __attribute__((packed)) RefereeRxDataShootData
+typedef struct __attribute__((packed)) RefereeRxDataShootData
 {
     // bit1：17mm弹丸, bit2：42mm弹丸
     uint8_t projectile_type;
@@ -322,10 +322,10 @@ struct __attribute__((packed)) RefereeRxDataShootData
     uint8_t launching_frequency;
     // 弹丸初速度，单位: m/s
     float projectile_speed;
-};
+} RefereeRxDataShootData;
 
 // 0x0208 允许发弹量数据
-struct __attribute__((packed)) RefereeRxDataProjectileAllowance
+typedef struct __attribute__((packed)) RefereeRxDataProjectileAllowance
 {
     // 17mm 弹丸允许发弹量
     uint16_t projectile_allowance_17mm;
@@ -337,10 +337,10 @@ struct __attribute__((packed)) RefereeRxDataProjectileAllowance
     // 堡垒增益点提供的储备 17mm 弹丸允许发弹量；
     // 该值与机器人是否实际占领堡垒无关
     uint16_t projectile_allowance_fortress;
-};
+} RefereeRxDataProjectileAllowance;
 
 // 0x0209 机器人RFID模块状态
-struct __attribute__((packed)) RefereeRxDataRfidStatus
+typedef struct __attribute__((packed)) RefereeRxDataRfidStatus
 {
     // bit 0：己方基地增益点
     uint32_t ally_base : 1;
@@ -421,10 +421,10 @@ struct __attribute__((packed)) RefereeRxDataRfidStatus
     uint8_t opponent_tunnel_trapezoid_high : 1;
     // bit 6-7
     uint8_t reserved : 2;
-};
+} RefereeRxDataRfidStatus;
 
 // 0x020A 飞镖选手端指令数据
-struct __attribute__((packed)) RefereeRxDataDartClientCmd
+typedef struct __attribute__((packed)) RefereeRxDataDartClientCmd
 {
     // 当前飞镖发射站的状态： 1：关闭 2：正在开启或者关闭中 0：已经开启
     uint8_t dart_launch_opening_status;
@@ -434,10 +434,10 @@ struct __attribute__((packed)) RefereeRxDataDartClientCmd
     uint16_t target_change_time;
     // 最后一次操作手确定发射指令时的比赛剩余时间，单位：秒，初始值为0
     uint16_t latest_launch_cmd_time;
-};
+} RefereeRxDataDartClientCmd;
 
 // 0x020B 地面机器人位置数据
-struct __attribute__((packed)) RefereeRxDataGroundRobotPosition
+typedef struct __attribute__((packed)) RefereeRxDataGroundRobotPosition
 {
     // 己方英雄机器人位置 x 轴坐标，单位：m
     float hero_x;
@@ -459,10 +459,10 @@ struct __attribute__((packed)) RefereeRxDataGroundRobotPosition
     float reserved_1;
     // 保留
     float reserved_2;
-};
+} RefereeRxDataGroundRobotPosition;
 
 // 0x020C 雷达标记进度数据
-struct __attribute__((packed)) RefereeRxDataRadarMarkData
+typedef struct __attribute__((packed)) RefereeRxDataRadarMarkData
 {
     // 对方机器人：在对应机器人被标记进度≥100 时发送 1，被标记进度<100 时发送 0。
     // 己方机器人：在对应机器人被标记进度≥50 时发送 1，被标记进度<50 时发送 0。
@@ -498,10 +498,10 @@ struct __attribute__((packed)) RefereeRxDataRadarMarkData
     uint16_t ally_aerial_radar_hit : 1;
     // bit 15：己方空中机器人被反制标识
     uint16_t ally_aerial_suppressed : 1;
-};
+} RefereeRxDataRadarMarkData;
 
 // 0x020D 哨兵自主决策信息同步
-struct __attribute__((packed)) RefereeRxDataSentryInfo
+typedef struct __attribute__((packed)) RefereeRxDataSentryInfo
 {
     // bits 0-10：除远程兑换外，哨兵机器人成功兑换的允许发弹量，开局为0
     uint32_t allowed_fire_amount : 11;
@@ -545,10 +545,10 @@ struct __attribute__((packed)) RefereeRxDataSentryInfo
     uint64_t boosted_move_pose_remaining_time : 8;
     // bit 56-63：保留
     uint64_t reserved3 : 8;
-};
+} RefereeRxDataSentryInfo;
 
 // 0x020E 雷达自主决策信息同步
-struct __attribute__((packed)) RefereeRxDataRadarInfo
+typedef struct __attribute__((packed)) RefereeRxDataRadarInfo
 {
     // bits 0-1：雷达拥有触发双倍易伤的机会（0~2），开局为 0，最大可达 2
     uint8_t double_vul_trigger_chance : 2;
@@ -560,10 +560,10 @@ struct __attribute__((packed)) RefereeRxDataRadarInfo
     uint8_t can_key_be_modified : 1;
     // bit 6-7：保留
     uint8_t reserved : 2;
-};
+} RefereeRxDataRadarInfo;
 
 // 0x0301 机器人交互数据
-struct __attribute__((packed)) RefereeTxDataRobotInteractionData
+typedef struct __attribute__((packed)) RefereeTxDataRobotInteractionData
 {
     // 子内容id
     uint16_t sub_content_id;
@@ -573,19 +573,19 @@ struct __attribute__((packed)) RefereeTxDataRobotInteractionData
     uint16_t receiver_id;
     // 最大为112
     uint8_t user_data[112];
-};
+} RefereeTxDataRobotInteractionData;
 
 // 0x0301 0x0100 选手端删除图层
-struct __attribute__((packed)) RefereeTxDataInteractionLayerDelete
+typedef struct __attribute__((packed)) RefereeTxDataInteractionLayerDelete
 {
     // 0：空操作 1：删除图层 2：删除所有
     uint8_t delete_type;
     // 图层数：0~9
     uint8_t layer;
-};
+} RefereeTxDataInteractionLayerDelete;
 
 // 0x0301 0x0101 选手端绘制一个图形
-struct __attribute__((packed)) RefereeTxDataInteractionFigure
+typedef struct __attribute__((packed)) RefereeTxDataInteractionFigure
 {
     // 在图形删除、修改等操作中，作为索引
     uint8_t figure_name[3];
@@ -617,35 +617,35 @@ struct __attribute__((packed)) RefereeTxDataInteractionFigure
     uint32_t details_d : 11;
     // bit 21-31：根据绘制的图形不同，含义不同
     uint32_t details_e : 11;
-};
+} RefereeTxDataInteractionFigure;
 
 // 0x0301 0x0102 选手端绘制两个图形
-struct __attribute__((packed)) RefereeTxDataInteractionFigure2
+typedef struct __attribute__((packed)) RefereeTxDataInteractionFigure2
 {
     RefereeTxDataInteractionFigure interaction_figures[2];
-};
+} RefereeTxDataInteractionFigure2;
 
 // 0x0301 0x0103 选手端绘制五个图形
-struct __attribute__((packed)) RefereeTxDataInteractionFigure5
+typedef struct __attribute__((packed)) RefereeTxDataInteractionFigure5
 {
     RefereeTxDataInteractionFigure interaction_figures[5];
-};
+} RefereeTxDataInteractionFigure5;
 
 // 0x0301 0x0104 选手端绘制七个图形
-struct __attribute__((packed)) RefereeTxDataInteractionFigure7
+typedef struct __attribute__((packed)) RefereeTxDataInteractionFigure7
 {
     RefereeTxDataInteractionFigure interaction_figures[7];
-};
+} RefereeTxDataInteractionFigure7;
 
 // 0x0301 0x0110 选手端绘制字符图形
-struct __attribute__((packed)) RefereeTxDataExtClientCustomCharacter
+typedef struct __attribute__((packed)) RefereeTxDataExtClientCustomCharacter
 {
     RefereeTxDataInteractionFigure interaction_figure;
     uint8_t data[30];
-};
+} RefereeTxDataExtClientCustomCharacter;
 
 // 0x0301 0x0120 哨兵自主决策指令
-struct __attribute__((packed)) RefereeTxDataSentryCmd
+typedef struct __attribute__((packed)) RefereeTxDataSentryCmd
 {
     // bit 0：是否确认复活 0：否 1：是
     uint32_t confirm_respawn : 1;
@@ -664,10 +664,10 @@ struct __attribute__((packed)) RefereeTxDataSentryCmd
     uint32_t confirm_power_rune_activation : 1;
     // bit 25-31：保留
     uint32_t reserved : 7;
-};
+} RefereeTxDataSentryCmd;
 
 // 0x0301 0x0121 雷达自主决策指令
-struct __attribute__((packed)) RefereeTxDataRadarCmd
+typedef struct __attribute__((packed)) RefereeTxDataRadarCmd
 {
     // 触发双倍易伤次数， 开局为0，单调递增，每次加1，最大为2
     uint8_t radar_cmd;
@@ -680,16 +680,16 @@ struct __attribute__((packed)) RefereeTxDataRadarCmd
     uint8_t password_4;
     uint8_t password_5;
     uint8_t password_6;
-};
+} RefereeTxDataRadarCmd;
 
 // 0x0302 自定义控制器与机器人交互数据 图传链路
-struct __attribute__((packed)) RefereeRxDataCustomRobotData
+typedef struct __attribute__((packed)) RefereeRxDataCustomRobotData
 {
     uint8_t data[30];
-};
+} RefereeRxDataCustomRobotData;
 
 // 0x0303 选手端小地图交互数据
-struct __attribute__((packed)) RefereeRxDataMapCommandData
+typedef struct __attribute__((packed)) RefereeRxDataMapCommandData
 {
     // 目标位置 x 轴坐标，单位：m；当发送目标机器人 id 时，该值为 0
     float target_position_x;
@@ -701,11 +701,11 @@ struct __attribute__((packed)) RefereeRxDataMapCommandData
     uint8_t target_robot_id;
     // 信息来源 id
     uint16_t cmd_source;
-};
+} RefereeRxDataMapCommandData;
 
 // 0x0305 选手端小地图接收雷达数据
 // x/y 超出边界时显示在对应边缘；x 和 y 均为 0 时，视为未发送此机器人坐标
-struct __attribute__((packed)) RefereeTxDataMapRobotData
+typedef struct __attribute__((packed)) RefereeTxDataMapRobotData
 {
     // 对方英雄机器人 x 位置坐标，单位：cm
     uint16_t opponent_hero_position_x;
@@ -755,10 +755,10 @@ struct __attribute__((packed)) RefereeTxDataMapRobotData
     uint16_t ally_sentry_position_x;
     // 己方哨兵机器人 y 位置坐标，单位：cm
     uint16_t ally_sentry_position_y;
-};
+} RefereeTxDataMapRobotData;
 
 // 0x0306 自定义控制器与选手端交互数据
-struct __attribute__((packed)) RefereeTxDataCustomClientData
+typedef struct __attribute__((packed)) RefereeTxDataCustomClientData
 {
     // bit 0-7：按键 1 通用键值
     uint16_t key_value_1 : 8;
@@ -775,10 +775,10 @@ struct __attribute__((packed)) RefereeTxDataCustomClientData
 
     // 保留位
     uint16_t reserved;
-};
+} RefereeTxDataCustomClientData;
 
 // 0x0307 选手端小地图接收哨兵数据
-struct __attribute__((packed)) RefereeTxDataMapData
+typedef struct __attribute__((packed)) RefereeTxDataMapData
 {
     // 1：到目标点攻击 2：到目标点防守 3：移动到目标点
     uint8_t intention;
@@ -792,10 +792,10 @@ struct __attribute__((packed)) RefereeTxDataMapData
     int8_t delta_y[49];
     // 发送方 id
     uint16_t sender_id;
-};
+} RefereeTxDataMapData;
 
 // 0x0308 选手端小地图接收机器人数据
-struct __attribute__((packed)) RefereeTxDataCustomInfo
+typedef struct __attribute__((packed)) RefereeTxDataCustomInfo
 {
     // 发送者的 id
     uint16_t sender_id;
@@ -803,27 +803,27 @@ struct __attribute__((packed)) RefereeTxDataCustomInfo
     uint16_t receiver_id;
     // UTF-16 编码字符，支持中文，发送时注意大小端
     uint8_t user_data[30];
-};
+} RefereeTxDataCustomInfo;
 
 // 0x0309 自定义控制器接收机器人数据 图传链路
-struct __attribute__((packed)) RefereeTxDataRobotCustomData
+typedef struct __attribute__((packed)) RefereeTxDataRobotCustomData
 {
     uint8_t data[30];
-};
+} RefereeTxDataRobotCustomData;
 
 // 0x0310 机器人发送给自定义客户端的数据
-struct __attribute__((packed)) RefereeTxDataRobotClientData
+typedef struct __attribute__((packed)) RefereeTxDataRobotClientData
 {
     // 根据实际发送长度灵活处理，最大300
     uint8_t data[300];
-};
+} RefereeTxDataRobotClientData;
 
 // 0x0311 自定义客户端发送给机器人的自定义指令
-struct __attribute__((packed)) RefereeRxDataClientRobotData
+typedef struct __attribute__((packed)) RefereeRxDataClientRobotData
 {
     // 自定义客户端发送给机器人的自定义指令，最大 30 字节
     uint8_t data[30];
-};
+} RefereeRxDataClientRobotData;
 
 /* Exported variables ---------------------------------------------------------*/
 

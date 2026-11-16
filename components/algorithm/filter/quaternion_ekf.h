@@ -6,7 +6,6 @@
  * @date 2026-06-16 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
- *
  */
 
 #pragma once
@@ -14,11 +13,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "kalman_filter.h"
 
-/* Exported macros -----------------------------------------------------------*/
-
 /* Exported types ------------------------------------------------------------*/
-
-struct QuaternionEkfState
+typedef struct
 {
     KalmanFilter_t filter; // 卡尔曼滤波器结构体
 
@@ -41,126 +37,44 @@ struct QuaternionEkfState
 
     float adaptive_gain_scale;      // 自适应增益缩放系数
     float orientation_arccosine[3]; // 方向余弦角
-};
+} QuaternionEkfState_t;
 
-/**
- * @brief Specialized
- *
- */
-class GravityKf
+typedef struct
 {
-public:
-    float gravity_vec_[3]; // 重力向量估计值
+    float gravity_vec[3]; // 重力向量估计值
 
-    void init(float process_noise, float measure_noise);
+    float f_matrix[9]; // 状态转移雅可比矩阵
+    float p_matrix[9]; // 后验估计协方差
+    float q_matrix[9]; // 过程噪声协方差
+    float r_matrix[9]; // 测量噪声协方差
+    float h_matrix[9]; // 观测雅可比矩阵
+    KalmanFilter_t filter;
+} GravityKf_t;
 
-    void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
-
-protected:
-    // 初始化相关常量
-
-    // clang-format off
-    // 状态转移雅可比矩阵初始值
-    const float f_matrix_[9] = {1, 0, 0,
-                                0, 1, 0,
-                                0, 0, 1};
-
-    // 后验估计协方差初始值
-    const float p_matrix_[9] = {100, 0.1, 0.1,
-                                0.1, 100, 0.1,
-                                0.1, 0.1, 100};
-    // 过程噪声协方差矩阵初始值
-    float q_matrix_[9] = {};
-    // 测量噪声协方差矩阵初始值
-    float r_matrix_[9] = {};
-    // 观测雅可比矩阵初始值
-    const float h_matrix_[9] = {1, 0, 0,
-                                0, 1, 0,
-                                0, 0, 1};
-    // clang-format on
-
-    // 常量
-
-    // 内部变量
-
-    // 卡尔曼滤波器结构体
-    KalmanFilter_t filter_;
-
-    // 读变量
-
-    // 写变量
-
-    // 读写变量
-
-    // 内部函数
-};
-
-/**
- * @brief Specialized
- *
- */
-class QuaternionEkf
+typedef struct
 {
-public:
-    QuaternionEkfState ins_;
-
-    void init(float process_noise1, float process_noise2, float measure_noise, float lambda);
-
-    void update(float gx, float gy, float gz, float ax, float ay, float az, float dt);
-
-protected:
-    // 初始化相关常量
-
-    // clang-format off
-    // 状态转移雅可比矩阵初始值
-    float f_matrix_[36] = {1, 0, 0, 0, 0, 0,
-                           0, 1, 0, 0, 0, 0,
-                           0, 0, 1, 0, 0, 0,
-                           0, 0, 0, 1, 0, 0,
-                           0, 0, 0, 0, 1, 0,
-                           0, 0, 0, 0, 0, 1};
-    // 后验估计协方差初始值
-    float p_matrix_[36] = {100000, 0.1,    0.1,    0.1,    0.1, 0.1,
-                           0.1,    100000, 0.1,    0.1,    0.1, 0.1,
-                           0.1,    0.1,    100000, 0.1,    0.1, 0.1,
-                           0.1,    0.1,    0.1,    100000, 0.1, 0.1,
-                           0.1,    0.1,    0.1,    0.1,    100, 0.1,
-                           0.1,    0.1,    0.1,    0.1,    0.1, 100};
-
-    // 卡尔曼增益初始值
-    float k_matrix_[18] = {};
-    // 观测雅可比矩阵初始值
-    float h_matrix_[18] = {};
-    // clang-format on
-
-    // 常量
-
-    // 内部变量
-
-    // 读变量
-
-    // 写变量
-
-    // 读写变量
-
-    // 内部函数
-
-    static void observe_callback(KalmanFilter_t *kf);
-    static void linearize_callback(KalmanFilter_t *kf);
-    static void set_h_callback(KalmanFilter_t *kf);
-    static void update_xhat_callback(KalmanFilter_t *kf);
-
-    void observe(KalmanFilter_t *kf);
-
-    void linearize_f_and_fade_p(KalmanFilter_t *kf);
-
-    void set_h_matrix(KalmanFilter_t *kf);
-
-    void update_xhat(KalmanFilter_t *kf);
-};
-
-/* Exported variables ---------------------------------------------------------*/
+    QuaternionEkfState_t ins;
+    float f_matrix[36]; // 状态转移雅可比矩阵
+    float p_matrix[36]; // 后验估计协方差
+    float k_matrix[18]; // 卡尔曼增益
+    float h_matrix[18]; // 观测雅可比矩阵
+} QuaternionEkf_t;
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+void GravityKf_Init(GravityKf_t *self, float process_noise, float measure_noise);
+void GravityKf_Update(GravityKf_t *self, float gx, float gy, float gz,
+                      float ax, float ay, float az, float dt);
+void QuaternionEkf_Init(QuaternionEkf_t *self, float process_noise1,
+                        float process_noise2, float measure_noise, float lambda);
+void QuaternionEkf_Update(QuaternionEkf_t *self, float gx, float gy, float gz,
+                          float ax, float ay, float az, float dt);
+
+#ifdef __cplusplus
+}
+#endif
+
+/*************************** COPYRIGHT(C) SZTU-HJ *****************************/

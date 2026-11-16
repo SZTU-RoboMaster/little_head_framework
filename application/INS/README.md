@@ -6,7 +6,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/INS/INS_task.cpp
+    application/INS/INS_task.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -36,14 +36,14 @@ const osThreadAttr_t insTask_attributes = {
 insTaskHandle = osThreadNew(INS_task, NULL, &insTask_attributes);
 ```
 
-`INS_task.cpp` 提供 `extern "C" void INS_task(void *)` 强定义。
+`INS_task.c` 提供 `void INS_task(void *)` 强定义。
 
 ## 数据就绪接入
 
 Robot SDK 在 BMI088 EXTI 回调中读取传感器，并在 Gyro Data Ready 时唤醒 INS 任务：
 
-```cpp
-ins.bmi088_.exti_read_callback(gpio_pin);
+```c
+Bmi088_ExtiReadCallback(&ins.bmi088, gpio_pin);
 
 if (gpio_pin == INT1_GYRO_Pin && insTaskHandle != NULL)
 {
@@ -55,24 +55,24 @@ if (gpio_pin == INT1_GYRO_Pin && insTaskHandle != NULL)
 
 ## 运行流程
 
-```cpp
-ins.init();
+```c
+INS_Init();
 osThreadFlagsSet(defaultTaskHandle, TASK_READY_INS);
 
 for (;;)
 {
     osThreadFlagsWait(INS_DATA_READY_FLAG, osFlagsWaitAny, osWaitForever);
-    ins.update();
-    ins.publish();
-    ins.temp_control();
+    INS_Update();
+    INS_Publish();
+    INS_TempControl();
 }
 ```
 
-`update()` 固定按 `dt = 0.001 s` 融合，因此需要稳定的 1 kHz Gyro Data Ready。
+`INS_Update()` 固定按 `dt = 0.001 s` 融合，因此需要稳定的 1 kHz Gyro Data Ready。
 
 ## 消息接口
 
-模块发布 `/ins`，类型为 `InsMessage`：
+模块发布 `/ins`，类型为 `Ins_Message_t`：
 
 | 字段 | 内容 |
 | --- | --- |

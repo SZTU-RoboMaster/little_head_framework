@@ -6,7 +6,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/imu_pwm/bsp_imu_pwm.cpp
+    bsp/imu_pwm/bsp_imu_pwm.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -20,19 +20,19 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_imu_pwm.h"
 
-imu_pwm_init();
-imu_pwm_set(2500); // 约 50% 占空比
-imu_pwm_set(0);    // 关闭加热
+BspImuPwm_Init();
+BspImuPwm_Set(2500); // 约 50% 占空比
+BspImuPwm_Set(0);    // 关闭加热
 ```
 
-`imu_pwm_set()` 直接写比较值，调用者负责把输出限制在 `0-ARR`。
+`BspImuPwm_Set()` 直接写比较值，调用者负责把输出限制在 `0-ARR`。
 
 ## 注意事项
 
 - 加热器属于高功率负载，首次调试必须限制最大 PWM 并监控 IMU 温度。
 - 温度传感器失效或任务停止时，当前 BSP 不会自动关闭 PWM；安全策略应由 INS 应用层实现。
-- 更换定时器通道后需要同步修改 `bsp_imu_pwm.cpp`。
+- 更换定时器通道后需要同步修改 `bsp_imu_pwm.c`。
 

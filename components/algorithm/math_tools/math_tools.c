@@ -12,7 +12,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "math_tools.h"
 
-#include <cstring>
+#include <math.h>
+#include <string.h>
 
 /* Private macros ------------------------------------------------------------*/
 
@@ -36,9 +37,9 @@ float inv_sqrt(float x)
     float halfx = 0.5f * x;
     float y = x;
     uint32_t i;
-    std::memcpy(&i, &y, sizeof(i));
+    memcpy(&i, &y, sizeof(i));
     i = 0x5f375a86 - (i >> 1);
-    std::memcpy(&y, &i, sizeof(y));
+    memcpy(&y, &i, sizeof(y));
     y = y * (1.5f - (halfx * y * y));
     return y;
 }
@@ -94,5 +95,25 @@ float cubic_map(float x, float expo)
     {
         return (1.0f - expo) * x + expo * x * x * x;
     }
+}
+
+float clamp_float(float value, float low, float high)
+{
+    if (value < low) return low;
+    if (value > high) return high;
+    return value;
+}
+
+/**
+ * @brief 将浮点数归化到 [-modulus/2, modulus/2)
+ */
+float wrap_center_float(float x, float modulus)
+{
+    if (modulus <= 0.0f) return x;
+
+    float value = fmodf(x, modulus);
+    if (value < -modulus / 2.0f) value += modulus;
+    else if (value >= modulus / 2.0f) value -= modulus;
+    return value;
 }
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

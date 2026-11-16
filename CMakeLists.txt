@@ -25,7 +25,7 @@ set(CMAKE_PROJECT_NAME little_head_test)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 # Core project settings
-project(${CMAKE_PROJECT_NAME})
+project(${CMAKE_PROJECT_NAME} LANGUAGES C ASM)
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Enable CMake support for ASM and C languages
@@ -55,46 +55,51 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_sin_f32.c
     Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_cos_f32.c
     Drivers/CMSIS/DSP/Source/FastMathFunctions/arm_atan2_f32.c
-    bsp/can/bsp_can.cpp
-    bsp/tim/bsp_tim.cpp
-    bsp/uart/bsp_uart.cpp
-    bsp/usb/bsp_usb.cpp
-    bsp/dwt/bsp_dwt.cpp
-    bsp/led/bsp_led.cpp
-    bsp/buzzer/bsp_buzzer.cpp
-    bsp/imu_pwm/bsp_imu_pwm.cpp
-    components/motor/motor_dji.cpp
-    components/motor/motor_dm.cpp
-    components/rc/dr16.cpp
-    components/rc/vt13.cpp
+#============================================================================//
+    bsp/can/bsp_can.c
+    bsp/tim/bsp_tim.c
+    bsp/uart/bsp_uart.c
+    bsp/usb/bsp_usb.c
+    bsp/dwt/bsp_dwt.c
+    bsp/led/bsp_led.c
+    bsp/buzzer/bsp_buzzer.c
+    bsp/imu_pwm/bsp_imu_pwm.c
+#============================================================================//
+    components/motor/motor_dji.c
+    components/motor/motor_dm.c
+    components/rc/dr16.c
+    components/rc/vt13.c
     components/support/CRC8_CRC16.c
-    components/referee/referee.cpp
+    components/referee/referee.c
     components/bmi088/third_party/bmi08a.c
     components/bmi088/third_party/bmi08g.c
     components/bmi088/third_party/bmi08xa.c
-    components/bmi088/bmi088_interface.cpp
-    components/bmi088/bmi088.cpp
-    components/algorithm/filter/quaternion_ekf.cpp
-    components/algorithm/math_tools/math_tools.cpp
+    components/bmi088/bmi088_interface.c
+    components/bmi088/bmi088.c
+    components/algorithm/filter/low_pass_filter.c
+    components/algorithm/filter/quaternion_ekf.c
+    components/algorithm/math_tools/math_tools.c
     components/algorithm/filter/kalman_filter.c
-    components/algorithm/pid/pid.cpp
-    # components/ist8310/ist8310driver.cpp
-    # components/ist8310/ist8310driver_middleware.cpp
-    components/vision/vision.cpp
-    application/gimbal/gimbal.cpp
-    application/shoot/shoot.cpp
-    application/chassis/chassis.cpp
-    application/initial/initial_task.cpp
-    application/INS/INS_task.cpp
-    application/gimbal/gimbal_task.cpp
-    application/chassis/chassis_task.cpp
-    application/shoot/shoot_task.cpp
-    application/vision/vision_task.cpp
-    sdk/message/message_center.cpp
-    application/command/command.cpp
-    application/chassis/power_control/power_controller.cpp
-    sdk/robot/robot_sdk.cpp
-    components/algorithm/filter/low_pass_filter.cpp
+    components/algorithm/pid/pid.c
+    # components/ist8310/ist8310driver.c
+    # components/ist8310/ist8310driver_middleware.c
+    components/vision/vision.c
+#============================================================================//
+    application/gimbal/gimbal.c
+    application/shoot/shoot.c
+    application/chassis/chassis.c
+    application/initial/initial_task.c
+    application/INS/INS_task.c
+    application/gimbal/gimbal_task.c
+    application/chassis/chassis_task.c
+    application/shoot/shoot_task.c
+    application/vision/vision_task.c
+    application/command/command.c
+    application/chassis/power_control/power_controller.c
+#============================================================================//
+    sdk/robot/robot_sdk.c
+    sdk/message/message_center.c
+
 )
 
 # Add include paths

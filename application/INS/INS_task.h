@@ -6,7 +6,6 @@
  * @date 2026-07-13 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
- *
  */
 
 #pragma once
@@ -15,64 +14,42 @@
 #include "bmi088.h"
 #include "pid.h"
 #include "quaternion_ekf.h"
-
-#include "cmsis_os2.h"
-
+#include "ins_event.h"
 #include "message_center.h"
 #include "message_def.h"
 
-/* Exported macros -----------------------------------------------------------*/
-#define INS_DATA_READY_FLAG (1U << 0)
-
 /* Exported types ------------------------------------------------------------*/
-
-/**
- * @brief Specialized
- *
- */
-class INS
+typedef struct
 {
-public:
     // imu
-    Bmi088 bmi088_;
-
-    void init();
-
-    void update();
-
-    void publish();
-
-    void temp_control();
-
-protected:
-    // 初始化相关常量
-
-    // 常量
-
-    // 内部变量
+    Bmi088_t bmi088;
 
     // imu温控pid
-    Pid imu_temp_pid_;
+    Pid_t imu_temp_pid;
     // 加速度kf
-    GravityKf gravity_kf_;
+    GravityKf_t gravity_kf;
     // 四元数ekf
-    QuaternionEkf quaternion_ekf_;
+    QuaternionEkf_t quaternion_ekf;
 
-    // 读变量
-
-    // 写变量
-    Publisher<InsMessage> publisher_;
-
-    // 读写变量
-
-    // 内部函数
-};
+    Publisher_t publisher;
+} Ins_t;
 
 /* Exported variables ---------------------------------------------------------*/
-extern INS ins;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-extern osThreadId_t insTaskHandle;
+extern Ins_t ins;
 
 /* Exported function declarations ---------------------------------------------*/
+void INS_task(void *argument);
+void INS_Init(void);
+void INS_Update(void);
+void INS_Publish(void);
+void INS_TempControl(void);
 
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+#ifdef __cplusplus
+}
+#endif
+
+/*************************** COPYRIGHT(C) SZTU-HJ *****************************/

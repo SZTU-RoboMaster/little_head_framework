@@ -111,7 +111,7 @@ int main(void)
   MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   MX_USB_DEVICE_Init();
-  robot_sdk_init();
+  RobotSdk_Init();
 
   /* USER CODE END 2 */
 

@@ -1,12 +1,12 @@
 # Vision Task
 
-视觉通信的应用任务封装。任务初始化 `Vision` 组件，并以 1 kHz 从 `/ins` 更新姿态后通过 USB CDC 向视觉上位机发送机器人数据。
+视觉通信的应用任务封装。任务初始化 `Vision_t`，以 1 kHz 从 `/ins` 更新姿态并通过 USB CDC 发送；收到有效视觉帧后由任务向 `/vision` 发布。
 
 ## 安装
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/vision/vision_task.cpp
+    application/vision/vision_task.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -28,20 +28,20 @@ const osThreadAttr_t visionTask_attributes = {
 visionTaskHandle = osThreadNew(vision_task, NULL, &visionTask_attributes);
 ```
 
-`vision_task.cpp` 提供全局唯一实例 `Vision vision`，Robot SDK 的 USB 接收回调直接访问该对象。
+`vision.c` 提供全局唯一实例 `Vision_t vision`，Robot SDK 的 USB 接收回调将数据交给该对象解析。
 
 ## 任务流程
 
-```cpp
-extern "C" void vision_task(void *argument)
+```c
+void vision_task(void *argument)
 {
-    vision.init();
+    Vision_Init();
     osThreadFlagsSet(defaultTaskHandle, TASK_READY_VISION);
 
     for (;;)
     {
-        vision.update_tx();
-        vision.send();
+        Vision_Publish_New();
+        Vision_Send();
         osDelayUntil(next_tick);
     }
 }
@@ -49,13 +49,14 @@ extern "C" void vision_task(void *argument)
 
 ## 接收路径
 
-视觉接收不经过该任务轮询：
+USB回调只解析和保存有效帧，发布在任务中完成：
 
 ```text
 USB CDC Receive
     -> USB_Rx_Callback()
     -> vision_usb_callback()
-    -> vision.usb_rx_callback()
+    -> Vision_UsbRxCallback()
+    -> Vision_Publish_New() in vision_task
     -> publish /vision
 ```
 
@@ -63,7 +64,7 @@ USB CDC Receive
 
 ## 注意事项
 
-- 当前发送频率为 1 kHz，但 `CDC_Transmit_FS()` 可能返回 `USBD_BUSY`；实际可用频率应按 USB 帧长和上位机处理能力确认。
+- 任务检查上一帧 USB 发送状态；忙时跳过本周期，不覆盖仍在发送的缓冲区。
 - 如果不需要固定 1 kHz 发送，可降低任务频率或改用发送完成事件驱动。
-- Robot SDK 启动 USB 回调前会等待本任务完成 `vision.init()`。
+- Robot SDK 启动 USB 回调前会等待本任务完成 `Vision_Init()`。
 

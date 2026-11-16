@@ -22,28 +22,21 @@
  * @brief BMI088数据结构体
  *
  */
-struct Bmi088RxData
+typedef struct
 {
     float accel[3]; // 加速度计数据
     float temp;     // 温度数据
     float gyro[3];  // 陀螺仪数据
-};
+} Bmi088RxData_t;
 
 /**
  * @brief Specialized
  *
  */
-class Bmi088
+typedef struct
 {
-public:
     // BMI088处理后的数据
-    Bmi088RxData rx_data_;
-
-    int8_t init();
-
-    void exti_read_callback(uint16_t gpio_pin);
-
-protected:
+    Bmi088RxData_t rx_data;
     // 初始化相关常量
 
     // 常量
@@ -51,17 +44,17 @@ protected:
     // 内部变量
 
     // bmi088设备结构体
-    bmi08_dev bmi08dev_;
+    struct bmi08_dev bmi08dev;
     // 加速度计中断配置
-    bmi08_accel_int_channel_cfg accel_int_config_;
+    struct bmi08_accel_int_channel_cfg accel_int_config;
     // 陀螺仪中断配置
-    bmi08_gyro_int_channel_cfg gyro_int_config_;
+    struct bmi08_gyro_int_channel_cfg gyro_int_config;
     // 加速度计源数据
-    bmi08_sensor_data raw_accel_;
+    struct bmi08_sensor_data raw_accel;
     // 陀螺仪源数据
-    bmi08_sensor_data raw_gyro_;
+    struct bmi08_sensor_data raw_gyro;
     // z轴陀螺仪零飘值
-    float gyro_bias_z_;
+    float gyro_bias_z;
 
     // 读变量
 
@@ -69,14 +62,20 @@ protected:
 
     // 读写变量
 
-    // 内部函数
-    int8_t enable_bmi08_interrupt();
-
-    void calibrate_gyro_bias_z(volatile float gyro_z);
-};
+} Bmi088_t;
 
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int8_t Bmi088_Init(Bmi088_t *self);
+void Bmi088_ExtiReadCallback(Bmi088_t *self, uint16_t gpio_pin);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

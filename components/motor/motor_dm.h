@@ -6,33 +6,31 @@
  * @date 2026-06-03 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
- *
  */
 
-#pragma once
+#ifndef MOTOR_DM_H
+#define MOTOR_DM_H
 
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_can.h"
+#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
 /* Exported types ------------------------------------------------------------*/
-
 /**
  * @brief 达妙电机状态
- *
  */
-enum MotorDmStatus
+typedef enum
 {
     MOTOR_DM_STATUS_DISCONNECTED = 0,
     MOTOR_DM_STATUS_CONNECTED,
-};
+} MotorDmStatus_e;
 
 /**
  * @brief 达妙电机错误码状态
- *
  */
-enum MotorDmErrStatus
+typedef enum
 {
     MOTOR_DM_ERR_STATUS_DISABLE = 0x0,
     MOTOR_DM_ERR_STATUS_ENABLE,
@@ -43,37 +41,33 @@ enum MotorDmErrStatus
     MOTOR_DM_ERR_STATUS_ROTOR_OVERTEMPERATURE,
     MOTOR_DM_ERR_STATUS_LOSE_CONNECTION,
     MOTOR_DM_ERR_STATUS_OVERLOAD,
-};
+} MotorDmErrStatus_e;
 
 /**
  * @brief 达妙电机控制方式
- *
  */
-enum MotorDmControlMethod
+typedef enum
 {
     MOTOR_DM_CONTROL_METHOD_MIT = 0,
     MOTOR_DM_CONTROL_METHOD_ANGLE_OMEGA,
     MOTOR_DM_CONTROL_METHOD_OMEGA,
-};
+} MotorDmControlMethod_e;
 
 /**
  * @brief 达妙电机使能状态
- *
  */
-enum MotorDmEnableStatus
+typedef enum
 {
     MOTOR_DM_ENABLE_STATUS_DISABLE = 0,
     MOTOR_DM_ENABLE_STATUS_ENABLE,
-};
+} MotorDmEnableStatus_e;
 
 /**
  * @brief 达妙电机反馈的数据
- *
  */
-struct MotorDmRxData
+typedef struct
 {
-
-    MotorDmErrStatus error_status;
+    MotorDmErrStatus_e error_status;
     float position;
     float angle;
     float omega;
@@ -83,176 +77,93 @@ struct MotorDmRxData
     float last_position;
     float total_angle;
     int16_t position_cycle_count;
-};
+} MotorDmRxData_t;
 
 /**
- * @brief 达妙电机类
- *
+ * @brief 达妙电机对象，保存控制参数、反馈和 CAN 发送缓存
  */
-class MotorDm
+typedef struct
 {
-public:
-    void init(CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
-              MotorDmControlMethod control_method = MOTOR_DM_CONTROL_METHOD_MIT,
-              float p_max = 12.5f, float v_max = 30.0f, float t_max = 10.0f, float kp = 0.0f,
-              float kd = 0.0f, uint8_t reverse = false, MotorDmEnableStatus enable_status = MOTOR_DM_ENABLE_STATUS_DISABLE);
-
-    inline void set_target_angle(float target_angle);
-
-    inline void set_target_omega(float target_omega);
-
-    inline void set_target_torque(float target_torque);
-
-    inline void set_pid_params(float kp, float kd);
-
-    inline void set_enable_status(MotorDmEnableStatus enable_status);
-
-    void can_rx_callback(const uint8_t *rx_data);
-
-    void send_clear_error();
-
-    void send_enable_cmd();
-
-    void send_disable_cmd();
-
-    void save_zero_position();
-
-    void check_alive_100ms();
-
-    void send_control();
-
     // 电机对外接口信息
-    MotorDmRxData rx_data_;
-
-protected:
-    // 初始化相关常量
+    MotorDmRxData_t rx_data;
 
     // 绑定的CAN
-    CanManageObject *can_manage_obj_;
+    BspCan_Manage_t *can_manage_obj;
     // 发数据绑定的CAN id, 是上位机驱动参数CAN_ID加上控制模式的偏移量
-    uint16_t can_tx_id_;
+    uint16_t can_tx_id;
     // 收数据绑定的CAN id, 与上位机驱动参数Master_ID保持一致
-    uint16_t can_rx_id_;
+    uint16_t can_rx_id;
     // 最大位置, 与上位机控制幅值PMAX保持一致
-    float p_max_;
+    float p_max;
     // 最大速度, 与上位机控制幅值VMAX保持一致
-    float v_max_;
+    float v_max;
     // 最大扭矩, 与上位机控制幅值TMAX保持一致
-    float t_max_;
+    float t_max;
     // 反向安装标志
-    uint8_t reverse_ = false;
-
-    // 常量
-
-    // 内部变量
+    uint8_t reverse;
 
     // 当前时刻的电机接收flag
-    uint32_t rx_flag_ = 0;
+    volatile uint32_t rx_flag;
     // 前一时刻的电机接收flag
-    uint32_t last_rx_flag_ = 0;
+    uint32_t last_rx_flag;
     // 当前时刻的电机控制flag
-    uint32_t cmd_flag_ = 0;
+    volatile uint32_t cmd_flag;
     // 前一时刻的电机控制flag
-    uint32_t last_cmd_flag_ = 0;
+    uint32_t last_cmd_flag;
     // 控制指令是否在线
-    uint8_t cmd_online_ = false;
+    uint8_t cmd_online;
 
     // 输出量
-    float cmd_angle_ = 0.0f;
-    float cmd_omega_ = 0.0f;
-    float cmd_torque_ = 0.0f;
+    float cmd_angle;
+    float cmd_omega;
+    float cmd_torque;
     // 发送缓冲区
-    uint8_t tx_data_[8];
-
-    // 读变量
+    uint8_t tx_data[8];
 
     // 电机状态
-    MotorDmStatus status_ = MOTOR_DM_STATUS_DISCONNECTED;
-
-    MotorDmEnableStatus enable_status_ = MOTOR_DM_ENABLE_STATUS_DISABLE;
-
-    // 写变量
-
-    // 读写变量
-
+    MotorDmStatus_e status;
+    MotorDmEnableStatus_e enable_status;
     // 电机控制方式
-    MotorDmControlMethod control_method_ = MOTOR_DM_CONTROL_METHOD_MIT;
+    MotorDmControlMethod_e control_method;
     // 目标的角度, rad
-    float target_angle_ = 0.0f;
+    float target_angle;
     // 目标的速度, rad/s
-    float target_omega_ = 0.0f;
+    float target_omega;
     // 目标的扭矩, N*m
-    float target_torque_ = 0.0f;
-    // kp_, 0~500
-    float kp_ = 0.0f;
-    // kd_, 0~5
-    float kd_ = 0.0f;
-
-    // 内部函数
-
-    void process_data(const uint8_t *rx_data);
-
-    void output();
-
-    void send_mit_control();
-
-    void send_angle_omega_control();
-
-    void send_omega_control();
-};
+    float target_torque;
+    // kp, 0~500
+    float kp;
+    // kd, 0~5
+    float kd;
+} MotorDm_t;
 
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/**
- * @brief 设定目标的角度, rad
- *
- * @param target_angle 目标的角度, rad
- */
-inline void MotorDm::set_target_angle(float target_angle)
-{
-    target_angle_ = target_angle;
-    cmd_flag_++;
+void MotorDm_Init(MotorDm_t *motor, CAN_HandleTypeDef *hcan, uint16_t can_id, uint16_t master_id,
+                  MotorDmControlMethod_e control_method, float p_max, float v_max, float t_max,
+                  float kp, float kd, uint8_t reverse, MotorDmEnableStatus_e enable_status);
+
+void MotorDm_SetTargetAngle(MotorDm_t *motor, float target_angle);
+void MotorDm_SetTargetOmega(MotorDm_t *motor, float target_omega);
+void MotorDm_SetTargetTorque(MotorDm_t *motor, float target_torque);
+void MotorDm_SetPidParams(MotorDm_t *motor, float kp, float kd);
+void MotorDm_SetEnableStatus(MotorDm_t *motor, MotorDmEnableStatus_e enable_status);
+
+void MotorDm_CanRxCallback(MotorDm_t *motor, const uint8_t *rx_data);
+void MotorDm_CheckAlive100ms(MotorDm_t *motor);
+void MotorDm_SendControl(MotorDm_t *motor);
+void MotorDm_SendClearError(MotorDm_t *motor);
+void MotorDm_SendEnableCmd(MotorDm_t *motor);
+void MotorDm_SendDisableCmd(MotorDm_t *motor);
+void MotorDm_SaveZeroPosition(MotorDm_t *motor);
+
+#ifdef __cplusplus
 }
+#endif
 
-/**
- * @brief 设定目标的速度, rad/s
- *
- * @param target_omega 目标的速度, rad/s
- */
-inline void MotorDm::set_target_omega(float target_omega)
-{
-    target_omega_ = target_omega;
-    cmd_flag_++;
-}
-
-/**
- * @brief 设定目标的扭矩, N*m
- *
- * @param target_torque 目标的扭矩, N*m
- */
-inline void MotorDm::set_target_torque(float target_torque)
-{
-    target_torque_ = target_torque;
-    cmd_flag_++;
-}
-
-/**
- * @brief 设定PID参数
- *
- * @param kp kp, 0~500
- * @param kd kd, 0~5
- */
-inline void MotorDm::set_pid_params(float kp, float kd)
-{
-    kp_ = kp;
-    kd_ = kd;
-}
-
-inline void MotorDm::set_enable_status(MotorDmEnableStatus enable_status)
-{
-    enable_status_ = enable_status;
-}
-
-/************************ COPYRIGHT(C) SZTU-HJ **************************/
+#endif

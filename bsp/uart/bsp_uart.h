@@ -25,36 +25,44 @@
  * @brief UART通信接收回调函数数据类型
  *
  */
-typedef void (*uart_callback_t)(uint8_t *buffer, uint16_t length);
+typedef void (*BspUart_Callback_t)(uint8_t *buffer, uint16_t length);
 
 /**
  * @brief UART通信处理结构体
  */
-struct UartManageObject
+typedef struct
 {
     UART_HandleTypeDef *uart_handle;
     uint8_t tx_buffer[UART_BUFFER_SIZE];
     uint8_t rx_buffer[2][UART_BUFFER_SIZE];
     uint16_t rx_buffer_length;
-    uart_callback_t callback_func;
-};
+    BspUart_Callback_t callback_func;
+} BspUart_Manage_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern uint8_t initialized;
 
-extern UartManageObject uart1_manage_obj;
-extern UartManageObject uart3_manage_obj;
-extern UartManageObject uart6_manage_obj;
+extern BspUart_Manage_t bsp_uart1;
+extern BspUart_Manage_t bsp_uart3;
+extern BspUart_Manage_t bsp_uart6;
 
 /* Exported function declarations ---------------------------------------------*/
 
-HAL_StatusTypeDef UARTEx_MultiBuffer_ReceiveToIdle_DMA(UART_HandleTypeDef *huart,
+HAL_StatusTypeDef BspUart_MultiBufferReceiveToIdleDma(UART_HandleTypeDef *huart,
                                                        uint8_t *DstAddress,
                                                        uint8_t *SecondMemAddress,
                                                        uint16_t DataLength);
 
-void uart_init(UART_HandleTypeDef *huart, uart_callback_t callback_func, uint16_t rx_buffer_length);
+void BspUart_Init(UART_HandleTypeDef *huart, BspUart_Callback_t callback_func, uint16_t rx_buffer_length);
 
-void uart_reinit(UART_HandleTypeDef *huart);
+void BspUart_Reinit(UART_HandleTypeDef *huart);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

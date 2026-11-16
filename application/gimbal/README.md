@@ -6,8 +6,8 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/gimbal/gimbal.cpp
-    application/gimbal/gimbal_task.cpp
+    application/gimbal/gimbal.c
+    application/gimbal/gimbal_task.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -24,38 +24,38 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 | Yaw | CAN1 | `0x1FE` | `0x205` |
 | Pitch | CAN2 | `0x1FE` | `0x205` |
 
-Robot SDK 的 CAN 回调必须将这两个反馈 ID 路由到 `gimbal.motor_yaw_` 和 `gimbal.motor_pitch_`，并在 1 ms 调度中发送两路 `0x1FE` 聚合帧。
+Robot SDK 的 CAN 回调将反馈 ID 路由到 `gimbal.motor_yaw` 和 `gimbal.motor_pitch`，并在 1 ms 调度中发送两路 `0x1FE` 聚合帧。
 
 ## 消息接口
 
 | 方向 | Topic | 消息类型 | 用途 |
 | --- | --- | --- | --- |
-| 订阅 | `/ins` | `InsMessage` | 姿态角和角速度反馈 |
-| 订阅 | `/vision` | `VisionMessage` | 视觉目标与前馈 |
-| 订阅 | `/command/gimbal` | `GimbalCmdMessage` | 模式和手动角速度 |
-| 发布 | `/gimbal` | `GimbalMessage` | Yaw 电机总角度，供底盘跟随 |
+| 订阅 | `/ins` | `Ins_Message_t` | 姿态角和角速度反馈 |
+| 订阅 | `/vision` | `Vision_Message_t` | 视觉目标与前馈 |
+| 订阅 | `/command/gimbal` | `Gimbal_Cmd_Message_t` | 模式和手动角速度 |
+| 发布 | `/gimbal` | `Gimbal_Message_t` | Yaw 电机总角度，供底盘跟随 |
 
-控制命令超过 `100 ms` 未更新时自动进入 Relax；视觉消息超过 `100 ms` 或 `target_lock != 49` 时回到手动控制。
+控制命令或 INS 超过 `100 ms` 未更新时自动进入 Relax；视觉消息超过 `100 ms` 或 `target_lock != 49` 时回到手动控制。Topic 在 `RobotSdk_Init()` 中统一注册，云台只创建订阅者和发布者。
 
 ## 任务
 
-```cpp
-extern "C" void gimbal_task(void *argument)
+```c
+void gimbal_task(void *argument)
 {
-    gimbal.init();
-    command.init();
+    (void)Gimbal_Init();
+    (void)Command_Init();
     osThreadFlagsSet(defaultTaskHandle, TASK_READY_GIMBAL);
 
     for (;;)
     {
-        command.update();
-        gimbal.update_input();
-        gimbal.update_feedback();
-        gimbal.handle_safety();
-        gimbal.set_mode();
-        gimbal.control();
-        gimbal.calculate();
-        gimbal.output();
+        Command_Update();
+        Gimbal_Update_Input();
+        Gimbal_Update_Feedback();
+        Gimbal_Handle_Safety();
+        Gimbal_Set_Mode();
+        Gimbal_Control();
+        Gimbal_Calculate();
+        Gimbal_Output();
         osDelayUntil(next_tick);
     }
 }
@@ -68,11 +68,12 @@ extern "C" void gimbal_task(void *argument)
 - `GIMBAL_RELAX`：清除 PID 积分并输出零电流。
 - `GIMBAL_ACTIVE`：首次进入时先将 Pitch 回中；完成后接收手动或视觉目标。
 
-Pitch 目标限制在 `[-0.55, 0.5] rad`，回中目标为 `0 rad`。这些配置和 PID 参数位于 `gimbal.h/.cpp`，移植后必须按机械限位和电机方向调整。
+Pitch 目标限制在 `[-0.55, 0.5] rad`，回中目标为 `0 rad`。这些配置和 PID 参数位于 `gimbal.c`，移植后必须按机械限位和电机方向调整。
 
 ## 注意事项
 
 - INS 坐标轴当前使用 `angle[2]/gyro[2]` 作为 Yaw，`angle[1]/gyro[1]` 作为 Pitch。
 - 调试前确认机械限位、编码器方向和 IMU 正方向，避免闭环正反馈。
-- `Command` 当前随 Gimbal Task 安装；若改成独立任务，应从这里移除其实例和初始化。
+- `Command` 当前随 Gimbal Task 安装；若改成独立任务，应从这里移除初始化和更新。
+- INS、视觉、DR16/VT13 等上游模块仍需迁移到 C 消息中心；完整固件在这些模块改完之前不能通过构建。
 

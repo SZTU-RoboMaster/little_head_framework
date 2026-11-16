@@ -21,10 +21,18 @@
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
-void buzzer_init();
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void buzzer_on(uint16_t psc, uint16_t pwm);
+void BspBuzzer_Init(void);
 
-void buzzer_off(void);
+void BspBuzzer_On(uint16_t psc, uint16_t pwm);
+
+void BspBuzzer_Off(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

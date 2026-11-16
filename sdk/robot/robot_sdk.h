@@ -25,12 +25,12 @@ extern "C"
 {
 #endif
 
-    void robot_sdk_init();
+    void RobotSdk_Init(void);
+
+    void RobotSdk_Start(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-void robot_sdk_start();
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

@@ -20,20 +20,19 @@
 
 /* Exported macros -----------------------------------------------------------*/
 
-static constexpr uint8_t REF_PROTOCOL_HEADER = 0xA5;
-static constexpr uint16_t REF_PROTOCOL_HEADER_SIZE = sizeof(RefFrameHeader);
-static constexpr uint16_t REF_PROTOCOL_CMD_SIZE = 2;
-static constexpr uint16_t REF_PROTOCOL_CRC16_SIZE = 2;
-static constexpr uint16_t REF_HEADER_CRC_LEN = REF_PROTOCOL_HEADER_SIZE + REF_PROTOCOL_CRC16_SIZE;
-static constexpr uint16_t REF_HEADER_CRC_CMDID_LEN =
-    REF_PROTOCOL_HEADER_SIZE + REF_PROTOCOL_CRC16_SIZE + sizeof(uint16_t);
-static constexpr uint16_t REF_HEADER_CMDID_LEN = REF_PROTOCOL_HEADER_SIZE + sizeof(uint16_t);
-static constexpr uint16_t REF_PROTOCOL_FRAME_MAX_SIZE = 255;
-static constexpr uint16_t REF_PROTOCOL_CMD_MAX_NUM = 20;
+#define REF_PROTOCOL_HEADER (0xA5)
+#define REF_PROTOCOL_HEADER_SIZE (sizeof(RefFrameHeader))
+#define REF_PROTOCOL_CMD_SIZE (2)
+#define REF_PROTOCOL_CRC16_SIZE (2)
+#define REF_HEADER_CRC_LEN (REF_PROTOCOL_HEADER_SIZE + REF_PROTOCOL_CRC16_SIZE)
+#define REF_HEADER_CRC_CMDID_LEN (REF_PROTOCOL_HEADER_SIZE + REF_PROTOCOL_CRC16_SIZE + sizeof(uint16_t))
+#define REF_HEADER_CMDID_LEN (REF_PROTOCOL_HEADER_SIZE + sizeof(uint16_t))
+#define REF_PROTOCOL_FRAME_MAX_SIZE (255)
+#define REF_PROTOCOL_CMD_MAX_NUM (20)
 
 /* Exported types ------------------------------------------------------------*/
 
-struct __attribute__((packed)) RefereeUartData
+typedef struct __attribute__((packed)) RefereeUartData
 {
     uint8_t frame_header;
     uint16_t data_length;
@@ -41,13 +40,13 @@ struct __attribute__((packed)) RefereeUartData
     uint8_t crc8;
     uint16_t cmd_id;
     uint8_t data[1];
-};
+} RefereeUartData;
 
 /**
  * @brief 解包步骤枚举值
  *
  */
-enum UnpackStep
+typedef enum UnpackStep
 {
     STEP_HEADER_SOF = 0,
     STEP_LENGTH_LOW = 1,
@@ -55,146 +54,144 @@ enum UnpackStep
     STEP_FRAME_SEQ = 3,
     STEP_HEADER_CRC8 = 4,
     STEP_DATA_CRC16 = 5,
-};
+} UnpackStep;
 
-struct UnpackData
+typedef struct UnpackData
 {
     UnpackStep unpack_step;
     uint16_t data_len;
     uint16_t index;
     uint8_t protocol_packet[REF_PROTOCOL_FRAME_MAX_SIZE];
-};
+} UnpackData;
 
 /**
  * @brief 裁判系统状态
  *
  */
-enum RefereeStatus
+typedef enum RefereeStatus
 {
     REFEREE_STATUS_DISABLE = 0,
     REFEREE_STATUS_ENABLE,
-};
+} RefereeStatus;
 
 /**
  * @brief 各种标签, 场地, 相关设施激活与存活状态
  *
  */
-enum RefereeDataStatus
+typedef enum RefereeDataStatus
 {
     REFEREE_DATA_STATUS_DISABLE = 0,
     REFEREE_DATA_STATUS_ENABLE,
-};
+} RefereeDataStatus;
 
 /**
  * @brief Specialized, 裁判系统
  *
  */
-class Referee
+typedef struct
 {
-public:
-    void init(UART_HandleTypeDef *huart);
-
-    void uart_rx_callback(uint8_t *rx_data, uint16_t length);
-
-    void check_alive_1000ms();
 
     // 裁判系统状态
-    RefereeStatus status_ = REFEREE_STATUS_DISABLE;
+    RefereeStatus status;
 
-protected:
     // 初始化相关常量
 
     // 绑定的UART
-    UartManageObject *uart_manage_obj_;
+    BspUart_Manage_t *uart_manage_obj;
 
     // 常量
 
     // 内部变量
 
     // 当前时刻的裁判系统接收flag
-    uint32_t rx_flag_ = 0;
+    uint32_t rx_flag;
     // 前一时刻的裁判系统接收flag
-    uint32_t last_rx_flag_ = 0;
+    uint32_t last_rx_flag;
 
     // 发送序列号
-    uint8_t sequence_ = 0;
+    uint8_t sequence;
 
     // UI是否是初次绘制, 没绘制过是0
-    uint8_t ui_change_flag_[10][10] = {0};
+    uint8_t ui_change_flag[10][10];
 
     // 比赛状态
-    RefereeRxDataGameStatus game_status_;
+    RefereeRxDataGameStatus game_status;
     // 比赛结果
-    RefereeRxDataGameResult game_result_;
+    RefereeRxDataGameResult game_result;
     // 机器人血量
-    RefereeRxDataGameRobotHp game_robot_hp_;
+    RefereeRxDataGameRobotHp game_robot_hp;
 
     // 场地事件
-    RefereeRxDataEventData event_data_;
+    RefereeRxDataEventData event_data;
     // 裁判警告信息
-    RefereeRxDataRefereeWarning referee_warning_;
+    RefereeRxDataRefereeWarning referee_warning;
     // 飞镖发射相关数据
-    RefereeRxDataDartInfo dart_info_;
+    RefereeRxDataDartInfo dart_info;
 
     // 机器人状态
-    RefereeRxDataRobotState robot_state_;
+    RefereeRxDataRobotState robot_state;
     // 当前机器人实时功率热量
-    RefereeRxDataPowerHeatData power_heat_data_;
+    RefereeRxDataPowerHeatData power_heat_data;
     // 当前机器人实时位置
-    RefereeRxDataRobotPos robot_pos_;
+    RefereeRxDataRobotPos robot_pos;
     // 当前机器人增益
-    RefereeRxDataBuff buff_;
+    RefereeRxDataBuff buff;
     // 伤害情况
-    RefereeRxDataHurtData hurt_data_;
+    RefereeRxDataHurtData hurt_data;
     // 子弹信息
-    RefereeRxDataShootData shoot_data_;
+    RefereeRxDataShootData shoot_data;
     // 子弹剩余信息
-    RefereeRxDataProjectileAllowance projectile_allowance_;
+    RefereeRxDataProjectileAllowance projectile_allowance;
     // RFID状态信息
-    RefereeRxDataRfidStatus rfid_status_;
+    RefereeRxDataRfidStatus rfid_status;
     // 飞镖选手端指令
-    RefereeRxDataDartClientCmd dart_client_cmd_;
+    RefereeRxDataDartClientCmd dart_client_cmd;
     // 哨兵获取己方位置信息
-    RefereeRxDataGroundRobotPosition ground_robot_position_;
+    RefereeRxDataGroundRobotPosition ground_robot_position;
     // 雷达标记进度
-    RefereeRxDataRadarMarkData radar_mark_data_;
+    RefereeRxDataRadarMarkData radar_mark_data;
     // 哨兵决策信息
-    RefereeRxDataSentryInfo sentry_info_;
+    RefereeRxDataSentryInfo sentry_info;
     // 雷达决策信息
-    RefereeRxDataRadarInfo radar_info_;
+    RefereeRxDataRadarInfo radar_info;
 
     // 自定义控制器与机器人交互数据
-    RefereeRxDataCustomRobotData custom_robot_data_;
+    RefereeRxDataCustomRobotData custom_robot_data;
     // 选手端小地图交互数据
-    RefereeRxDataMapCommandData map_command_data_;
+    RefereeRxDataMapCommandData map_command_data;
     // 自定义客户端发送给机器人的自定义指令
-    RefereeRxDataClientRobotData client_robot_data_;
+    RefereeRxDataClientRobotData client_robot_data;
 
     // 读变量
 
     // 写变量
-    RefereeTxDataInteractionFigure graphic_config_[10][10];
+    RefereeTxDataInteractionFigure graphic_config[10][10];
 
-    Publisher<RefereeMessage> publisher_;
-    RefereeMessage referee_msg_;
+    Publisher_t publisher;
+    Referee_Message_t referee_msg;
 
     // 读写变量
 
     // 解包状态机数据
-    UnpackData referee_unpack_obj_;
+    UnpackData referee_unpack_obj;
 
     // 裁判系统是否可信
-    RefereeDataStatus referee_trust_status_ = REFEREE_DATA_STATUS_ENABLE;
+    RefereeDataStatus referee_trust_status;
 
-    // 内部函数
-
-    void process_data(uint8_t *rx_data, uint16_t length);
-
-    void handle_data(uint8_t *frame);
-};
+} Referee_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+extern Referee_t referee;
 
 /* Exported function declarations ---------------------------------------------*/
+void Referee_Init(Referee_t *self, UART_HandleTypeDef *huart);
+void Referee_UartRxCallback(Referee_t *self, uint8_t *rx_data, uint16_t length);
+void Referee_CheckAlive1000ms(Referee_t *self);
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

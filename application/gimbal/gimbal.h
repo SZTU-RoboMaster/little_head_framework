@@ -10,10 +10,12 @@
  */
 
 #pragma once
+#include <stdbool.h>
 
 /* Includes ------------------------------------------------------------------*/
-#include "motor_dji.h"
 #include "low_pass_filter.h"
+#include "motor_dji.h"
+#include "pid.h"
 
 #include "message_center.h"
 #include "message_def.h"
@@ -22,150 +24,149 @@
 
 /* Exported types ------------------------------------------------------------*/
 
-struct GimbalFeedback
+typedef struct
 {
     float yaw_angle;
     float imu_yaw_angle;
     float imu_pitch_angle;
     float imu_yaw_omega;
     float imu_pitch_omega;
-};
+}Gimbal_Feedback_t;
 
-struct GimbalConfig
+typedef struct
 {
     // pitch轴最小值
-    float pitch_min_imu_angle = -0.55f;
+    float pitch_min_imu_angle;
     // pitch轴最大值
-    float pitch_max_imu_angle = 0.5f;
+    float pitch_max_imu_angle;
     // pitch轴回中值
-    float pitch_center_angle = 0.0f;
+    float pitch_center_angle;
     // yaw轴回中值
-    float yaw_center_angle = -0.56f;
+    float yaw_center_angle;
     // yaw轴前馈系数
-    float yaw_ff_p = 0.0f;
+    float yaw_ff_p;
     // pitch轴前馈系数
-    float pitch_ff_p = 0.0f;
-};
+    float pitch_ff_p;
+}Gimbal_Config_t;
 
-struct GimbalOutput
+typedef struct
 {
     // yaw轴目标角度
-    float target_yaw_angle = 0.0f;
+    float target_yaw_angle;
     // pitch轴目标角度
-    float target_pitch_angle = 0.0f;
+    float target_pitch_angle;
     // yaw轴目标角速度
-    float target_yaw_omega = 0.0f;
+    float target_yaw_omega;
     // pitch轴目标角速度
-    float target_pitch_omega = 0.0f;
+    float target_pitch_omega;
     // yaw轴前馈角速度
-    float target_yaw_feedforward_omega = 0.0f;
+    float target_yaw_feedforward_omega;
     // pitch轴前馈角速度
-    float target_pitch_feedforward_omega = 0.0f;
+    float target_pitch_feedforward_omega;
     // yaw轴前馈角加速度
-    float target_yaw_feedforward_acc = 0.0f;
+    float target_yaw_feedforward_acc;
     // pitch轴前馈角加速度
-    float target_pitch_feedforward_acc = 0.0f;
+    float target_pitch_feedforward_acc;
     // yaw轴目标电流
-    float target_yaw_current = 0.0f;
+    float target_yaw_current;
     // pitch轴目标电流
-    float target_pitch_current = 0.0f;
+    float target_pitch_current;
     // yaw轴目标角度误差
-    float target_yaw_error = 0.0f;
-};
+    float target_yaw_error;
+}Gimbal_Output_t;
 
-enum GimbalMode
+typedef enum
 {
     GIMBAL_RELAX,  // 云台失能
     GIMBAL_ACTIVE, // 云台使能
-};
+}GimbalMode_e;
 
-enum ModeSwitch
+typedef enum
 {
     GIMBAL_SWITCH_IDLE,      // 无操作
     GIMBAL_SWITCH_TO_MIDDLE, // 云台回中
-};
+}ModeSwitch_e;
 
-struct GimbalStatus
+typedef struct
 {
-    GimbalMode mode;
-    ModeSwitch switching;
-};
+    GimbalMode_e mode;
+    ModeSwitch_e switching;
+}Gimbal_Status_e;
 
 /**
- * @brief Specialized, 云台类
+ * @brief 云台状态和控制数据
  *
  */
-class Gimbal
+typedef struct
 {
-public:
     // yaw轴电机
-    MotorDji motor_yaw_;
+    MotorDji_t motor_yaw;
 
     // pitch轴电机
-    MotorDji motor_pitch_;
-
-    void init();
-
-    void update_input();
-
-    void update_feedback();
-
-    void handle_safety();
-
-    void set_mode();
-
-    void control();
-
-    void calculate();
-
-    void output();
-
-protected:
-    // 初始化相关常量
-
-    // 常量
-
-    // 云台配置
-    GimbalConfig config_;
+    MotorDji_t motor_pitch;
 
     // 内部变量
-    Pid yaw_angle_pid_;
-    Pid yaw_omega_pid_;
-    Pid pitch_angle_pid_;
-    Pid pitch_omega_pid_;
-    OneEuroFilter yaw_filter_;
-    OneEuroFilter pitch_filter_;
+    Pid_t yaw_angle_pid;
+    Pid_t yaw_omega_pid;
+    Pid_t pitch_angle_pid;
+    Pid_t pitch_omega_pid;
+    OneEuroFilter_t yaw_filter;
+    OneEuroFilter_t pitch_filter;
 
-    uint8_t vision_update_ = 0;
-    // 视觉自瞄flag
-    uint8_t auto_aim_ = 0;
+    uint8_t vision_update_;
+    uint8_t auto_aim_;
 
-    // 读变量
-    Subscriber<InsMessage> ins_subscriber_;
-    InsMessage ins_msg_;
-    Subscriber<VisionMessage> vision_subscriber_;
-    VisionMessage vision_msg_;
-    Subscriber<GimbalCmdMessage> cmd_subscriber_;
-    GimbalCmdMessage cmd_msg_;
+    // 订阅者
+    Subscriber_t ins_subscriber;
+    Subscriber_t vision_subscriber;
+    Subscriber_t cmd_subscriber;
 
-    // 写变量
-    Publisher<GimbalMessage> publisher_;
+    // 数据
+    Ins_Message_t ins_msg;
+    Vision_Message_t vision_msg;
+    Gimbal_Cmd_Message_t cmd_msg;
 
+    // 发布者
+    Publisher_t gimbal_publisher;
+
+    // 云台配置
+    Gimbal_Config_t config;
     // 云台反馈
-    GimbalFeedback feedback_;
+    Gimbal_Feedback_t feedback;
     // 云台状态
-    GimbalStatus status_;
-
-    // 读写变量
-
+    Gimbal_Status_e status;
     // 云台输出
-    GimbalOutput control_output_;
+    Gimbal_Output_t control_output;
 
-    // 内部函数
-};
+}Gimbal_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern Gimbal_t gimbal;
 
 /* Exported function declarations ---------------------------------------------*/
+
+void Gimbal_Init(void);
+
+void Gimbal_Update_Input(void);
+
+void Gimbal_Update_Feedback(void);
+
+void Gimbal_Handle_Safety(void);
+
+void Gimbal_Set_Mode(void);
+
+void Gimbal_Control(void);
+
+void Gimbal_Calculate(void);
+
+void Gimbal_Output(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

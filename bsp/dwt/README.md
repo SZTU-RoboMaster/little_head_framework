@@ -6,7 +6,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/dwt/bsp_dwt.cpp
+    bsp/dwt/bsp_dwt.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -18,26 +18,26 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_dwt.h"
 
 int main(void)
 {
     HAL_Init();
     SystemClock_Config();
-    dwt_init();
+    BspDwt_Init();
 
-    delay_us(10);
+    BspDwt_DelayUs(10);
 }
 ```
 
-`dwt_init()` 开启 trace 并启动 `DWT_CYCCNT`。`delay_us()` 轮询周期计数器直到达到目标时间。
+`BspDwt_Init()` 开启 trace 并启动 `DWT_CYCCNT`。`BspDwt_DelayUs()` 轮询周期计数器直到达到目标时间。
 
 ## 时钟配置
 
 当前实现按 `168 MHz` 主频计算：
 
-```cpp
+```c
 const uint32_t ticks = us * 168;
 ```
 
@@ -45,7 +45,7 @@ const uint32_t ticks = us * 168;
 
 ## 注意事项
 
-- `delay_us()` 是忙等待，会占用 CPU，不适合毫秒级延时。
+- `BspDwt_DelayUs()` 是忙等待，会占用 CPU，不适合毫秒级延时。
 - 中断抢占会延长实际等待时间。
 - 计数差使用无符号减法，可以处理一次 32 位计数器回绕。
 - 部分低功耗或调试配置会停止 DWT；当前工程不进入此类低功耗状态。

@@ -22,42 +22,50 @@
  * @brief CAN接收的信息结构体
  *
  */
-struct CanRxBuffer
+typedef struct
 {
     CAN_RxHeaderTypeDef header;
     uint8_t data[8];
-};
+} BspCan_RxBuffer_t;
 
 /**
  * @brief CAN通信接收回调函数数据类型
  *
  */
-typedef void (*can_callback_t)(CanRxBuffer *);
+typedef void (*BspCan_Callback_t)(BspCan_RxBuffer_t *);
 
 /**
  * @brief CAN通信处理结构体
  *
  */
-struct CanManageObject
+typedef struct
 {
     CAN_HandleTypeDef *can_handle;
-    CanRxBuffer rx_buffer;
-    can_callback_t callback_func;
-};
+    BspCan_RxBuffer_t rx_buffer;
+    BspCan_Callback_t callback_func;
+} BspCan_Manage_t;
 
 /* Exported variables ---------------------------------------------------------*/
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 extern uint8_t initialized;
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
 
-extern CanManageObject can1_manage_obj;
-extern CanManageObject can2_manage_obj;
+extern BspCan_Manage_t bsp_can1;
+extern BspCan_Manage_t bsp_can2;
 
 /* Exported function declarations ---------------------------------------------*/
-void can_init(CAN_HandleTypeDef *hcan, can_callback_t callback_func);
+void BspCan_Init(CAN_HandleTypeDef *hcan, BspCan_Callback_t callback_func);
 
-uint8_t can_data_send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint16_t length);
+uint8_t BspCan_Send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint16_t length);
+
+#ifdef __cplusplus
+}
+#endif
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

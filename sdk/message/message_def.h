@@ -12,35 +12,35 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include <cstdint>
+#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
-static constexpr char kInsTopicName[] = "/ins";
-static constexpr char kVisionTopicName[] = "/vision";
-static constexpr char kGimbalTopicName[] = "/gimbal";
-static constexpr char kDr16TopicName[] = "/dr16";
-static constexpr char kVt13TopicName[] = "/vt13";
-static constexpr char kCmdGimbalTopicName[] = "/command/gimbal";
-static constexpr char kCmdChassisTopicName[] = "/command/chassis";
-static constexpr char kCmdShootTopicName[] = "/command/shoot";
-static constexpr char kChassisTopicName[] = "/chassis";
-static constexpr char kPowerControllerTopicName[] = "/powercontroller";
-static constexpr char kRefereeTopicName[] = "/referee";
+static const char kInsTopicName[] = "/ins";
+static const char kVisionTopicName[] = "/vision";
+static const char kGimbalTopicName[] = "/gimbal";
+static const char kDr16TopicName[] = "/dr16";
+static const char kVt13TopicName[] = "/vt13";
+static const char kCmdGimbalTopicName[] = "/command/gimbal";
+static const char kCmdChassisTopicName[] = "/command/chassis";
+static const char kCmdShootTopicName[] = "/command/shoot";
+static const char kChassisTopicName[] = "/chassis";
+static const char kPowerControllerTopicName[] = "/powercontroller";
+static const char kRefereeTopicName[] = "/referee";
 
 /* Exported types ------------------------------------------------------------*/
-enum GimbalCmdMode
+typedef enum
 {
     GIMBAL_CMD_RELAX,  // 云台失能
     GIMBAL_CMD_ACTIVE, // 云台使能
-};
+} GimbalCmdMode_e;
 
-enum ChassisCmdMode
+typedef enum
 {
     CHASSIS_CMD_RELAX,  // 底盘失能
     CHASSIS_CMD_ONLY,   // 底盘独立
     CHASSIS_CMD_FOLLOW, // 底盘跟随
     CHASSIS_CMD_SPIN,   // 小陀螺
-};
+} ChassisCmdMode_e;
 
 /**
  * @brief IMU数据
@@ -48,13 +48,13 @@ enum ChassisCmdMode
  * @brief gimbal vision订阅
  *
  */
-struct InsMessage
+typedef struct
 {
     float angle[3];
     float gyro[3];
     float acc[3];
     float quaternion[4];
-};
+}Ins_Message_t;
 
 /**
  * @brief 视觉自瞄数据
@@ -62,17 +62,17 @@ struct InsMessage
  * @brief gimbal订阅
  *
  */
-struct VisionMessage
+typedef struct
 {
-    float yaw = 0.0f;
-    float yaw_vel = 0.0f;
-    float yaw_acc = 0.0f;
-    float pitch = 0.0f;
-    float pitch_vel = 0.0f;
-    float pitch_acc = 0.0f;
-    int8_t target_lock = 50; // 49: lock, 50: unlock
-    int8_t fire_command = 0;
-};
+    float yaw;
+    float yaw_vel;
+    float yaw_acc;
+    float pitch;
+    float pitch_vel;
+    float pitch_acc;
+    int8_t target_lock; // 49: lock, 50: unlock
+    int8_t fire_command;
+}Vision_Message_t;
 
 /**
  * @brief 云台数据
@@ -80,10 +80,10 @@ struct VisionMessage
  * @brief chassis订阅
  *
  */
-struct GimbalMessage
+typedef struct
 {
-    float yaw_total_angle = 0.0f;
-};
+    float yaw_total_angle;
+}Gimbal_Message_t;
 
 /**
  * @brief 底盘控制数据
@@ -91,13 +91,13 @@ struct GimbalMessage
  * @brief chassis订阅
  *
  */
-struct ChassisCmdMessage
+typedef struct
 {
-    ChassisCmdMode chassis_mode = CHASSIS_CMD_RELAX;
-    float rc_vx = 0.0f;
-    float rc_vy = 0.0f;
-    float rc_vw = 0.0f;
-};
+    ChassisCmdMode_e chassis_mode;
+    float rc_vx;
+    float rc_vy;
+    float rc_vw;
+}Chassis_Cmd_Message_t;
 
 /**
  * @brief 云台控制数据
@@ -105,13 +105,13 @@ struct ChassisCmdMessage
  * @brief gimbal订阅
  *
  */
-struct GimbalCmdMessage
+typedef struct
 {
-    GimbalCmdMode gimbal_mode = GIMBAL_CMD_RELAX;
-    float yaw_rate = 0.0f;
-    float pitch_rate = 0.0f;
-    uint8_t auto_aim = 0;
-};
+    GimbalCmdMode_e gimbal_mode;
+    float yaw_rate;
+    float pitch_rate;
+    uint8_t auto_aim;
+}Gimbal_Cmd_Message_t;
 
 /**
  * @brief 发射控制数据
@@ -119,13 +119,13 @@ struct GimbalCmdMessage
  * @brief shoot订阅
  *
  */
-struct ShootCmdMessage
+typedef struct
 {
-    uint8_t fric_enabled = 0;
-    uint8_t continue_shoot = 0;
-    uint32_t single_shot_seq = 0;
-    uint8_t auto_aim = 0;
-};
+    uint8_t fric_enabled;
+    uint8_t continue_shoot;
+    uint32_t single_shot_seq;
+    uint8_t auto_aim;
+}Shoot_Cmd_Message_t;
 
 /**
  * @brief 裁判系统反馈数据
@@ -133,15 +133,15 @@ struct ShootCmdMessage
  * @brief shoot powercontroller订阅
  *
  */
-struct RefereeMessage
+typedef struct
 {
-    uint16_t shooter_17mm_barrel_heat = 0;
-    uint16_t shooter_barrel_heat_limit = 65535;
-    uint16_t shooter_barrel_cooling_value = 0;
+    uint16_t shooter_17mm_barrel_heat;
+    uint16_t shooter_barrel_heat_limit;
+    uint16_t shooter_barrel_cooling_value;
 
-    uint16_t chassis_power_limit = 50;
-    uint16_t buffer_energy = 50;
-};
+    uint16_t chassis_power_limit;
+    uint16_t buffer_energy;
+}Referee_Message_t;
 
 /**
  * @brief 底盘数据
@@ -149,12 +149,12 @@ struct RefereeMessage
  * @brief powercontroller订阅
  *
  */
-struct ChassisMessage
+typedef struct
 {
-    float feedback_omega[4]{0.0f};
-    float cmd_omega[4]{0.0f};
-    float cmd_current[4]{0.0f};
-};
+    float feedback_omega[4];
+    float cmd_omega[4];
+    float cmd_current[4];
+}Chassis_Message_t;
 
 /**
  * @brief 功控数据
@@ -162,10 +162,10 @@ struct ChassisMessage
  * @brief chassis订阅
  *
  */
-struct PowerControllerMessage
+typedef struct
 {
-    float target_current[4]{0.0f};
-};
+    float target_current[4];
+}Power_Controller_Message_t;
 
 /**
  * @brief dr16数据
@@ -173,7 +173,7 @@ struct PowerControllerMessage
  * @brief command订阅
  *
  */
-struct Dr16Message
+typedef struct
 {
     /* rocker channel information */
     int16_t ch_0;
@@ -218,7 +218,7 @@ struct Dr16Message
         } bit;
     } kb;
     int16_t wheel;
-};
+}Dr16_Message_t;
 
 /**
  * @brief vt13数据
@@ -226,7 +226,7 @@ struct Dr16Message
  * @brief command订阅
  *
  */
-struct Vt13Message
+typedef struct
 {
     uint8_t sof_1;
     uint8_t sof_2;
@@ -275,7 +275,7 @@ struct Vt13Message
         } bit;
     } kb;
     uint16_t crc16;
-};
+}Vt13_Message_t;
 
 /* Exported variables ---------------------------------------------------------*/
 

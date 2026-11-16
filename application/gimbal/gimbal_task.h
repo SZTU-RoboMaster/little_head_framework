@@ -19,8 +19,17 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported variables ---------------------------------------------------------*/
-extern Gimbal gimbal;
+/* gimbal 在 gimbal.h 中声明。 */
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void gimbal_task(void *argument);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

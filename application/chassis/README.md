@@ -6,9 +6,9 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/chassis/chassis.cpp
-    application/chassis/chassis_task.cpp
-    application/chassis/power_control/power_controller.cpp
+    application/chassis/chassis.c
+    application/chassis/chassis_task.c
+    application/chassis/power_control/power_controller.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -17,7 +17,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 ```
 
-依赖 DJI [`motor`](../../components/motor/README.md)、PID、Math Tools、[`sdk/message`](../../sdk/message/README.md)、CMSIS-RTOS2 和 [`power_control`](power_control/README.md)。不需要功控时可移除 PowerController，并让底盘直接使用 `control_output_` 电流。
+依赖 DJI [`motor`](../../components/motor/README.md)、PID、Math Tools、[`sdk/message`](../../sdk/message/README.md)、CMSIS-RTOS2 和 [`power_control`](power_control/README.md)。不需要功控时可移除功控模块，并让底盘直接使用 `control_output` 电流。
 
 ## 硬件映射
 
@@ -36,39 +36,39 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 | 方向 | Topic | 消息类型 |
 | --- | --- | --- |
-| 订阅 | `/command/chassis` | `ChassisCmdMessage` |
-| 订阅 | `/gimbal` | `GimbalMessage` |
-| 订阅 | `/powercontroller` | `PowerControllerMessage` |
-| 发布 | `/chassis` | `ChassisMessage` |
+| 订阅 | `/command/chassis` | `Chassis_Cmd_Message_t` |
+| 订阅 | `/gimbal` | `Gimbal_Message_t` |
+| 订阅 | `/powercontroller` | `Power_Controller_Message_t` |
+| 发布 | `/chassis` | `Chassis_Message_t` |
 
 控制命令超过 `100 ms` 未更新时自动清零并进入 Relax。
 
 ## 任务调用顺序
 
-```cpp
-chassis.update_input();
-chassis.update_feedback();
-chassis.handle_safety();
-chassis.set_mode();
-chassis.control();
-chassis.solve();
-chassis.output();
+```c
+Chassis_Update_Input();
+Chassis_Update_Feedback();
+Chassis_Handle_Safety();
+Chassis_Set_Mode();
+Chassis_Control();
+Chassis_Solve();
+Chassis_Output();
 
-power_controller.update();
+PowerController_Update();
 ```
 
-任务周期为 `1 ms`。`chassis.output()` 先发布本周期期望电流，PowerController 随后计算并发布限流结果，底盘在下一周期读取并写入电机 target。
+任务周期为 `1 ms`。`Chassis_Output()` 先发布本周期期望电流，功控随后计算并发布限流结果，底盘在下一周期读取并写入电机 target。
 
 ## 模式
 
 - `CHASSIS_RELAX`：速度和电流目标清零。
-- `CHASSIS_ONLY`：直接使用 `vx/vy/vw`；消息枚举已定义，但当前 `set_mode()` 尚未处理 `CHASSIS_CMD_ONLY`。
+- `CHASSIS_ONLY`：直接使用 `vx/vy/vw`，由 `CHASSIS_CMD_ONLY` 选择。
 - `CHASSIS_FOLLOW`：根据 Gimbal Yaw 偏差计算底盘角速度。
 - `CHASSIS_SPIN`：固定角速度小陀螺，并根据云台角度旋转平移指令坐标系。
 
 ## 机械参数
 
-`ChassisConfig` 中的轮径、半长、半宽、云台 Yaw 偏置、最大轮速、加减速度和小陀螺速度均与当前机器人绑定。移植时必须重新测量，尤其是：
+`Chassis_Config_t` 中的轮径、半长、半宽、云台 Yaw 偏置、最大轮速、加减速度和小陀螺速度均与当前机器人绑定。移植时必须重新测量，尤其是：
 
 ```text
 wheel_radius       = 0.07689 m

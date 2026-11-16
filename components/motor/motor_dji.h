@@ -9,11 +9,14 @@
  *
  */
 
-#pragma once
+#ifndef MOTOR_DJI_H
+#define MOTOR_DJI_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "bsp_can.h"
+#include "can.h"
 #include "pid.h"
+#include <stdbool.h>
+#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -21,30 +24,27 @@
 
 /**
  * @brief 大疆电机状态
- *
  */
-enum MotorDjiStatus
+typedef enum
 {
     MOTOR_DJI_STATUS_DISABLE = 0,
     MOTOR_DJI_STATUS_ENABLE,
-};
+} MotorDjiStatus_e;
 
 /**
  * @brief 大疆电机控制方式
- *
  */
-enum MotorDjiControlMethod
+typedef enum
 {
     MOTOR_DJI_CONTROL_METHOD_CURRENT = 0,
     MOTOR_DJI_CONTROL_METHOD_OMEGA,
     MOTOR_DJI_CONTROL_METHOD_ANGLE,
-};
+} MotorDjiControlMethod_e;
 
 /**
  * @brief 大疆电机反馈的数据
- *
  */
-struct MotorDjiRxData
+typedef struct
 {
     uint16_t encoder;
     float angle;
@@ -54,171 +54,95 @@ struct MotorDjiRxData
     uint16_t last_encoder;
     float total_angle;
     int16_t round_count;
-};
+} MotorDjiRxData_t;
 
 /**
- * @brief 大疆电机类
- *
+ * @brief 大疆电机对象，保存控制参数、反馈和 CAN 发送位置
  */
-class MotorDji
+typedef struct
 {
-public:
     // PID角度环控制
-    Pid angle_pid_;
+    Pid_t angle_pid;
     // PID角速度环控制
-    Pid omega_pid_;
-    // 电机对外接口信息
-    MotorDjiRxData rx_data_;
-
-    void init(CAN_HandleTypeDef *hcan, uint16_t can_tx_id, uint16_t can_rx_id,
-              MotorDjiControlMethod control_method = MOTOR_DJI_CONTROL_METHOD_OMEGA,
-              float gearbox_rate = 1.0f, uint8_t reverse = false);
-
-    inline void set_target_current(float target_current);
-
-    inline void set_target_angle(float target_angle);
-
-    inline void set_target_omega(float target_omega);
-
-    inline void set_feedforward_omega(float feedforward_omega);
-
-    inline void set_control_method(MotorDjiControlMethod control_method);
-
-    void can_rx_callback(const uint8_t *rx_data);
-
-    void check_alive_100ms();
-
-    void calculate();
-
-protected:
-    // 初始化相关常量
+    Pid_t omega_pid;
+    // 电机对外接口信息，由 CAN 接收回调更新
+    MotorDjiRxData_t rx_data;
 
     // 绑定的CAN
-    CanManageObject *can_manage_obj_;
+    CAN_HandleTypeDef *can_handle;
     // 发数据绑定的CAN id, C6系列0x200/0x1FF, GM系列0x1FE/0x2FE
-    uint16_t can_tx_id_;
+    uint16_t can_tx_id;
     // 收数据绑定的CAN id, C6系列0x201~0x208, GM系列0x205~0x20b
-    uint16_t can_rx_id_;
-    // 发送缓存区
-    uint8_t *tx_data_;
+    uint16_t can_rx_id;
+    // 发送缓存区中的两个字节位置
+    uint8_t *tx_data;
     // 减速比, 默认带减速箱
-    float gearbox_rate_ = 1.0f;
+    float gearbox_rate;
     // 反向安装标志
-    uint8_t reverse_ = false;
-
-    // 常量
-
-    // 内部变量
+    uint8_t reverse;
 
     // 当前时刻的电机接收flag
-    uint32_t rx_flag_ = 0;
+    volatile uint32_t rx_flag;
     // 前一时刻的电机接收flag
-    uint32_t last_rx_flag_ = 0;
+    uint32_t last_rx_flag;
     // 计算周期计数, 用于降低角度环计算频率
-    uint8_t calculate_mod5_ = 5;
+    uint8_t calculate_mod5;
 
     // 当前时刻的电机控制flag
-    uint32_t cmd_flag_ = 0;
+    volatile uint32_t cmd_flag;
     // 前一时刻的电机控制flag
-    uint32_t last_cmd_flag_ = 0;
+    uint32_t last_cmd_flag;
     // 控制指令是否在线
-    uint8_t cmd_online_ = false;
+    uint8_t cmd_online;
 
     // 输出量
-    float output_value_ = 0.0f;
-
-    // 读变量
-
+    float output_value;
     // 电机状态
-    MotorDjiStatus status_ = MOTOR_DJI_STATUS_DISABLE;
-
-    // 写变量
-
-    // 读写变量
-
+    MotorDjiStatus_e status;
     // 电机控制方式
-    MotorDjiControlMethod control_method_ = MOTOR_DJI_CONTROL_METHOD_CURRENT;
+    MotorDjiControlMethod_e control_method;
     // 目标的角度, rad
-    float target_angle_ = 0.0f;
+    float target_angle;
     // 目标的速度, rad/s
-    float target_omega_ = 0.0f;
-    // 目标的电流, A
-    float target_current_ = 0.0f;
+    float target_omega;
+    // 目标的电流, 控制帧原始值
+    float target_current;
     // 前馈的速度, rad/s
-    float feedforward_omega_ = 0.0f;
-
-    // 内部函数
-
-    void process_data(const uint8_t *rx_data);
-
-    void calculate_control();
-
-    void output();
-};
+    float feedforward_omega;
+} MotorDji_t;
 
 /* Exported variables ---------------------------------------------------------*/
 
-extern uint8_t can1_0x200_tx_data[];
-extern uint8_t can1_0x1ff_tx_data[];
-extern uint8_t can1_0x1fe_tx_data[];
-extern uint8_t can1_0x2fe_tx_data[];
-extern uint8_t can2_0x200_tx_data[];
-extern uint8_t can2_0x1ff_tx_data[];
-extern uint8_t can2_0x1fe_tx_data[];
-extern uint8_t can2_0x2fe_tx_data[];
-
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/**
- * @brief 设定目标的电流, A
- *
- * @param target_current 目标的电流, A
- */
-inline void MotorDji::set_target_current(float target_current)
-{
-    target_current_ = target_current;
-    cmd_flag_++;
-}
+extern uint8_t can1_0x200_tx_data[8];
+extern uint8_t can1_0x1ff_tx_data[8];
+extern uint8_t can1_0x1fe_tx_data[8];
+extern uint8_t can1_0x2fe_tx_data[8];
+extern uint8_t can2_0x200_tx_data[8];
+extern uint8_t can2_0x1ff_tx_data[8];
+extern uint8_t can2_0x1fe_tx_data[8];
+extern uint8_t can2_0x2fe_tx_data[8];
 
-/**
- * @brief 设定目标的角度, rad
- *
- * @param target_angle 目标的角度, rad
- */
-inline void MotorDji::set_target_angle(float target_angle)
-{
-    target_angle_ = target_angle;
-    cmd_flag_++;
-}
+bool MotorDji_Init(MotorDji_t *motor, CAN_HandleTypeDef *hcan, uint16_t can_tx_id,
+                   uint16_t can_rx_id, MotorDjiControlMethod_e control_method,
+                   float gearbox_rate, uint8_t reverse);
 
-/**
- * @brief 设定目标的速度, rad/s
- *
- * @param target_omega 目标的速度, rad/s
- */
-inline void MotorDji::set_target_omega(float target_omega)
-{
-    target_omega_ = target_omega;
-    cmd_flag_++;
-}
+void MotorDji_SetTargetCurrent(MotorDji_t *motor, float target_current);
+void MotorDji_SetTargetAngle(MotorDji_t *motor, float target_angle);
+void MotorDji_SetTargetOmega(MotorDji_t *motor, float target_omega);
+void MotorDji_SetFeedforwardOmega(MotorDji_t *motor, float feedforward_omega);
+void MotorDji_SetControlMethod(MotorDji_t *motor, MotorDjiControlMethod_e control_method);
 
-/**
- * @brief 设定前馈的速度, rad/s
- *
- * @param feedforward_omega 前馈的速度, rad/s
- */
-inline void MotorDji::set_feedforward_omega(float feedforward_omega)
-{
-    feedforward_omega_ = feedforward_omega;
-    cmd_flag_++;
-}
+void MotorDji_CanRxCallback(MotorDji_t *motor, const uint8_t *rx_data);
+void MotorDji_CheckAlive100ms(MotorDji_t *motor);
+void MotorDji_Calculate(MotorDji_t *motor);
 
-/**
- * @brief 设定电机控制方式
- *
- * @param control_method 电机控制方式
- */
-inline void MotorDji::set_control_method(MotorDjiControlMethod control_method)
-{
-    control_method_ = control_method;
+#ifdef __cplusplus
 }
+#endif
+
+#endif

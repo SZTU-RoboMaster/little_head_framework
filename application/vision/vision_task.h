@@ -19,8 +19,16 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported variables ---------------------------------------------------------*/
-extern Vision vision;
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void vision_task(void *argument);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

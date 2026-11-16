@@ -19,8 +19,16 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported variables ---------------------------------------------------------*/
-extern Shoot shoot;
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void shoot_task(void *argument);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

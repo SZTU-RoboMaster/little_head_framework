@@ -6,7 +6,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/uart/bsp_uart.cpp
+    bsp/uart/bsp_uart.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -25,17 +25,17 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_uart.h"
 
 void uart3_callback(uint8_t *buffer, uint16_t length)
 {
-    remote.uart_rx_callback(buffer, length);
+    /* 在这里把接收到的数据交给协议解析模块 */
 }
 
-void device_start()
+void device_start(void)
 {
-    uart_init(&huart3, uart3_callback, 18);
+    BspUart_Init(&huart3, uart3_callback, 18);
 }
 ```
 
@@ -43,13 +43,13 @@ void device_start()
 
 接收帧错位或 UART 出错时可以重启 DMA：
 
-```cpp
-uart_reinit(&huart3);
+```c
+BspUart_Reinit(&huart3);
 ```
 
 ## 工作方式
 
-- `UARTEx_MultiBuffer_ReceiveToIdle_DMA()` 直接调用 `HAL_DMAEx_MultiBufferStart()` 建立双缓冲。
+- `BspUart_MultiBufferReceiveToIdleDma()` 直接调用 `HAL_DMAEx_MultiBufferStart()` 建立双缓冲。
 - `HAL_UARTEx_RxEventCallback()` 根据 DMA 当前目标缓冲区，向上层交付另一块已完成缓冲区。
 - `HAL_UART_ErrorCallback()` 停止、清理并重新启动对应 UART 的接收 DMA。
 - 回调只有在全局 `initialized != 0` 后才会分发。

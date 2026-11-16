@@ -1,154 +1,93 @@
-/**
- * @file message_center.h
- * @author anchengc
- * @brief
- * @version 0.1
- * @date 2026-08-15 0.1 初版
- *
- * @copyright SZTU-HJ (c) 2026
- *
- */
+//
+// Created by hjr on 2026/11/16.
+//
 
-#pragma once
+#ifndef LITTLE_HEAD_TEST_MESAGE_CENTER_H
+#define LITTLE_HEAD_TEST_MESAGE_CENTER_H
+#include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 
-/* Includes ------------------------------------------------------------------*/
-#include <cstddef>
-#include <cstdint>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-/* Exported macros -----------------------------------------------------------*/
-inline constexpr std::size_t kMaxTopics = 24;
-inline constexpr std::size_t kMaxTopicNameLength = 31;
-inline constexpr std::size_t kMaxPayloadSize = 256;
+#define MAX_TOPICS       24
+#define MAX_NAME_LEN     31
+#define MAX_DATA_SIZE    256
 
-/* Exported types ------------------------------------------------------------*/
-
-// forward declaration
-template <typename T> class Publisher;
-template <typename T> class Subscriber;
-class MessageCenter;
-
-/**
- * @brief Specialized Topic
- *
- */
-class Topic
+typedef struct
 {
-public:
-private:
-    friend class MessageCenter;
-    template <typename T> friend class Publisher;
-    template <typename T> friend class Subscriber;
+    char name[MAX_NAME_LEN + 1];
 
-    char name_[kMaxTopicNameLength + 1];
-    uint8_t data_[kMaxPayloadSize];
-    std::size_t payload_size_;
+    uint8_t data[MAX_DATA_SIZE];
+    size_t data_size;
 
-    uint64_t sequence_;
-    uint32_t timestamp_ms_;
+    bool is_active;
+    bool has_publisher;
+    bool has_value;
 
-    bool is_active_;
-    bool has_publisher_;
-    bool has_value_;
+    uint32_t update_count;
+    uint32_t last_update_time;
 
-private:
-    bool publish_msg(const void *data);
+    uint16_t subscriber_count;
+} Topic_t;
 
-    bool update_msg(void *data, uint64_t &last_sequence, uint32_t &last_timestamp_ms,
-                    bool &first_in);
-
-    bool is_fresh(uint32_t last_timestamp_ms, bool first_in, uint32_t timeout_ms) const;
-};
-
-/**
- * @brief Specialized Publisher
- *
- */
-template <typename T> class Publisher
+typedef struct
 {
-    static_assert(sizeof(T) <= kMaxPayloadSize);
+    Topic_t topics[MAX_TOPICS];
+    uint16_t topic_count;
+    uint32_t register_error_count;
+} MessageCenter_t;
 
-public:
-    Publisher() = default;
 
-    bool publish(const T &data) const
-    {
-        return topic_ != nullptr && topic_->publish_msg(&data);
-    }
-
-private:
-    friend class MessageCenter;
-
-    explicit Publisher(Topic *topic) : topic_(topic)
-    {
-    }
-
-    Topic *topic_ = nullptr;
-};
-
-/**
- * @brief Specialized Subscriber
- *
- */
-template <typename T> class Subscriber
+typedef struct
 {
-    static_assert(sizeof(T) <= kMaxPayloadSize);
+    Topic_t *topic;
+    uint32_t publish_count;
+} Publisher_t;
 
-public:
-    Subscriber() = default;
-
-    bool update(T &data)
-    {
-        return topic_ != nullptr &&
-               topic_->update_msg(&data, last_sequence_, last_timestamp_ms_, first_in_);
-    }
-
-    bool is_fresh(uint32_t timeout_ms) const
-    {
-        return topic_ != nullptr && topic_->is_fresh(last_timestamp_ms_, first_in_, timeout_ms);
-    }
-
-private:
-    friend class MessageCenter;
-
-    explicit Subscriber(Topic *topic) : topic_(topic)
-    {
-    }
-
-    Topic *topic_ = nullptr;
-    uint64_t last_sequence_ = 0;
-    uint32_t last_timestamp_ms_ = 0;
-    bool first_in_ = true;
-};
-
-/**
- * @brief Specialized MessageCenter
- *
- */
-class MessageCenter
+typedef struct
 {
-public:
-    static MessageCenter &instance();
+    Topic_t *topic;
+    uint32_t read_count;
+    uint32_t last_read_time;
+    uint32_t last_read_update_count;
+    uint32_t last_message_time;
+    bool has_read;
+} Subscriber_t;
 
-    template <typename T> Publisher<T> advertise(const char *topic_name)
-    {
-        Topic *topic = register_topic(topic_name, sizeof(T), true);
-        return Publisher<T>(topic);
-    }
 
-    template <typename T> Subscriber<T> subscribe(const char *topic_name)
-    {
-        Topic *topic = register_topic(topic_name, sizeof(T), false);
-        return Subscriber<T>(topic);
-    }
+extern MessageCenter_t g_message_center;
 
-private:
-    Topic *register_topic(const char *topic_name, std::size_t payload_size, bool is_publisher);
 
-    Topic topics_[kMaxTopics];
-};
+void MessageCenter_Init(void);
 
-/* Exported variables ---------------------------------------------------------*/
 
-/* Exported function declarations ---------------------------------------------*/
+void MessageCenter_Topics_Init(void);
 
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+
+bool Register_Topic(const char *name, size_t data_size);
+
+
+bool Create_Publisher(Publisher_t *publisher, const char *topic_name, size_t data_size);
+
+
+bool Create_Subscriber(Subscriber_t *subscriber, const char *topic_name, size_t data_size);
+
+
+bool Message_Publish(Publisher_t *publisher, const void *data, size_t data_size);
+
+bool Message_PublishFromISR(Publisher_t *publisher, const void *data, size_t data_size);
+
+
+bool Message_Read(Subscriber_t *subscriber, void *data, size_t data_size);
+
+
+bool Message_IsTimeout(const Subscriber_t *subscriber, uint32_t timeout_ms);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // LITTLE_HEAD_TEST_MESAGE_CENTER_H
