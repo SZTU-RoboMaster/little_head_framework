@@ -12,35 +12,42 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
+#ifdef __cplusplus
 #include <cstdint>
+// C++ keeps its default member values. C initializes values when creating an object.
+#define MESSAGE_DEFAULT(value) = value
+#else
+#include <stdint.h>
+#define MESSAGE_DEFAULT(value)
+#endif
 
 /* Exported macros -----------------------------------------------------------*/
-static constexpr char kInsTopicName[] = "/ins";
-static constexpr char kVisionTopicName[] = "/vision";
-static constexpr char kGimbalTopicName[] = "/gimbal";
-static constexpr char kDr16TopicName[] = "/dr16";
-static constexpr char kVt13TopicName[] = "/vt13";
-static constexpr char kCmdGimbalTopicName[] = "/command/gimbal";
-static constexpr char kCmdChassisTopicName[] = "/command/chassis";
-static constexpr char kCmdShootTopicName[] = "/command/shoot";
-static constexpr char kChassisTopicName[] = "/chassis";
-static constexpr char kPowerControllerTopicName[] = "/powercontroller";
-static constexpr char kRefereeTopicName[] = "/referee";
+static const char kInsTopicName[] = "/ins";
+static const char kVisionTopicName[] = "/vision";
+static const char kGimbalTopicName[] = "/gimbal";
+static const char kDr16TopicName[] = "/dr16";
+static const char kVt13TopicName[] = "/vt13";
+static const char kCmdGimbalTopicName[] = "/command/gimbal";
+static const char kCmdChassisTopicName[] = "/command/chassis";
+static const char kCmdShootTopicName[] = "/command/shoot";
+static const char kChassisTopicName[] = "/chassis";
+static const char kPowerControllerTopicName[] = "/powercontroller";
+static const char kRefereeTopicName[] = "/referee";
 
 /* Exported types ------------------------------------------------------------*/
-enum GimbalCmdMode
+typedef enum GimbalCmdMode
 {
     GIMBAL_CMD_RELAX,  // 云台失能
     GIMBAL_CMD_ACTIVE, // 云台使能
-};
+} GimbalCmdMode;
 
-enum ChassisCmdMode
+typedef enum ChassisCmdMode
 {
     CHASSIS_CMD_RELAX,  // 底盘失能
     CHASSIS_CMD_ONLY,   // 底盘独立
     CHASSIS_CMD_FOLLOW, // 底盘跟随
     CHASSIS_CMD_SPIN,   // 小陀螺
-};
+} ChassisCmdMode;
 
 /**
  * @brief IMU数据
@@ -48,13 +55,13 @@ enum ChassisCmdMode
  * @brief gimbal vision订阅
  *
  */
-struct InsMessage
+typedef struct InsMessage
 {
     float angle[3];
     float gyro[3];
     float acc[3];
     float quaternion[4];
-};
+} InsMessage;
 
 /**
  * @brief 视觉自瞄数据
@@ -62,17 +69,17 @@ struct InsMessage
  * @brief gimbal订阅
  *
  */
-struct VisionMessage
+typedef struct VisionMessage
 {
-    float yaw = 0.0f;
-    float yaw_vel = 0.0f;
-    float yaw_acc = 0.0f;
-    float pitch = 0.0f;
-    float pitch_vel = 0.0f;
-    float pitch_acc = 0.0f;
-    int8_t target_lock = 50; // 49: lock, 50: unlock
-    int8_t fire_command = 0;
-};
+    float yaw MESSAGE_DEFAULT(0.0f);
+    float yaw_vel MESSAGE_DEFAULT(0.0f);
+    float yaw_acc MESSAGE_DEFAULT(0.0f);
+    float pitch MESSAGE_DEFAULT(0.0f);
+    float pitch_vel MESSAGE_DEFAULT(0.0f);
+    float pitch_acc MESSAGE_DEFAULT(0.0f);
+    int8_t target_lock MESSAGE_DEFAULT(50); // 49: lock, 50: unlock
+    int8_t fire_command MESSAGE_DEFAULT(0);
+} VisionMessage;
 
 /**
  * @brief 云台数据
@@ -80,10 +87,10 @@ struct VisionMessage
  * @brief chassis订阅
  *
  */
-struct GimbalMessage
+typedef struct GimbalMessage
 {
-    float yaw_total_angle = 0.0f;
-};
+    float yaw_total_angle MESSAGE_DEFAULT(0.0f);
+} GimbalMessage;
 
 /**
  * @brief 底盘控制数据
@@ -91,13 +98,13 @@ struct GimbalMessage
  * @brief chassis订阅
  *
  */
-struct ChassisCmdMessage
+typedef struct ChassisCmdMessage
 {
-    ChassisCmdMode chassis_mode = CHASSIS_CMD_RELAX;
-    float rc_vx = 0.0f;
-    float rc_vy = 0.0f;
-    float rc_vw = 0.0f;
-};
+    ChassisCmdMode chassis_mode MESSAGE_DEFAULT(CHASSIS_CMD_RELAX);
+    float rc_vx MESSAGE_DEFAULT(0.0f);
+    float rc_vy MESSAGE_DEFAULT(0.0f);
+    float rc_vw MESSAGE_DEFAULT(0.0f);
+} ChassisCmdMessage;
 
 /**
  * @brief 云台控制数据
@@ -105,13 +112,13 @@ struct ChassisCmdMessage
  * @brief gimbal订阅
  *
  */
-struct GimbalCmdMessage
+typedef struct GimbalCmdMessage
 {
-    GimbalCmdMode gimbal_mode = GIMBAL_CMD_RELAX;
-    float yaw_rate = 0.0f;
-    float pitch_rate = 0.0f;
-    uint8_t auto_aim = 0;
-};
+    GimbalCmdMode gimbal_mode MESSAGE_DEFAULT(GIMBAL_CMD_RELAX);
+    float yaw_rate MESSAGE_DEFAULT(0.0f);
+    float pitch_rate MESSAGE_DEFAULT(0.0f);
+    uint8_t auto_aim MESSAGE_DEFAULT(0);
+} GimbalCmdMessage;
 
 /**
  * @brief 发射控制数据
@@ -119,13 +126,13 @@ struct GimbalCmdMessage
  * @brief shoot订阅
  *
  */
-struct ShootCmdMessage
+typedef struct ShootCmdMessage
 {
-    uint8_t fric_enabled = 0;
-    uint8_t continue_shoot = 0;
-    uint32_t single_shot_seq = 0;
-    uint8_t auto_aim = 0;
-};
+    uint8_t fric_enabled MESSAGE_DEFAULT(0);
+    uint8_t continue_shoot MESSAGE_DEFAULT(0);
+    uint32_t single_shot_seq MESSAGE_DEFAULT(0);
+    uint8_t auto_aim MESSAGE_DEFAULT(0);
+} ShootCmdMessage;
 
 /**
  * @brief 裁判系统反馈数据
@@ -133,15 +140,15 @@ struct ShootCmdMessage
  * @brief shoot powercontroller订阅
  *
  */
-struct RefereeMessage
+typedef struct RefereeMessage
 {
-    uint16_t shooter_17mm_barrel_heat = 0;
-    uint16_t shooter_barrel_heat_limit = 65535;
-    uint16_t shooter_barrel_cooling_value = 0;
+    uint16_t shooter_17mm_barrel_heat MESSAGE_DEFAULT(0);
+    uint16_t shooter_barrel_heat_limit MESSAGE_DEFAULT(65535);
+    uint16_t shooter_barrel_cooling_value MESSAGE_DEFAULT(0);
 
-    uint16_t chassis_power_limit = 50;
-    uint16_t buffer_energy = 50;
-};
+    uint16_t chassis_power_limit MESSAGE_DEFAULT(50);
+    uint16_t buffer_energy MESSAGE_DEFAULT(50);
+} RefereeMessage;
 
 /**
  * @brief 底盘数据
@@ -149,12 +156,12 @@ struct RefereeMessage
  * @brief powercontroller订阅
  *
  */
-struct ChassisMessage
+typedef struct ChassisMessage
 {
-    float feedback_omega[4]{0.0f};
-    float cmd_omega[4]{0.0f};
-    float cmd_current[4]{0.0f};
-};
+    float feedback_omega[4] MESSAGE_DEFAULT({0.0f});
+    float cmd_omega[4] MESSAGE_DEFAULT({0.0f});
+    float cmd_current[4] MESSAGE_DEFAULT({0.0f});
+} ChassisMessage;
 
 /**
  * @brief 功控数据
@@ -162,10 +169,10 @@ struct ChassisMessage
  * @brief chassis订阅
  *
  */
-struct PowerControllerMessage
+typedef struct PowerControllerMessage
 {
-    float target_current[4]{0.0f};
-};
+    float target_current[4] MESSAGE_DEFAULT({0.0f});
+} PowerControllerMessage;
 
 /**
  * @brief dr16数据
@@ -173,7 +180,7 @@ struct PowerControllerMessage
  * @brief command订阅
  *
  */
-struct Dr16Message
+typedef struct Dr16Message
 {
     /* rocker channel information */
     int16_t ch_0;
@@ -218,7 +225,7 @@ struct Dr16Message
         } bit;
     } kb;
     int16_t wheel;
-};
+} Dr16Message;
 
 /**
  * @brief vt13数据
@@ -226,7 +233,7 @@ struct Dr16Message
  * @brief command订阅
  *
  */
-struct Vt13Message
+typedef struct Vt13Message
 {
     uint8_t sof_1;
     uint8_t sof_2;
@@ -275,7 +282,9 @@ struct Vt13Message
         } bit;
     } kb;
     uint16_t crc16;
-};
+} Vt13Message;
+
+#undef MESSAGE_DEFAULT
 
 /* Exported variables ---------------------------------------------------------*/
 

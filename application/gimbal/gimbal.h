@@ -15,7 +15,7 @@
 #include "motor_dji.h"
 #include "low_pass_filter.h"
 
-#include "message_center.h"
+#include "message_center_c++.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/

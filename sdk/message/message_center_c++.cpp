@@ -10,7 +10,7 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "message_center.h"
+#include "message_center_c++.h"
 
 #include "stm32g4xx_hal.h"
 #include <cstring>

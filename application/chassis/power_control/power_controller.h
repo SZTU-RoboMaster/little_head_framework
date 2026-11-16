@@ -12,7 +12,7 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "message_center.h"
+#include "message_center_c++.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/

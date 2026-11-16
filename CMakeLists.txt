@@ -94,10 +94,13 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/chassis/chassis_task.cpp
     application/shoot/shoot_task.cpp
     application/vision/vision_task.cpp
-    sdk/message/message_center.cpp
+        sdk/message/message_center_c++.cpp
     application/command/command.cpp
     application/chassis/power_control/power_controller.cpp
     sdk/robot/robot_sdk.cpp
+    sdk/board_communication/board_communication.c
+    sdk/message/message_center.c
+    sdk/robot/robot_sdk.c
     components/algorithm/filter/low_pass_filter.cpp
 )
 
@@ -136,6 +139,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/command
     application/chassis/power_control
     sdk/robot
+    sdk/board_communication
 )
 
 # Add project symbols (macros)

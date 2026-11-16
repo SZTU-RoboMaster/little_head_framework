@@ -15,7 +15,7 @@
 #include "motor_dji.h"
 #include "pid.h"
 
-#include "message_center.h"
+#include "message_center_c++.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/

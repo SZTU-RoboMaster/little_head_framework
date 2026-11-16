@@ -14,7 +14,8 @@
 /* Includes ------------------------------------------------------------------*/
 
 /* Exported macros -----------------------------------------------------------*/
-
+#define GIMBAL_BOARD
+#define CHASSIS_BOARD
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported variables ---------------------------------------------------------*/
@@ -25,6 +26,7 @@ extern "C"
 {
 #endif
 
+    void robot_sdk_message_init(void);
     void robot_sdk_init();
 
 #ifdef __cplusplus
