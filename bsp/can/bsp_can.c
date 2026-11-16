@@ -1,0 +1,223 @@
+/**
+ * @file bsp_can.c
+ * @author anchengc
+ * @brief 移植USTC-RoboWalker的CAN通信初始化与配置流程
+ * @version 0.1
+ * @date 2026-05-30 0.1 初版
+ *
+ * @copyright SZTU-HJ (c) 2026
+ *
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include "bsp_can.h"
+
+/* Private macros ------------------------------------------------------------*/
+
+// 滤波器编号
+#define CAN_FILTER(x) ((x) << 3)
+
+// 接收队列
+#define CAN_FIFO_0 (0 << 2)
+#define CAN_FIFO_1 (1 << 2)
+
+// 标准帧或扩展帧
+#define CAN_STDID (0 << 1)
+#define CAN_EXTID (1 << 1)
+
+// 数据帧或遥控帧
+#define CAN_DATA_TYPE (0 << 0)
+#define CAN_REMOTE_TYPE (1 << 0)
+
+/* Private types -------------------------------------------------------------*/
+
+/* Private variables ---------------------------------------------------------*/
+
+BspCan_Manage_t bsp_can1 = {0};
+BspCan_Manage_t bsp_can2 = {0};
+
+/* Private function declarations ---------------------------------------------*/
+
+/* function prototypes -------------------------------------------------------*/
+
+/**
+ * @brief 配置CAN的过滤器
+ *
+ * @param hcan CAN编号
+ * @param object_param 编号 | FIFOx | ID类型 | 帧类型
+ * @param id id
+ * @param mask_id 屏蔽位(0x3ff, 0x1fffffff)
+ */
+static void can_filter_mask_config(CAN_HandleTypeDef *hcan, uint8_t object_param, uint32_t id,
+                            uint32_t mask_id)
+{
+    CAN_FilterTypeDef can_filter_init_structure;
+
+    // 检测传参是否正确
+    assert_param(hcan != NULL);
+
+    if ((object_param & 0x02))
+    {
+        // 标准帧
+        // 掩码后ID的高16bit
+        can_filter_init_structure.FilterIdHigh = id << 3 >> 16;
+        // 掩码后ID的低16bit
+        can_filter_init_structure.FilterIdLow = id << 3 | ((object_param & 0x03) << 1);
+        // ID掩码值高16bit
+        can_filter_init_structure.FilterMaskIdHigh = mask_id << 3 << 16;
+        // ID掩码值低16bit
+        can_filter_init_structure.FilterMaskIdLow = mask_id << 3 | ((object_param & 0x03) << 1);
+    }
+    else
+    {
+        // 扩展帧
+        // 掩码后ID的高16bit
+        can_filter_init_structure.FilterIdHigh = id << 5;
+        // 掩码后ID的低16bit
+        can_filter_init_structure.FilterIdLow = ((object_param & 0x03) << 1);
+        // ID掩码值高16bit
+        can_filter_init_structure.FilterMaskIdHigh = mask_id << 5;
+        // ID掩码值低16bit
+        can_filter_init_structure.FilterMaskIdLow = ((object_param & 0x03) << 1);
+    }
+    // 滤波器序号, 0-27, 共28个滤波器, 前14个在CAN1, 后14个在CAN2
+    can_filter_init_structure.FilterBank = object_param >> 3;
+    // 滤波器绑定FIFO0
+    can_filter_init_structure.FilterFIFOAssignment = (object_param >> 2) & 0x01;
+    // 使能滤波器
+    can_filter_init_structure.FilterActivation = ENABLE;
+    // 滤波器模式，设置ID掩码模式
+    can_filter_init_structure.FilterMode = CAN_FILTERMODE_IDMASK;
+    // 32位滤波
+    can_filter_init_structure.FilterScale = CAN_FILTERSCALE_32BIT;
+    // 从机模式选择开始单元
+    can_filter_init_structure.SlaveStartFilterBank = 14;
+
+    HAL_CAN_ConfigFilter(hcan, &can_filter_init_structure);
+}
+
+/**
+ * @brief 初始化CAN总线
+ *
+ * @param hcan CAN编号
+ * @param callback_func 处理回调函数
+ */
+void BspCan_Init(CAN_HandleTypeDef *hcan, BspCan_Callback_t callback_func)
+{
+    HAL_CAN_Start(hcan);
+    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+    __HAL_CAN_ENABLE_IT(hcan, CAN_IT_RX_FIFO1_MSG_PENDING);
+
+    if (hcan->Instance == CAN1)
+    {
+        bsp_can1.can_handle = hcan;
+        bsp_can1.callback_func = callback_func;
+
+        can_filter_mask_config(hcan, CAN_FILTER(0) | CAN_FIFO_0 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
+        can_filter_mask_config(hcan, CAN_FILTER(1) | CAN_FIFO_1 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
+    }
+    else if (hcan->Instance == CAN2)
+    {
+        bsp_can2.can_handle = hcan;
+        bsp_can2.callback_func = callback_func;
+
+        can_filter_mask_config(hcan, CAN_FILTER(14) | CAN_FIFO_0 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
+        can_filter_mask_config(hcan, CAN_FILTER(15) | CAN_FIFO_1 | CAN_STDID | CAN_DATA_TYPE, 0, 0);
+    }
+}
+
+/**
+ * @brief 发送CAN数据
+ *
+ * @param hcan CAN编号
+ * @param id id
+ * @param data 被发送的数据指针
+ * @param length 数据长度
+ * @return uint8_t 发送状态
+ */
+uint8_t BspCan_Send(CAN_HandleTypeDef *hcan, uint16_t id, uint8_t *data, uint16_t length)
+{
+    CAN_TxHeaderTypeDef tx_header;
+    uint32_t used_mailbox;
+
+    // 检测传参是否正确
+    assert_param(hcan != NULL);
+
+    tx_header.StdId = id;
+    tx_header.ExtId = 0;
+    tx_header.IDE = 0;
+    tx_header.RTR = 0;
+    tx_header.DLC = length;
+
+    return (HAL_CAN_AddTxMessage(hcan, &tx_header, data, &used_mailbox));
+}
+
+/**
+ * @brief HAL库CAN接收FIFO0中断
+ *
+ * @param hcan CAN编号
+ */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    // 判断程序初始化完成
+    if (!initialized)
+    {
+        return;
+    }
+
+    // 选择回调函数
+    if (hcan->Instance == CAN1)
+    {
+        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO0, &bsp_can1.rx_buffer.header,
+                             bsp_can1.rx_buffer.data);
+        if (bsp_can1.callback_func != NULL)
+        {
+            bsp_can1.callback_func(&bsp_can1.rx_buffer);
+        }
+    }
+    else if (hcan->Instance == CAN2)
+    {
+        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO0, &bsp_can2.rx_buffer.header,
+                             bsp_can2.rx_buffer.data);
+        if (bsp_can2.callback_func != NULL)
+        {
+            bsp_can2.callback_func(&bsp_can2.rx_buffer);
+        }
+    }
+}
+
+/**
+ * @brief HAL库CAN接收FIFO1中断
+ *
+ * @param hcan CAN编号
+ */
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    // 判断程序初始化完成
+    if (!initialized)
+    {
+        return;
+    }
+
+    // 选择回调函数
+    if (hcan->Instance == CAN1)
+    {
+        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO1, &bsp_can1.rx_buffer.header,
+                             bsp_can1.rx_buffer.data);
+        if (bsp_can1.callback_func != NULL)
+        {
+            bsp_can1.callback_func(&bsp_can1.rx_buffer);
+        }
+    }
+    else if (hcan->Instance == CAN2)
+    {
+        HAL_CAN_GetRxMessage(hcan, CAN_FILTER_FIFO1, &bsp_can2.rx_buffer.header,
+                             bsp_can2.rx_buffer.data);
+        if (bsp_can2.callback_func != NULL)
+        {
+            bsp_can2.callback_func(&bsp_can2.rx_buffer);
+        }
+    }
+}
+
+/************************ COPYRIGHT(C) SZTU-HJ **************************/
