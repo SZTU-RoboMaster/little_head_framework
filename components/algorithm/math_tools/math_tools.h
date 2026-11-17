@@ -13,8 +13,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "arm_math.h" // IWYU pragma: export
-#include <algorithm> // IWYU pragma: export
-#include <cstdlib> // IWYU pragma: export
+#include <stddef.h>
+#include <stdint.h>
 
 /* Exported macros -----------------------------------------------------------*/
 
@@ -28,6 +28,9 @@
 /* Exported variables --------------------------------------------------------*/
 
 /* Exported function declarations --------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 float inv_sqrt(float x);
 
@@ -37,26 +40,12 @@ uint32_t float_to_uint(float x, float x_min, float x_max, size_t bits);
 
 float cubic_map(float x, float expo);
 
-/**
- * @brief 归化函数
- *
- * @tparam T 类型
- * @param x 传入数据
- * @param modulus 模数
- * @return T 返回的归化数, 介于 ±modulus / 2 之间
- */
-template <typename T> T wrap_center(T x, T modulus)
-{
-    T tmp;
-    tmp = std::fmod(x, modulus);
-    if (tmp < -(modulus / T{2}))
-    {
-        tmp += modulus;
-    }
-    else if (tmp >= (modulus / T{2}))
-    {
-        tmp -= modulus;
-    }
-    return (tmp);
+float clamp_float(float value, float low, float high);
+
+float wrap_center_float(float x, float modulus);
+
+#ifdef __cplusplus
 }
+#endif
+
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

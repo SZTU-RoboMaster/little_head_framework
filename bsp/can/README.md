@@ -1,12 +1,12 @@
-# CAN BSP
+# FDCAN BSP
 
-CAN1/CAN2 的 HAL 封装，负责启动 CAN、配置接收过滤器、发送标准帧，并把 FIFO0/FIFO1 接收中断转发给注册的上层回调。
+FDCAN1/FDCAN2/FDCAN3 的 HAL 封装，负责启动 FDCAN、配置接收过滤器、发送经典 CAN 标准帧，并把 FIFO0 接收中断转发给注册的上层回调。
 
 ## 安装
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/can/bsp_can.cpp
+    bsp/can/bsp_can.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -14,55 +14,57 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 )
 ```
 
-依赖 CubeMX 生成的 `can.h`、`can.c` 和 STM32 HAL CAN 驱动。
+依赖 CubeMX 生成的 `fdcan.h`、`fdcan.c` 和 STM32 HAL FDCAN 驱动。
 
 ## CubeMX 配置
 
-- 启用需要使用的 CAN1/CAN2 和对应 GPIO。
-- 配置总线波特率；当前工程两路 CAN 均为 `1 Mbit/s`。
-- 开启 `RX0` 和 `RX1` 中断；当前工程抢占优先级为 `5`。
-- 使用 CAN2 时必须同时使能 CAN1 时钟，这是 STM32F4 双 CAN 的硬件要求。
+- 启用需要使用的 FDCAN1/FDCAN2/FDCAN3 和对应 GPIO。
+- 当前 G4 工程将三路 FDCAN 配置为经典 CAN 帧格式。
+- 开启 FIFO0 新消息、Bus-Off 和协议错误通知。
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_can.h"
+#include "motor_dji.h"
 
-void can1_rx_callback(CanRxBuffer *rx)
+extern MotorDji_t motor;
+
+void can1_rx_callback(BspCan_RxBuffer_t *rx)
 {
-    if (rx->header.StdId == 0x201)
+    if (rx->header.Identifier == 0x201)
     {
-        motor.can_rx_callback(rx->data);
+        MotorDji_CanRxCallback(&motor, rx->data);
     }
 }
 
-void device_init()
+void device_init(void)
 {
-    can_init(&hcan1, can1_rx_callback);
+    BspCan_Init(&hfdcan1, can1_rx_callback);
 }
 ```
 
 发送一个标准数据帧：
 
-```cpp
-uint8_t data[8] = {};
-can_data_send(&hcan1, 0x200, data, 8);
+```c
+uint8_t data[8] = {0};
+BspCan_Send(&hfdcan1, 0x200, data, 8);
 ```
 
-`can_data_send()` 返回 `HAL_CAN_AddTxMessage()` 的状态值。长度应为 `0-8` 字节。
+`BspCan_Send()` 返回 `HAL_FDCAN_AddMessageToTxFifoQ()` 的状态值。其长度参数保持 G4 原实现的传递方式。
 
 ## 当前行为
 
-- `can_init()` 启动 CAN，并开启 FIFO0/FIFO1 消息挂起中断。
-- CAN1 使用 Filter Bank 0/1，CAN2 使用 14/15。
-- 默认过滤器接收全部标准数据帧，分别绑定 FIFO0 和 FIFO1。
+- `BspCan_Init()` 配置索引 0 的全通标准帧过滤器、开启通知并启动 FDCAN。
+- 默认过滤器把标准数据帧放入 FIFO0，其他帧由全局过滤器拒绝。
 - 发送接口只构造标准数据帧；当前接口不支持扩展帧和远程帧发送。
-- 接收回调只有在全局 `initialized != 0` 后才会向上分发。
+- FIFO0 回调会持续读取直至队列清空；全局 `initialized == 0` 时只清空数据、不向上分发。
+- Bus-Off 时按 G4 原实现清除控制器 INIT 位进行恢复。
 
 ## 注意事项
 
-- 该实现只管理 CAN1 和 CAN2，传入其他 CAN 实例不会注册管理对象。
+- 该实现管理 FDCAN1、FDCAN2 和 FDCAN3；当前 Robot SDK 使用前两路。
 - 上层回调运行在 CAN 中断上下文，不要阻塞或调用耗时逻辑。
-- `bsp_can.cpp` 已实现 HAL 的 FIFO0/FIFO1 回调，工程中不要再定义同名强符号。
-- 多个电机共用聚合发送帧时，先由电机模块填写缓存，再统一调用 `can_data_send()`。
+- `bsp_can.c` 已实现 HAL 的 FIFO0 和错误回调，工程中不要再定义同名强符号。
+- 多个电机共用聚合发送帧时，先由电机模块填写缓存，再统一调用 `BspCan_Send()`。
 

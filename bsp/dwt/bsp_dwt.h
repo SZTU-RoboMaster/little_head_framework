@@ -21,9 +21,16 @@
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void dwt_init();
+void BspDwt_Init(void);
 
-void delay_us(uint32_t us);
+void BspDwt_DelayUs(uint32_t us);
+
+#ifdef __cplusplus
+}
+#endif
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

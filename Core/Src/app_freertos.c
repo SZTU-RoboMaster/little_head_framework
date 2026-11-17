@@ -61,6 +61,13 @@ const osThreadAttr_t gimbalTask_attributes = {
   .priority = (osPriority_t) osPriorityHigh,
 };
 
+osThreadId_t board_commTaskHandle;
+const osThreadAttr_t board_commTask_attributes = {
+    .name = "board_commTask",
+    .stack_size = 512 * 4,
+    .priority = (osPriority_t) osPriorityHigh,
+  };
+
 osThreadId_t chassisTaskHandle;
 const osThreadAttr_t chassisTask_attributes = {
   .name = "chassisTask",
@@ -94,6 +101,7 @@ const osThreadAttr_t defaultTask_attributes = {
 /* USER CODE BEGIN FunctionPrototypes */
 void INS_task(void * argument);
 void gimbal_task(void * argument);
+void board_comm_task(void * argument);
 void chassis_task(void * argument);
 void shoot_task(void * argument);
 void vision_task(void * argument);
@@ -138,6 +146,7 @@ void MX_FREERTOS_Init(void) {
   /* add threads, ... */
   insTaskHandle = osThreadNew(INS_task, NULL, &insTask_attributes);
   gimbalTaskHandle = osThreadNew(gimbal_task, NULL, &gimbalTask_attributes);
+  board_commTaskHandle = osThreadNew(board_comm_task, NULL, &board_commTask_attributes);
   chassisTaskHandle = osThreadNew(chassis_task, NULL, &chassisTask_attributes);
   shootTaskHandle = osThreadNew(shoot_task, NULL, &shootTask_attributes);
   visionTaskHandle = osThreadNew(vision_task, NULL, &visionTask_attributes);
@@ -182,6 +191,14 @@ __weak void INS_task(void * argument)
 }
 
 __weak void gimbal_task(void * argument)
+{
+    /* Infinite loop */
+    for (;;)
+    {
+        osDelay(1);
+    }
+}
+__weak void board_comm_task(void * argument)
 {
     /* Infinite loop */
     for (;;)

@@ -6,7 +6,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/command/command.cpp
+    application/command/command.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -18,32 +18,30 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## 使用方法
 
-```cpp
-Command command;
-
+```c
 void control_task(void *argument)
 {
-    command.init();
+    (void)Command_Init();
 
     for (;;)
     {
-        command.update();
+        Command_Update();
         osDelay(1);
     }
 }
 ```
 
-当前工程将 `Command` 唯一实例放在 `gimbal_task` 中，并以 1 kHz 更新。由于三个输出 Topic 都只允许一个发布者，不要在其他任务重复创建 `Command`。
+当前工程将 `command` 唯一实例放在 `gimbal_task` 中，并以 1 kHz 更新。由于三个输出 Topic 都只允许一个发布者，不要在其他任务重复调用 `Command_Init`。
 
 ## 消息接口
 
 | 方向 | Topic | 消息类型 |
 | --- | --- | --- |
-| 订阅 | `/dr16` | `Dr16Message` |
-| 订阅 | `/vt13` | `Vt13Message` |
-| 发布 | `/command/gimbal` | `GimbalCmdMessage` |
-| 发布 | `/command/chassis` | `ChassisCmdMessage` |
-| 发布 | `/command/shoot` | `ShootCmdMessage` |
+| 订阅 | `/dr16` | `Dr16_Message_t` |
+| 订阅 | `/vt13` | `Vt13_Message_t` |
+| 发布 | `/command/gimbal` | `Gimbal_Cmd_Message_t` |
+| 发布 | `/command/chassis` | `Chassis_Cmd_Message_t` |
+| 发布 | `/command/shoot` | `Shoot_Cmd_Message_t` |
 
 两种遥控器均超过 `100 ms` 没有新消息时，模块发布全零/Relax 安全指令。
 

@@ -21,8 +21,16 @@
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
-void imu_pwm_init();
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void imu_pwm_set(uint16_t pwm);
+void BspImuPwm_Init(void);
+
+void BspImuPwm_Set(uint16_t pwm);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

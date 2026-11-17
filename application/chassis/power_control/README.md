@@ -10,7 +10,7 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/chassis/power_control/power_controller.cpp
+    application/chassis/power_control/power_controller.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -29,8 +29,8 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    sdk/message/message_center.cpp
-    components/algorithm/math_tools/math_tools.cpp
+    sdk/message/message_center.c
+    components/algorithm/math_tools/math_tools.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -45,32 +45,30 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 | 方向 | Topic | 消息类型 | 用途 |
 | --- | --- | --- | --- |
-| 订阅 | `/chassis` | `ChassisMessage` | 获取四个电机的目标电流、目标转速和反馈转速 |
-| 订阅 | `/referee` | `RefereeMessage` | 获取底盘功率限制和缓冲能量 |
-| 发布 | `/powercontroller` | `PowerControllerMessage` | 发布功率限制后的四路目标电流 |
+| 订阅 | `/chassis` | `Chassis_Message_t` | 获取四个电机的目标电流、目标转速和反馈转速 |
+| 订阅 | `/referee` | `Referee_Message_t` | 获取底盘功率限制和缓冲能量 |
+| 发布 | `/powercontroller` | `Power_Controller_Message_t` | 发布功率限制后的四路目标电流 |
 
 消息类型和 Topic 名称定义在 `sdk/message/message_def.h`。安装到其他工程时，需要同时保留以下定义：
 
-- `kChassisTopicName`、`ChassisMessage`
-- `kRefereeTopicName`、`RefereeMessage`
-- `kPowerControllerTopicName`、`PowerControllerMessage`
+- `kChassisTopicName`、`Chassis_Message_t`
+- `kRefereeTopicName`、`Referee_Message_t`
+- `kPowerControllerTopicName`、`Power_Controller_Message_t`
 
 ## 使用方法
 
 ### 初始化
 
-```cpp
+```c
 #include "power_controller.h"
-
-PowerController power_controller;
 
 void chassis_init()
 {
-    power_controller.init(POWER_CONTROL_ENABLE);
+    PowerController_Init(POWER_CONTROL_ENABLE);
 }
 ```
 
-`init()` 支持两种模式：
+`PowerController_Init()` 支持两种模式：
 
 | 模式 | 行为 |
 | --- | --- |
@@ -79,26 +77,26 @@ void chassis_init()
 
 ### 周期调用
 
-在底盘发布 `/chassis` 后调用 `update()`：
+在底盘发布 `/chassis` 后调用 `PowerController_Update()`：
 
-```cpp
+```c
 void chassis_control_loop()
 {
-    chassis.update_input();
-    chassis.update_feedback();
-    chassis.handle_safety();
-    chassis.set_mode();
-    chassis.control();
-    chassis.solve();
-    chassis.output();       // 发布 /chassis
+    Chassis_Update_Input();
+    Chassis_Update_Feedback();
+    Chassis_Handle_Safety();
+    Chassis_Set_Mode();
+    Chassis_Control();
+    Chassis_Solve();
+    Chassis_Output();       // 发布 /chassis
 
-    power_controller.update(); // 计算并发布 /powercontroller
+    PowerController_Update(); // 计算并发布 /powercontroller
 }
 ```
 
 推荐与底盘控制任务使用相同周期。当前工程在 `chassis_task` 中以 `1 kHz` 调用，底盘会在下一控制周期读取本次发布的限流结果。
 
-`update()` 只有收到新的 `/chassis` 消息时才会计算并发布，因此无需在外部额外判断消息是否更新。
+`PowerController_Update()` 只有收到新的 `/chassis` 消息时才会计算并发布，因此无需在外部额外判断消息是否更新。
 
 ## 工作流程
 
@@ -111,7 +109,7 @@ void chassis_control_loop()
 
 裁判系统超过 `1000 ms` 没有新消息时，模块将最大功率设为 `50 W`：
 
-```cpp
+```c
 max_power = 50.0f;
 ```
 
@@ -123,13 +121,13 @@ max_power = chassis_power_limit + 0.2 * (buffer_energy - 50)
 
 ## 参数标定
 
-电机功率模型参数位于 `power_controller.h`：
+电机功率模型参数位于 `power_controller.c`：
 
-```cpp
-static constexpr float k1_ = 3.24956187e-4f;
-static constexpr float k2_ = 2.96678362e-1f;
-static constexpr float k3_ = 1.77641220e-7f;
-static constexpr float a_  = 9.50608963e-1f;
+```c
+static const float kPowerK1 = 3.24956187e-4f;
+static const float kPowerK2 = 2.96678362e-1f;
+static const float kPowerK3 = 1.77641220e-7f;
+static const float kPowerA  = 9.50608963e-1f;
 ```
 
 预测模型为：
@@ -145,14 +143,14 @@ power = k1 * current * omega
 
 功率超限时，模块会在“轮速误差权重”和“请求功率权重”之间插值。插值阈值由以下参数控制：
 
-```cpp
-static constexpr float omega_err_lower = 8.0f;
-static constexpr float omega_err_upper = 16.0f;
+```c
+static const float kOmegaErrLower = 8.0f;
+static const float kOmegaErrUpper = 16.0f;
 ```
 
 ## 注意事项
 
-- `ChassisMessage` 中的数组顺序必须与底盘四个电机的顺序保持一致。
+- `Chassis_Message_t` 中的数组顺序必须与底盘四个电机的顺序保持一致。
 - `cmd_current` 使用 DJI 电机控制指令的数值尺度，不是以安培为单位的实际电流。
 - `feedback_omega` 和 `cmd_omega` 的单位必须一致。
 - 功控关闭只会旁路限流算法，不会使能或失能底盘电机。

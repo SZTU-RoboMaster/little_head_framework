@@ -1,0 +1,53 @@
+/**
+ * @file bsp_led.c
+ * @author anchengc
+ * @brief
+ * @version 0.1
+ * @date 2026-08-15 0.1 初版
+ *
+ * @copyright SZTU-HJ (c) 2026
+ *
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include "bsp_led.h"
+
+/* Private macros ------------------------------------------------------------*/
+
+/* Private types -------------------------------------------------------------*/
+
+/* Private variables ---------------------------------------------------------*/
+
+/* Private function declarations ---------------------------------------------*/
+
+/* function prototypes -------------------------------------------------------*/
+
+/**
+ * @brief
+ *
+ * @param
+
+ */
+void BspLed_Init()
+{
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
+    HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
+}
+
+void BspLed_ShowArgb(uint32_t aRGB)
+{
+    static uint8_t alpha;
+    static uint16_t red, green, blue;
+
+    alpha = (aRGB & 0xFF000000) >> 24;
+    red = ((aRGB & 0x00FF0000) >> 16) * alpha;
+    green = ((aRGB & 0x0000FF00) >> 8) * alpha;
+    blue = ((aRGB & 0x000000FF) >> 0) * alpha;
+
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_4, blue * 42499U / 65025U);
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_2, green * 42499U / 65025U);
+    __HAL_TIM_SetCompare(&htim1, TIM_CHANNEL_3, red * 42499U / 65025U);
+}
+
+/*************************** COPYRIGHT(C) SZTU-HJ *****************************/

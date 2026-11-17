@@ -26,6 +26,6 @@ sdk/robot ---> bsp + components + application 中的唯一设备实例
 
 - 只需要模块通信时，安装 `sdk/message`。
 - 复用当前整机硬件连接和启动流程时，再安装 `sdk/robot`。
-- 更换 CAN ID、UART、定时器或电机数量后，应修改 `robot_sdk.cpp` 中的回调映射。
+- 更换 CAN ID、UART、定时器或电机数量后，应修改 `robot_sdk.c` 中的回调映射。
 - 新增消息时，在 `message_def.h` 中同时增加 Topic 名称和消息结构体。
 

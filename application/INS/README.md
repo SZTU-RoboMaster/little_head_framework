@@ -1,12 +1,12 @@
 # INS
 
-惯性导航任务。模块读取 BMI088 数据，使用重力向量 KF 和四元数 EKF 计算姿态，通过 `/ins` 发布欧拉角、角速度、加速度和四元数，同时控制 IMU 加热 PWM。
+惯性导航任务。模块读取 BMI270 数据，使用重力向量 KF 和四元数 EKF 计算姿态，通过 `/ins` 发布欧拉角、角速度、加速度和四元数，同时控制 IMU 加热 PWM。
 
 ## 安装
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    application/INS/INS_task.cpp
+    application/INS/INS_task.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -16,7 +16,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 依赖：
 
-- [`components/bmi088`](../../components/bmi088/README.md)
+- `components/bmi270`
 - [`components/algorithm/pid`](../../components/algorithm/pid/README.md)
 - [`bsp/imu_pwm`](../../bsp/imu_pwm/README.md)
 - [`sdk/message`](../../sdk/message/README.md)
@@ -36,49 +36,47 @@ const osThreadAttr_t insTask_attributes = {
 insTaskHandle = osThreadNew(INS_task, NULL, &insTask_attributes);
 ```
 
-`INS_task.cpp` 提供 `extern "C" void INS_task(void *)` 强定义。
+`INS_task.c` 提供 `void INS_task(void *)` 强定义。
 
 ## 数据就绪接入
 
-Robot SDK 在 BMI088 EXTI 回调中读取传感器，并在 Gyro Data Ready 时唤醒 INS 任务：
+Robot SDK 在 BMI270 EXTI 回调中读取传感器，并在一组加速度和陀螺仪数据都就绪后唤醒 INS 任务：
 
-```cpp
-ins.bmi088_.exti_read_callback(gpio_pin);
-
-if (gpio_pin == INT1_GYRO_Pin && insTaskHandle != NULL)
+```c
+if (Bmi270_ExtiReadCallback(&ins.bmi270, gpio_pin) && insTaskHandle != NULL)
 {
     osThreadFlagsSet(insTaskHandle, INS_DATA_READY_FLAG);
 }
 ```
 
-调用 RTOS From-ISR 能力的中断优先级不能高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`。当前该值为 `5`，Gyro EXTI 优先级也为 `5`。
+调用 RTOS From-ISR 能力的中断优先级不能高于 `configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY`；修改 IMU EXTI 配置时需保持该约束。
 
 ## 运行流程
 
-```cpp
-ins.init();
+```c
+INS_Init();
 osThreadFlagsSet(defaultTaskHandle, TASK_READY_INS);
 
 for (;;)
 {
     osThreadFlagsWait(INS_DATA_READY_FLAG, osFlagsWaitAny, osWaitForever);
-    ins.update();
-    ins.publish();
-    ins.temp_control();
+    INS_Update();
+    INS_Publish();
+    INS_TempControl();
 }
 ```
 
-`update()` 固定按 `dt = 0.001 s` 融合，因此需要稳定的 1 kHz Gyro Data Ready。
+`INS_Update()` 保持 G4 原实现，固定按 `dt = 0.00125 s` 融合。
 
 ## 消息接口
 
-模块发布 `/ins`，类型为 `InsMessage`：
+模块发布 `/ins`，类型为 `Ins_Message_t`：
 
 | 字段 | 内容 |
 | --- | --- |
 | `angle[3]` | EKF 欧拉角 |
-| `gyro[3]` | BMI088 角速度，rad/s |
-| `acc[3]` | BMI088 加速度，m/s² |
+| `gyro[3]` | BMI270 角速度，rad/s |
+| `acc[3]` | BMI270 加速度，m/s² |
 | `quaternion[4]` | 姿态四元数 |
 
 Gimbal 和 Vision 订阅该 Topic。

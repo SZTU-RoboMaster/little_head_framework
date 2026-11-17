@@ -22,36 +22,44 @@
  * @brief TIM定时器回调函数数据类型
  *
  */
-typedef void (*tim_callback_t)();
+typedef void (*BspTim_Callback_t)(void);
 
 /**
  * @brief TIM定时器处理结构体
  *
  */
-struct TimManageObject
+typedef struct
 {
     TIM_HandleTypeDef *tim_handle;
-    tim_callback_t callback_func;
-};
+    BspTim_Callback_t callback_func;
+} BspTim_Manage_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern uint8_t initialized;
 
-extern TimManageObject tim1_manage_obj;
-extern TimManageObject tim2_manage_obj;
-extern TimManageObject tim3_manage_obj;
-extern TimManageObject tim4_manage_obj;
-extern TimManageObject tim5_manage_obj;
-extern TimManageObject tim6_manage_obj;
-extern TimManageObject tim7_manage_obj;
-extern TimManageObject tim8_manage_obj;
-extern TimManageObject tim15_manage_obj;
-extern TimManageObject tim16_manage_obj;
-extern TimManageObject tim17_manage_obj;
-extern TimManageObject tim20_manage_obj;
+extern BspTim_Manage_t bsp_tim1;
+extern BspTim_Manage_t bsp_tim2;
+extern BspTim_Manage_t bsp_tim3;
+extern BspTim_Manage_t bsp_tim4;
+extern BspTim_Manage_t bsp_tim5;
+extern BspTim_Manage_t bsp_tim6;
+extern BspTim_Manage_t bsp_tim7;
+extern BspTim_Manage_t bsp_tim8;
+extern BspTim_Manage_t bsp_tim15;
+extern BspTim_Manage_t bsp_tim16;
+extern BspTim_Manage_t bsp_tim17;
+extern BspTim_Manage_t bsp_tim20;
 
 /* Exported function declarations ---------------------------------------------*/
 
-void tim_init(TIM_HandleTypeDef *htim, tim_callback_t callback_func);
+void BspTim_Init(TIM_HandleTypeDef *htim, BspTim_Callback_t callback_func);
+
+#ifdef __cplusplus
+}
+#endif
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

@@ -82,7 +82,7 @@ Message Center
 
 ## 为什么还有 Robot SDK
 
-Message Center 解决的是模块之间的数据依赖，但硬件中断仍然需要找到具体对象。例如 CAN1 收到 `0x201` 后，必须知道它属于哪个底盘电机；BMI088 的 Data Ready 中断也必须唤醒 INS 任务。
+Message Center 解决的是模块之间的数据依赖，但硬件中断仍然需要找到具体对象。例如 FDCAN1 收到 `0x201` 后，必须知道它属于哪个底盘电机；BMI270 的 Data Ready 中断也必须唤醒 INS 任务。
 
 这些与整车硬件连接有关的关系统一放在 [`sdk/robot`](sdk/robot/README.md) 中。Robot SDK 可以访问 Gimbal、Chassis、Shoot、INS 等全局唯一实例，并负责：
 
@@ -97,7 +97,7 @@ Message Center 解决的是模块之间的数据依赖，但硬件中断仍然�
 
 模块 README 中已经给出了具体配置，通常只需要完成下面几步：
 
-1. 将模块的 `.cpp/.c` 加入 `target_sources()`。
+1. 将模块的 `.c` 加入 `target_sources()`。
 2. 将模块目录加入 `target_include_directories()`。
 3. 按 README 加入它依赖的 BSP、Components 或 SDK 模块。
 4. 在 CubeMX 中开启需要的外设、DMA、GPIO 和中断。
@@ -111,14 +111,14 @@ Message Center 解决的是模块之间的数据依赖，但硬件中断仍然�
 flowchart TD
     MAIN["main()"]
     HAL_INIT["HAL、时钟和 CubeMX 外设初始化"]
-    SDK_INIT["robot_sdk_init()<br/>初始化 DWT、IMU PWM、LED、蜂鸣器<br/>绑定 DR16、VT13 和 Referee"]
+    SDK_INIT["RobotSdk_Init()<br/>初始化 DWT、IMU PWM、LED、蜂鸣器<br/>绑定 DR16、VT13 和 Referee"]
     KERNEL_INIT["osKernelInitialize()"]
     FREERTOS_INIT["MX_FREERTOS_Init()<br/>创建 CMSIS-RTOS2 线程"]
     KERNEL_START["osKernelStart()"]
     DEFAULT_TASK["Default Task<br/>等待 TASK_READY_ALL"]
     APP_TASKS["INS、Gimbal、Chassis、Shoot、Vision Task<br/>分别初始化自己的对象"]
     READY_FLAGS["各任务设置 TASK_READY flag"]
-    SDK_START["robot_sdk_start()"]
+    SDK_START["RobotSdk_Start()"]
     CALLBACKS["设置 initialized<br/>开放 UART、CAN、USB 回调<br/>启动 TIM7 1 ms 电机调度"]
     DEFAULT_EXIT["Default Task 退出"]
 
@@ -136,7 +136,7 @@ flowchart TD
     CALLBACKS --> DEFAULT_EXIT
 ```
 
-初始化被分成两段，是因为中断可能比任务更早到来。`robot_sdk_init()` 只完成不会访问 Application 对象的初始化；等所有任务都设置 Ready 标志后，`robot_sdk_start()` 才真正启动通信和电机调度。这样中断回调不会访问一个还没完成初始化的对象。
+初始化被分成两段，是因为中断可能比任务更早到来。`RobotSdk_Init()` 只完成不会访问 Application 对象的初始化；等所有任务都设置 Ready 标志后，`RobotSdk_Start()` 才真正启动通信和电机调度。这样中断回调不会访问一个还没完成初始化的对象。
 
 ## 开发工具链
 
@@ -146,6 +146,6 @@ flowchart TD
 
 本项目的分层、模块化和 Application 间 pub-sub 思路主要参考了湖南大学 RoboMaster 跃鹿战队开源的 [HNUYueLuRM/basic_framework](https://github.com/HNUYueLuRM/basic_framework)。它对 BSP、Module、Application 的职责划分，以及通过消息机制避免上层应用互相包含的设计，对这个工程影响很大。
 
-在此基础上，这个项目结合自己的使用习惯做了一些取舍：使用 C++ 类组织设备和应用；在 BSP 与 Application 之间增加 SDK；采用无订阅回调的最新值 Message Center；由中间层统一添加消息时间戳；把当前机器人的中断路由和电机调度集中到 Robot SDK。
+在此基础上，这个项目结合自己的使用习惯做了一些取舍：使用 C 结构体和函数组织设备与应用；在 BSP 与 Application 之间增加 SDK；采用无订阅回调的最新值 Message Center；由中间层统一添加消息时间戳；把当前机器人的中断路由和电机调度集中到 Robot SDK。IST8310 驱动已改为 C，当前未加入固件构建。
 
 项目开发过程中还参考了中国科学技术大学 RoboWalker 战队开源的 [RM2025 电控培训资料](https://bbs.robomaster.com/article/18267?source=1)，深圳北理莫斯科大学 RoboMaster 北极熊战队开源的 [StandardRobot++](https://gitee.com/SMBU-POLARBEAR/StandardRobotpp)，以及大疆官方的c板例程[RoboMaster/Development-Board-C-Examples](https://github.com/RoboMaster/Development-Board-C-Examples)。

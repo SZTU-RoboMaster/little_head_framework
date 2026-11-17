@@ -1,68 +1,47 @@
 /**
  * @file command.h
  * @author anchengc
- * @brief
+ * @brief 遥控指令仲裁
  * @version 0.1
  * @date 2026-08-14 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
- *
  */
-
 #pragma once
 
-/* Includes ------------------------------------------------------------------*/
-#include <cstdint>
-
-#include "message_center_c++.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include "message_center.h"
 #include "message_def.h"
 
-/* Exported macros -----------------------------------------------------------*/
-
-/* Exported types ------------------------------------------------------------*/
-/**
- * @brief Specialized
- *
- */
-class Command
+typedef struct
 {
-public:
-    void init();
+    uint8_t first_in;
+    uint8_t last_sw_1;
+    uint8_t fric_enabled;
+    uint8_t auto_aim;
+    int16_t last_wheel;
+    uint32_t single_shot_seq;
 
-    void update();
+    Subscriber_t dr16_subscriber;
+    Dr16_Message_t dr16_msg;
+    Subscriber_t vt13_subscriber;
+    Vt13_Message_t vt13_msg;
+    Publisher_t gimbal_cmd_publisher;
+    Publisher_t chassis_cmd_publisher;
+    Publisher_t shoot_cmd_publisher;
+} Command_t;
 
-protected:
-    // 初始化相关常量
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    // 常量
+extern Command_t command;
+void Command_Init(void);
+void Command_Update(void);
 
-    // 内部变量
-    uint8_t first_in_ = true;
+#ifdef __cplusplus
+}
+#endif
 
-    uint8_t last_sw_1_;
-    uint8_t fric_enabled_ = false;
-    uint8_t auto_aim_ = false;
-    int16_t last_wheel_;
-    uint32_t single_shot_seq_ = 0;
-
-    // 读变量
-    Subscriber<Dr16Message> dr16_subscriber_;
-    Dr16Message dr16_msg_;
-    Subscriber<Vt13Message> vt13_subscriber_;
-    Vt13Message vt13_msg_;
-
-    // 写变量
-    Publisher<GimbalCmdMessage> gimbal_cmd_publisher_;
-    Publisher<ChassisCmdMessage> chassis_cmd_publisher_;
-    Publisher<ShootCmdMessage> shoot_cmd_publisher_;
-
-    // 读写变量
-
-    // 内部函数
-};
-
-/* Exported variables ---------------------------------------------------------*/
-
-/* Exported function declarations ---------------------------------------------*/
-
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+/*************************** COPYRIGHT(C) SZTU-HJ *****************************/

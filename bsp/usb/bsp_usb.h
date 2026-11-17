@@ -22,31 +22,30 @@
  * @brief USB通信接收回调函数数据类型
  *
  */
-typedef void (*usb_callback_t)(uint8_t *buf, uint32_t len);
+typedef void (*BspUsb_Callback_t)(uint8_t *buf, uint32_t len);
 
 /**
  * @brief USB通信处理结构体
  */
 typedef struct
 {
-    usb_callback_t callback_func;
-} UsbManageObject;
+    BspUsb_Callback_t callback_func;
+} BspUsb_Manage_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 extern uint8_t initialized;
 
-extern UsbManageObject usb_manage_obj;
+extern BspUsb_Manage_t bsp_usb;
 
 /* Exported function declarations ---------------------------------------------*/
 
-void usb_init(usb_callback_t callback);
+void BspUsb_Init(BspUsb_Callback_t callback);
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
-    void USB_Rx_Callback(uint8_t *buf, uint32_t len);
+void BspUsb_RxCallback(uint8_t *buf, uint32_t len);
 
 #ifdef __cplusplus
 }

@@ -21,8 +21,16 @@
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
-void led_init();
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-void aRGB_led_show(uint32_t aRGB);
+void BspLed_Init(void);
+
+void BspLed_ShowArgb(uint32_t argb);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

@@ -1,0 +1,119 @@
+/**
+ * @file math_tools.cpp
+ * @author anchengc
+ * @brief 数学工具函数实现
+ * @version 0.1
+ * @date 2026-06-05 0.1 初版
+ *
+ * @copyright SZTU-HJ (c) 2026
+ *
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include "math_tools.h"
+
+#include <math.h>
+#include <string.h>
+
+/* Private macros ------------------------------------------------------------*/
+
+/* Private types -------------------------------------------------------------*/
+
+/* Private variables ---------------------------------------------------------*/
+
+/* Private function declarations ---------------------------------------------*/
+
+/* Function prototypes -------------------------------------------------------*/
+
+/**
+ * @brief 快速计算逆平方根
+ *
+ * @param x 待计算的浮点数
+ * @note ref: https://en.wikipedia.org/wiki/Fast_inverse_square_root
+ * @return float 平方根的倒数
+ */
+float inv_sqrt(float x)
+{
+    float halfx = 0.5f * x;
+    float y = x;
+    uint32_t i;
+    memcpy(&i, &y, sizeof(i));
+    i = 0x5f375a86 - (i >> 1);
+    memcpy(&y, &i, sizeof(y));
+    y = y * (1.5f - (halfx * y * y));
+    return y;
+}
+
+/**
+ * @brief 将无符号整数映射到浮点数
+ *
+ * @param x_int 无符号整数
+ * @param x_min 浮点数最小值
+ * @param x_max 浮点数最大值
+ * @param bits 无符号整数的位宽
+ * @return float 映射后的浮点数
+ */
+float uint_to_float(uint32_t x_int, float x_min, float x_max, size_t bits)
+{
+    /// converts unsigned int to float, given range and number of bits ///
+    float span = x_max - x_min;
+    float offset = x_min;
+    return ((float)x_int) * span / ((float)((1 << bits) - 1)) + offset;
+}
+
+/**
+ * @brief 将浮点数映射到无符号整数
+ *
+ * @param x 浮点数
+ * @param x_min 浮点数最小值
+ * @param x_max 浮点数最大值
+ * @param bits 无符号整数的位宽
+ * @return uint32_t 无符号整数
+ */
+uint32_t float_to_uint(float x, float x_min, float x_max, size_t bits)
+{
+    /// Converts a float to an unsigned int, given range and number of bits ///
+    float span = x_max - x_min;
+    float offset = x_min;
+    return (uint32_t)((x - offset) * ((float)((1 << bits) - 1)) / span);
+}
+
+/**
+ * @brief 三次映射函数
+ *
+ * @param x 输入值
+ * @param expo 指数系数
+ * @return float 映射值
+ */
+float cubic_map(float x, float expo)
+{
+    if (expo == 0.0f)
+    {
+        return x;
+    }
+    else
+    {
+        return (1.0f - expo) * x + expo * x * x * x;
+    }
+}
+
+float clamp_float(float value, float low, float high)
+{
+    if (value < low) return low;
+    if (value > high) return high;
+    return value;
+}
+
+/**
+ * @brief 将浮点数归化到 [-modulus/2, modulus/2)
+ */
+float wrap_center_float(float x, float modulus)
+{
+    if (modulus <= 0.0f) return x;
+
+    float value = fmodf(x, modulus);
+    if (value < -modulus / 2.0f) value += modulus;
+    else if (value >= modulus / 2.0f) value -= modulus;
+    return value;
+}
+/************************ COPYRIGHT(C) SZTU-HJ **************************/

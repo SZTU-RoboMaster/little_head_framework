@@ -14,7 +14,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "bsp_uart.h"
 
-#include "message_center_c++.h"
+#include "message_center.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/
@@ -25,58 +25,61 @@
  * @brief 遥控器DR16状态
  *
  */
-enum Dr16Status
+typedef enum
 {
     DR16_STATUS_DISABLE = 0,
     DR16_STATUS_ENABLE,
-};
+} Dr16Status_e;
 
 /**
  * @brief Specialized, 遥控器DR16
  *
  */
-class Dr16
+typedef struct
 {
-public:
-    void init(UART_HandleTypeDef *huart);
-
-    void uart_rx_callback(uint8_t *rx_data, uint16_t length);
-
-    void check_alive_100ms();
-
-protected:
     // 初始化相关常量
 
     // 绑定的UART
-    UartManageObject *uart_manage_obj_;
+    BspUart_Manage_t *uart_manage_obj;
 
     // 常量
 
     // 内部变量
 
     // 当前时刻的遥控器接收flag
-    uint32_t rx_flag_ = 0;
+    uint32_t rx_flag;
     // 前一时刻的遥控器接收flag
-    uint32_t last_rx_flag_ = 0;
+    uint32_t last_rx_flag;
 
     // 读变量
 
     // 遥控器状态
-    Dr16Status dr16_status_ = DR16_STATUS_DISABLE;
+    Dr16Status_e status;
     // 遥控器数据
-    Dr16Message data_;
+    Dr16_Message_t data;
 
     // 写变量
-    Publisher<Dr16Message> publisher_;
+    Publisher_t publisher;
 
     // 读写变量
 
     // 内部函数
 
-    void process_data(uint8_t *rx_data, uint16_t length);
-};
+} Dr16_t;
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern Dr16_t dr16;
 
 /* Exported function declarations ---------------------------------------------*/
+void Dr16_Init(Dr16_t *self, UART_HandleTypeDef *huart);
+void Dr16_UartRxCallback(Dr16_t *self, uint8_t *rx_data, uint16_t length);
+void Dr16_CheckAlive100ms(Dr16_t *self);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

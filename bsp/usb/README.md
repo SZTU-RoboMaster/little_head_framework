@@ -1,12 +1,12 @@
 # USB BSP
 
-USB Device CDC 接收回调转发模块。它保存一个上层回调，并由 CubeMX 生成的 CDC 接收函数调用 `USB_Rx_Callback()` 完成分发。
+USB Device CDC 接收回调转发模块。它保存一个上层回调，并由 CubeMX 生成的 CDC 接收函数调用 `BspUsb_RxCallback()` 完成分发。
 
 ## 安装
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/usb/bsp_usb.cpp
+    bsp/usb/bsp_usb.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -27,7 +27,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 ```c
 static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
 {
-    USB_Rx_Callback(Buf, *Len);
+    BspUsb_RxCallback(Buf, *Len);
     USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
     USBD_CDC_ReceivePacket(&hUsbDeviceFS);
     return USBD_OK;
@@ -36,24 +36,24 @@ static int8_t CDC_Receive_FS(uint8_t *Buf, uint32_t *Len)
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_usb.h"
+#include "vision.h"
 
 void vision_rx_callback(uint8_t *buffer, uint32_t length)
 {
-    vision.usb_rx_callback(buffer, length);
+    Vision_UsbRxCallback(buffer, length);
 }
 
-void device_start()
+void device_start(void)
 {
-    MX_USB_DEVICE_Init();
-    usb_init(vision_rx_callback);
+    BspUsb_Init(vision_rx_callback);
 }
 ```
 
 发送接口不再额外封装，直接调用：
 
-```cpp
+```c
 CDC_Transmit_FS(data, length);
 ```
 
@@ -62,7 +62,7 @@ CDC_Transmit_FS(data, length);
 ## 注意事项
 
 - 接收回调只有在全局 `initialized != 0` 后才会分发。
-- `USB_Rx_Callback()` 使用 `extern "C"` 导出，供 C 文件调用。
+- `BspUsb_RxCallback()` 是 C 函数；头文件在 C++ 文件中通过 `extern "C"` 声明，供 C 与 C++ 调用。
 - USB 回调处于中断/协议栈回调上下文，不要阻塞。
 - CubeMX 重新生成代码后，确认 `CDC_Receive_FS()` 中的用户代码仍然存在。
 

@@ -6,76 +6,57 @@
  * @date 2026-08-26 0.1 初版
  *
  * @copyright SZTU-HJ (c) 2026
- *
  */
 
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-#include "message_center_c++.h"
+#include "message_center.h"
 #include "message_def.h"
 
 /* Exported macros -----------------------------------------------------------*/
-// 电机建模系数
-static constexpr float k1_ = 3.24956187e-4f;
-static constexpr float k2_ = 2.96678362e-1f;
-static constexpr float k3_ = 1.77641220e-7f;
-static constexpr float a_ = 9.50608963e-1f;
 
-static constexpr float omega_err_lower = 8.0f;
-static constexpr float omega_err_upper = 16.0f;
 /* Exported types ------------------------------------------------------------*/
-
-enum PowerControlMode
+typedef enum
 {
     POWER_CONTROL_ENABLE = 0,
     POWER_CONTROL_DISABLE = 1,
-};
+} PowerControlMode_e;
 
 /**
- * @brief Specialized PowerController
- *
+ * @brief 底盘功率控制数据
  */
-class PowerController
+typedef struct
 {
-public:
-    void init(PowerControlMode mode);
+    PowerControlMode_e mode;
+    float max_power;
 
-    void update();
+    // 订阅者
+    Subscriber_t chassis_subscriber;
+    Subscriber_t referee_subscriber;
 
-protected:
-    // 初始化相关常量
-    PowerControlMode mode_ = POWER_CONTROL_ENABLE;
+    // 数据
+    Chassis_Message_t chassis_msg;
+    Referee_Message_t referee_msg;
+    Power_Controller_Message_t output_msg;
 
-    // 常量
-
-    // 内部变量
-    float max_power_ = 50.0f;
-
-    // 读变量
-    Subscriber<ChassisMessage> chassis_subscriber_;
-    ChassisMessage chassis_msg_;
-    Subscriber<RefereeMessage> referee_subscriber_;
-    RefereeMessage referee_msg_;
-
-    // 写变量
-    Publisher<PowerControllerMessage> publisher_;
-    PowerControllerMessage output_msg_;
-
-    // 读写变量
-
-    // 内部函数
-    bool update_input();
-
-    void allocate_power();
-
-    float predict_power(float current, float omega);
-
-    float current_inverse(float omega, float allocated_power, bool is_positive);
-};
+    // 发布者
+    Publisher_t power_controller_publisher;
+} PowerController_t;
 
 /* Exported variables ---------------------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern PowerController_t power_controller;
 
 /* Exported function declarations ---------------------------------------------*/
+void PowerController_Init(PowerControlMode_e mode);
+void PowerController_Update(void);
 
-/*************************** COPYRIGHT(C) SZTU-HJ ******************************/
+#ifdef __cplusplus
+}
+#endif
+
+/*************************** COPYRIGHT(C) SZTU-HJ *****************************/

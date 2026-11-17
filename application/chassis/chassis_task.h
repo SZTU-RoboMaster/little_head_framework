@@ -19,8 +19,16 @@
 /* Exported types ------------------------------------------------------------*/
 
 /* Exported variables ---------------------------------------------------------*/
-extern Chassis chassis;
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void chassis_task(void *argument);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

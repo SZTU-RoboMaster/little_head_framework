@@ -1,3 +1,8 @@
+//
+// Created by hjr on 2026/11/16.
+//
+
+#include "message_center.h"
 
 //
 // Created by hjr on 2026/11/11.
@@ -225,6 +230,29 @@ bool Message_Publish(Publisher_t *publisher, const void *data, size_t data_size)
     return true;
 }
 
+/* UART interrupt callback publishes data. */
+bool Message_PublishFromISR(Publisher_t *publisher, const void *data, size_t data_size)
+{
+    if (publisher == NULL || publisher->topic == NULL || data == NULL)
+    {
+        return false;
+    }
+
+    Topic_t *topic = publisher->topic;
+    if (!topic->is_active || !topic->has_publisher || topic->data_size == 0 || topic->data_size > sizeof(topic->data) || data_size != topic->data_size)
+    {
+        return false;
+    }
+
+    UBaseType_t interrupt_mask = taskENTER_CRITICAL_FROM_ISR();
+    memcpy(topic->data, data, data_size);
+    topic->last_update_time = (uint32_t)xTaskGetTickCountFromISR();
+    topic->update_count++;
+    topic->has_value = true;
+    publisher->publish_count++;
+    taskEXIT_CRITICAL_FROM_ISR(interrupt_mask);
+    return true;
+}
 /**
  * @brief  读取 Topic 缓存中的最新值
  * @note   只要 Topic 曾经发布过数据，就可以重复读取；不会清空数据。

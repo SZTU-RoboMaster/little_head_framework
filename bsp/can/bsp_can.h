@@ -11,41 +11,22 @@
 
 #pragma once
 
-/* Includes ------------------------------------------------------------------*/
 #include "fdcan.h"
 
-/* Exported macros -----------------------------------------------------------*/
-
-/* Exported types ------------------------------------------------------------*/
-
-/**
- * @brief CAN接收的信息结构体
- *
- */
-struct CanRxBuffer
+typedef struct
 {
     FDCAN_RxHeaderTypeDef header;
     uint8_t data[64];
-};
+} BspCan_RxBuffer_t;
 
-/**
- * @brief CAN通信接收回调函数数据类型
- *
- */
-typedef void (*can_callback_t)(CanRxBuffer *);
+typedef void (*BspCan_Callback_t)(BspCan_RxBuffer_t *);
 
-/**
- * @brief CAN通信处理结构体
- *
- */
-struct CanManageObject
+typedef struct
 {
     FDCAN_HandleTypeDef *can_handle;
-    CanRxBuffer rx_buffer;
-    can_callback_t callback_func;
-};
-
-/* Exported variables ---------------------------------------------------------*/
+    BspCan_RxBuffer_t rx_buffer;
+    BspCan_Callback_t callback_func;
+} BspCan_Manage_t;
 
 extern uint8_t initialized;
 
@@ -53,13 +34,11 @@ extern FDCAN_HandleTypeDef hfdcan1;
 extern FDCAN_HandleTypeDef hfdcan2;
 extern FDCAN_HandleTypeDef hfdcan3;
 
-extern CanManageObject can1_manage_obj;
-extern CanManageObject can2_manage_obj;
-extern CanManageObject can3_manage_obj;
+extern BspCan_Manage_t bsp_can1;
+extern BspCan_Manage_t bsp_can2;
+extern BspCan_Manage_t bsp_can3;
 
-/* Exported function declarations ---------------------------------------------*/
-void can_init(FDCAN_HandleTypeDef *hfdcan, can_callback_t callback_func);
-
-uint8_t can_data_send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint16_t length);
+void BspCan_Init(FDCAN_HandleTypeDef *hfdcan, BspCan_Callback_t callback_func);
+uint8_t BspCan_Send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint16_t length);
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

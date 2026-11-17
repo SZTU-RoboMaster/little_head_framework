@@ -26,6 +26,9 @@
 /* Exported variables ---------------------------------------------------------*/
 
 /* Exported function declarations ---------------------------------------------*/
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  *  @brief Function for reading the sensor's registers through SPI bus.
@@ -87,5 +90,9 @@ void bmi08_delay_us(uint32_t period, void *intf_ptr);
  *  @retval < 0 -> Failure Info
  */
 int8_t bmi08_interface_init(struct bmi08_dev *bmi08, uint8_t intf, enum bmi08_variant variant);
+
+#ifdef __cplusplus
+}
+#endif
 
 /*************************** COPYRIGHT(C) SZTU-HJ ******************************/

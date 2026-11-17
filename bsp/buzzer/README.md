@@ -1,12 +1,12 @@
 # Buzzer BSP
 
-使用 TIM4 CH3 PWM 驱动蜂鸣器，可在运行时设置 Prescaler 和比较值。
+使用 TIM1 CH1 PWM 驱动蜂鸣器，可在运行时设置 Prescaler 和比较值。
 
 ## 安装
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    bsp/buzzer/bsp_buzzer.cpp
+    bsp/buzzer/bsp_buzzer.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -16,20 +16,20 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 ## CubeMX 配置
 
-当前工程将 PD14 配置为 TIM4 CH3 PWM，TIM4 Period 为 `20999`。
+当前工程将 PE9 配置为 TIM1 CH1 PWM，TIM1 Period 为 `42499`。
 
 ## 使用方法
 
-```cpp
+```c
 #include "bsp_buzzer.h"
 
-buzzer_init();
-buzzer_on(839, 10500); // 设置分频和占空比
+BspBuzzer_Init();
+BspBuzzer_On(839, 10500); // 设置分频和占空比
 HAL_Delay(100);
-buzzer_off();
+BspBuzzer_Off();
 ```
 
-`buzzer_init()` 启动 PWM；`buzzer_on(psc, pwm)` 更新预分频和比较值；`buzzer_off()` 将比较值清零。
+`BspBuzzer_Init()` 启动 PWM；`BspBuzzer_On(psc, pwm)` 更新预分频和比较值；`BspBuzzer_Off()` 将比较值清零。
 
 ## 注意事项
 

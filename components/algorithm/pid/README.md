@@ -6,8 +6,8 @@
 
 ```cmake
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    components/algorithm/pid/pid.cpp
-    components/algorithm/math_tools/math_tools.cpp
+    components/algorithm/pid/pid.c
+    components/algorithm/math_tools/math_tools.c
 )
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE

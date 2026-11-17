@@ -1,0 +1,8 @@
+//
+// Created by hjr on 2026/11/17.
+//
+
+#ifndef G4_LITTLE_HEAD_BOARD_COMM_TASK_H
+#define G4_LITTLE_HEAD_BOARD_COMM_TASK_H
+
+#endif // G4_LITTLE_HEAD_BOARD_COMM_TASK_H

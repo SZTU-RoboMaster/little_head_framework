@@ -10,7 +10,8 @@ Components 层封装可复用的设备驱动、通信协议和控制算法。组
 | [`motor`](motor/README.md) | DJI、达妙电机驱动和控制 |
 | [`rc`](rc/README.md) | DR16、VT13 遥控器解析和消息发布 |
 | [`referee`](referee/README.md) | RoboMaster 裁判系统协议解析 |
-| [`bmi088`](bmi088/README.md) | BMI088 SPI 驱动和姿态 EKF |
+| `bmi270` | 当前固件使用的 BMI270 SPI 驱动 |
+| [`bmi088`](bmi088/README.md) | 保留但未加入当前固件构建的 BMI088 驱动 |
 | [`vision`](vision/README.md) | USB CDC 视觉协议收发 |
 | [`support`](support/README.md) | CRC8/CRC16 通用校验函数 |
 
