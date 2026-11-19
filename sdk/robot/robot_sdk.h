@@ -12,12 +12,21 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
+#include "message_center.h"
 /* Exported macros -----------------------------------------------------------*/
+//#define GIMBAL_BOARD
+#define CHASSIS_BOARD
 
 /* Exported types ------------------------------------------------------------*/
+extern Subscriber_t boardcomm_chassiscmd_subscriber;
 
+extern Publisher_t boardcomm_referee_publisher;
+
+extern Publisher_t boardcomm_chassiscmd_publisher;
+
+extern Subscriber_t boardcomm_referee_subscriber;
 /* Exported variables ---------------------------------------------------------*/
+
 
 /* Exported function declarations ---------------------------------------------*/
 #ifdef __cplusplus

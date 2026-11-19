@@ -33,8 +33,9 @@ enable_language(C ASM)
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-        application/board_communication/board_comm_task.c
-        application/board_communication/board_comm_task.h)
+        application/board_commication/board_comm_task.c
+        application/board_commication/board_comm_task.h
+        sdk/board_communication/board_communication.h)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
@@ -91,7 +92,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     application/vision/vision_task.c
     application/command/command.c
     application/chassis/power_control/power_controller.c
-        application/board_communication/board_communication.c
+        sdk/board_communication/board_communication.c
     sdk/message/message_center.c
     sdk/robot/robot_sdk.c
     components/algorithm/filter/low_pass_filter.c
@@ -130,7 +131,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     application/command
     application/chassis/power_control
     sdk/robot
-        application/board_communication
+        sdk/board_communication
 )
 
 # Add project symbols (macros)

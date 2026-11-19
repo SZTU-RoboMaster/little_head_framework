@@ -12,16 +12,21 @@
 #pragma once
 
 /* Includes ------------------------------------------------------------------*/
-
+#include "robot_sdk.h"
 /* Exported macros -----------------------------------------------------------*/
 #define TASK_READY_INS (1U << 0)
 #define TASK_READY_GIMBAL (1U << 1)
 #define TASK_READY_CHASSIS (1U << 2)
 #define TASK_READY_SHOOT (1U << 3)
 #define TASK_READY_VISION (1U << 4)
+#define TASK_READY_BOARD_COMM (1U << 5)
 
-#define TASK_READY_ALL                                                                             \
-    (TASK_READY_INS | TASK_READY_GIMBAL | TASK_READY_CHASSIS | TASK_READY_SHOOT | TASK_READY_VISION)
+
+#ifdef GIMBAL_BOARD
+#define TASK_READY_ALL (TASK_READY_INS | TASK_READY_BOARD_COMM | TASK_READY_GIMBAL | TASK_READY_SHOOT | TASK_READY_VISION)
+#else
+#define TASK_READY_ALL (TASK_READY_INS | TASK_READY_BOARD_COMM | TASK_READY_CHASSIS)
+#endif
 
 /* Exported types ------------------------------------------------------------*/
 

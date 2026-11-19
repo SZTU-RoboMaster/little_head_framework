@@ -11,6 +11,8 @@
 
 #include "bsp_can.h"
 
+#include <string.h>
+
 BspCan_Manage_t bsp_can1 = {0};
 BspCan_Manage_t bsp_can2 = {0};
 BspCan_Manage_t bsp_can3 = {0};
@@ -73,6 +75,41 @@ uint8_t BspCan_Send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uin
     tx_header.MessageMarker = 0;
 
     return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &tx_header, data);
+}
+uint8_t BspFDCan_Send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, size_t data_size)
+{
+    //数据检查
+    if (data == NULL || data_size > 64) //FDCAN一帧最大传输64字节
+    {
+        return HAL_ERROR;
+    }
+    uint32_t dlc;
+    size_t frame_size;
+
+    if (data_size <= 8)       { dlc = (uint32_t)data_size; frame_size = data_size; }
+    else if (data_size <= 12) { dlc = FDCAN_DLC_BYTES_12; frame_size = 12; }
+    else if (data_size <= 16) { dlc = FDCAN_DLC_BYTES_16; frame_size = 16; }
+    else if (data_size <= 20) { dlc = FDCAN_DLC_BYTES_20; frame_size = 20; }
+    else if (data_size <= 24) { dlc = FDCAN_DLC_BYTES_24; frame_size = 24; }
+    else if (data_size <= 32) { dlc = FDCAN_DLC_BYTES_32; frame_size = 32; }
+    else if (data_size <= 48) { dlc = FDCAN_DLC_BYTES_48; frame_size = 48; }
+    else                      { dlc = FDCAN_DLC_BYTES_64; frame_size = 64; }
+
+    uint8_t frame_data[64] = {0};
+    memcpy(frame_data, data, data_size);
+
+    FDCAN_TxHeaderTypeDef header = {0};
+    header.Identifier = id;
+    header.IdType = FDCAN_STANDARD_ID;
+    header.TxFrameType = FDCAN_DATA_FRAME;
+    header.DataLength = dlc;
+    header.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+    header.BitRateSwitch = FDCAN_BRS_OFF;
+    header.FDFormat = FDCAN_FD_CAN;
+    header.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+
+    (void)frame_size;  // 补零后的长度由 DLC 决定
+    return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &header, frame_data);
 }
 
 static BspCan_Manage_t *get_can_manage(FDCAN_HandleTypeDef *hfdcan)

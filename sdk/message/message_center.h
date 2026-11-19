@@ -63,10 +63,6 @@ extern MessageCenter_t g_message_center;
 
 void MessageCenter_Init(void);
 
-
-void MessageCenter_Topics_Init(void);
-
-
 bool Register_Topic(const char *name, size_t data_size);
 
 

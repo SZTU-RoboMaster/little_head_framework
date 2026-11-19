@@ -40,5 +40,6 @@ extern BspCan_Manage_t bsp_can3;
 
 void BspCan_Init(FDCAN_HandleTypeDef *hfdcan, BspCan_Callback_t callback_func);
 uint8_t BspCan_Send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, uint16_t length);
+uint8_t BspFDCan_Send(FDCAN_HandleTypeDef *hfdcan, uint16_t id, uint8_t *data, size_t data_size);
 
 /************************ COPYRIGHT(C) SZTU-HJ **************************/

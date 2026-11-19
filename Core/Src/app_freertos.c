@@ -22,7 +22,7 @@
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
-
+#include "robot_sdk.h"
 #include "usb_device.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -144,12 +144,18 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  insTaskHandle = osThreadNew(INS_task, NULL, &insTask_attributes);
-  gimbalTaskHandle = osThreadNew(gimbal_task, NULL, &gimbalTask_attributes);
-  board_commTaskHandle = osThreadNew(board_comm_task, NULL, &board_commTask_attributes);
-  chassisTaskHandle = osThreadNew(chassis_task, NULL, &chassisTask_attributes);
-  shootTaskHandle = osThreadNew(shoot_task, NULL, &shootTask_attributes);
-  visionTaskHandle = osThreadNew(vision_task, NULL, &visionTask_attributes);
+    insTaskHandle = osThreadNew(INS_task, NULL, &insTask_attributes);
+    board_commTaskHandle = osThreadNew(board_comm_task, NULL, &board_commTask_attributes);
+
+#ifdef GIMBAL_BOARD
+    gimbalTaskHandle = osThreadNew(gimbal_task, NULL, &gimbalTask_attributes);
+    shootTaskHandle  = osThreadNew(shoot_task, NULL, &shootTask_attributes);
+    visionTaskHandle = osThreadNew(vision_task, NULL, &visionTask_attributes);
+#endif
+
+#ifdef CHASSIS_BOARD
+    chassisTaskHandle = osThreadNew(chassis_task, NULL, &chassisTask_attributes);
+#endif
 
   /* USER CODE END RTOS_THREADS */
 

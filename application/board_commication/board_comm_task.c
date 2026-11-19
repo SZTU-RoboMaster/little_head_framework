@@ -2,7 +2,7 @@
 // Created by hjr on 2026/11/17.
 //
 
-#include "board_comm_task.h"
+
 /**
  * @file gimbal_task.c
  * @author hjr
@@ -15,6 +15,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "board_comm_task.h"
+#include "board_communication.h"
 
 #include "cmsis_os2.h"
 #include "initial_task.h"
@@ -26,12 +27,23 @@ void board_comm_task(void *argument)
 {
     (void)argument;
 
-    osThreadFlagsSet(defaultTaskHandle, TASK_READY_GIMBAL);
+    osThreadFlagsSet(defaultTaskHandle, TASK_READY_BOARD_COMM);
     uint32_t start = osKernelGetTickCount();
     uint32_t ticks = 0;
     while (1)
     {
         ticks++;
+#ifdef GIMBAL_BOARD
+
+        Boardcomm_Gimbal_Send();
+
+#endif
+
+#ifdef  CHASSIS_BOARD
+
+        //Boardcomm_Chassis_Send();
+
+#endif
 
         osDelayUntil(start + ticks);
     }

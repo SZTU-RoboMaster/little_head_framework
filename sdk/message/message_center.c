@@ -24,11 +24,11 @@ void MessageCenter_Init(void)
 }
 
 
-
-bool Register_Topic(const char *name,size_t data_size)
+bool Register_Topic(const char *name, size_t data_size)
 {
     // 1. 检查参数
-    if (name == NULL || name[0] == '\0' || strlen(name) > MAX_NAME_LEN || data_size == 0 || data_size > MAX_DATA_SIZE)
+    if (name == NULL || name[0] == '\0' || strlen(name) > MAX_NAME_LEN || data_size == 0 ||
+        data_size > MAX_DATA_SIZE)
     {
         g_message_center.register_error_count++;
         return false;
@@ -114,7 +114,7 @@ static Topic_t *Find_Topic(const char *name)
  * @param data_size  消息结构体大小
  * @return true 成功，false 失败
  */
-bool Create_Publisher(Publisher_t *publisher,const char *topic_name,size_t data_size)
+bool Create_Publisher(Publisher_t *publisher, const char *topic_name, size_t data_size)
 {
     // 1. 检查发布者是否有效、是否已经绑定
     if (publisher == NULL || publisher->topic != NULL)
@@ -155,7 +155,7 @@ bool Create_Publisher(Publisher_t *publisher,const char *topic_name,size_t data_
 /**
  * @brief 创建订阅者，绑定指定 Topic
  */
-bool Create_Subscriber(Subscriber_t *subscriber,const char *topic_name,size_t data_size)
+bool Create_Subscriber(Subscriber_t *subscriber, const char *topic_name, size_t data_size)
 {
     // 1. 检查订阅者是否有效、是否已经绑定
     if (subscriber == NULL || subscriber->topic != NULL)
@@ -212,7 +212,8 @@ bool Message_Publish(Publisher_t *publisher, const void *data, size_t data_size)
     Topic_t *topic = publisher->topic;
 
     // 检查话题
-    if (!topic->is_active || !topic->has_publisher || topic->data_size == 0 || topic->data_size > sizeof(topic->data) || data_size != topic->data_size)
+    if (!topic->is_active || !topic->has_publisher || topic->data_size == 0 || topic->data_size >
+        sizeof(topic->data) || data_size != topic->data_size)
     {
         return false;
     }
@@ -239,7 +240,8 @@ bool Message_PublishFromISR(Publisher_t *publisher, const void *data, size_t dat
     }
 
     Topic_t *topic = publisher->topic;
-    if (!topic->is_active || !topic->has_publisher || topic->data_size == 0 || topic->data_size > sizeof(topic->data) || data_size != topic->data_size)
+    if (!topic->is_active || !topic->has_publisher || topic->data_size == 0 || topic->data_size >
+        sizeof(topic->data) || data_size != topic->data_size)
     {
         return false;
     }
@@ -253,6 +255,7 @@ bool Message_PublishFromISR(Publisher_t *publisher, const void *data, size_t dat
     taskEXIT_CRITICAL_FROM_ISR(interrupt_mask);
     return true;
 }
+
 /**
  * @brief  读取 Topic 缓存中的最新值
  * @note   只要 Topic 曾经发布过数据，就可以重复读取；不会清空数据。
@@ -269,7 +272,8 @@ bool Message_Read(Subscriber_t *subscriber, void *data, size_t data_size)
     const Topic_t *topic = subscriber->topic;
 
     // 检查话题
-    if (!topic->is_active || topic->data_size == 0 || topic->data_size > sizeof(topic->data) || data_size != topic->data_size)
+    if (!topic->is_active || topic->data_size == 0 || topic->data_size > sizeof(topic->data) ||
+        data_size != topic->data_size)
     {
         return false;
     }
